@@ -16,7 +16,7 @@ if (isset($_GET['accept']) && is_numeric($_GET['accept'])) {
     try {
         $pdo->beginTransaction();
 
-        $stmt = $pdo->prepare("UPDATE users SET is_approved = 1 WHERE user_id = ?");
+        $stmt = $pdo->prepare("UPDATE users SET status = 'approved' WHERE user_id = ?");
         $stmt->execute([$userId]);
 
         $accountNumber = generateAccountNumber();
@@ -53,6 +53,17 @@ if (isset($_GET['reject']) && is_numeric($_GET['reject'])) {
 // Delete user manually
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $userId = $_GET['delete'];
+
+    // Check user's balance first
+    $stmt = $pdo->prepare("SELECT balance FROM accounts WHERE user_id = ?");
+    $stmt->execute([$userId]);
+    $account = $stmt->fetch();
+
+    if (!$account || $account['balance'] > 0) {
+        $_SESSION['error'] = "Cannot delete user. Balance must be 0.";
+        header("Location: manage-users.php");
+        exit();
+    }
 
     try {
         $pdo->beginTransaction();
@@ -137,15 +148,19 @@ $users = $pdo->query("
                         <td><?= $user['account_number'] ?: 'N/A' ?></td>
                         <td>$<?= $user['balance'] ? number_format($user['balance'], 2) : '0.00' ?></td>
                         <td>
-                            <?= $user['is_approved'] ? '✅ Approved' : '⏳ Pending' ?>
+                            <?= $user['status'] === 'approved' ? '✅ Approved' : '⏳ Pending' ?>
                         </td>
                         <td><?= date('M j, Y', strtotime($user['created_at'])) ?></td>
                         <td>
-                            <?php if (!$user['is_approved']): ?>
+                            <?php if ($user['status'] !== 'approved'): ?>
                                 <a href="manage-users.php?accept=<?= $user['user_id'] ?>" class="btn btn-sm btn-success">Accept</a>
                                 <a href="manage-users.php?reject=<?= $user['user_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Reject and delete this user?')">Reject</a>
                             <?php endif; ?>
-                            <a href="manage-users.php?delete=<?= $user['user_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this user?')">Delete</a>
+                            <?php if ($user['balance'] == 0): ?>
+                                <a href="manage-users.php?delete=<?= $user['user_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this user?')">Delete</a>
+                            <?php else: ?>
+                                <span class="btn btn-sm btn-secondary" title="User must have zero balance to delete">🔒 Can't Delete</span>
+                            <?php endif; ?>
                         </td>
                     </tr>
                 <?php endforeach; ?>
