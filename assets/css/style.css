@@ -78,6 +78,7 @@ header {
     margin-bottom: 5px;
     font-weight: bold;
 }
+
 .alert {
     padding: 1rem;
     margin-bottom: 1.5rem;
@@ -89,6 +90,7 @@ header {
     color: #721c24;
     border: 1px solid #f5c6cb;
 }
+
 input, textarea, select {
     width: 100%;
     padding: 10px;
@@ -110,6 +112,7 @@ input, textarea, select {
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+
 .status.pending {
     color: #ff9800;
     font-weight: bold;
@@ -125,18 +128,17 @@ input, textarea, select {
     font-weight: bold;
 }
 
-
 /* Responsive Design */
 @media (max-width: 768px) {
     .container {
         padding: 15px;
     }
-    
+
     header {
         flex-direction: column;
         align-items: flex-start;
     }
-    
+
     .dashboard-nav {
         flex-direction: column;
     }
