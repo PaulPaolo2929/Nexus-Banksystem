@@ -19,7 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->prepare("UPDATE users SET reset_token = ?, reset_expires_at = ? WHERE user_id = ?")
             ->execute([$token, $expires, $user['user_id']]);
 
-        $resetLink = "http://localhost/securebank/reset-password.php?token=$token";
+            $resetLink = "http://localhost/Nexus-Banksystem/reset-password.php?token=$token";
+
         
         if (sendResetLink($email, $resetLink)) {
             $_SESSION['success'] = "Password reset link sent to your email.";

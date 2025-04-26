@@ -41,6 +41,16 @@ function generateAccountNumber() {
     return 'SB' . str_pad(mt_rand(0, 99999999), 8, '0', STR_PAD_LEFT);
 }
 
+function generateUniqueAccountNumber($pdo) {
+    do {
+        $number = generateAccountNumber();
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM accounts WHERE account_number = ?");
+        $stmt->execute([$number]);
+        $exists = $stmt->fetchColumn() > 0;
+    } while ($exists);
+    return $number;
+}
+
 
 function formatCurrency($amount) {
     return number_format($amount, 2, '.', ',');
