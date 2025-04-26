@@ -13,17 +13,21 @@ require_once __DIR__ . '/includes/otp.php';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL);
+    $email = strtolower(trim(filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL))); // Normalize email to lowercase
     $password = $_POST['password'] ?? '';
 
     try {
-        $stmt = $pdo->prepare("SELECT user_id, password_hash, is_admin, status FROM users WHERE email = ?");
-        $stmt->execute([$email]);
+        // Case-insensitive email match, ensuring the email is in lowercase
+        $stmt = $pdo->prepare("SELECT user_id, password_hash, is_admin, status, is_active FROM users WHERE LOWER(email) = ?");
+        $stmt->execute([strtolower($email)]);
         $user = $stmt->fetch();
 
         if ($user) {
             if ($user['status'] !== 'approved') {
                 $error = "Your account is still pending approval.";
+            } elseif ($user['is_active'] == 0) {
+                // Check if user is deactivated
+                $error = "Your account is deactivated. Please contact the admin.";
             } elseif (password_verify($password, $user['password_hash'])) {
                 // Send OTP before proceeding
                 if (generateOTP($email)) {
@@ -38,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = "Invalid email or password.";
             }
         } else {
-            $error = "Invalid email or password.";
+            $error = "User account not found. Please double-check your email.";
         }
     } catch (PDOException $e) {
         error_log("Login error: " . $e->getMessage());
@@ -46,6 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

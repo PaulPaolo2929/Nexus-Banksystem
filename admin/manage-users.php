@@ -1,4 +1,4 @@
-<?php
+<?php 
 session_start();
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -7,9 +7,10 @@ error_reporting(E_ALL);
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
 
+// Ensure only admin can access this page
 redirectIfNotAdmin();
 
-// Accept user
+// Accept user (Approve and create an account)
 if (isset($_GET['accept']) && is_numeric($_GET['accept'])) {
     $userId = $_GET['accept'];
 
@@ -17,12 +18,21 @@ if (isset($_GET['accept']) && is_numeric($_GET['accept'])) {
         $pdo->beginTransaction();
 
         $stmt = $pdo->prepare("UPDATE users SET status = 'approved' WHERE user_id = ?");
+        if (!$stmt->execute([$userId])) {
+            throw new Exception("Failed to update user status.");
+        }
+
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM accounts WHERE user_id = ?");
         $stmt->execute([$userId]);
+        $hasAccount = $stmt->fetchColumn();
 
-        $accountNumber = generateAccountNumber();
-
-        $stmt = $pdo->prepare("INSERT INTO accounts (user_id, account_number, balance) VALUES (?, ?, 0)");
-        $stmt->execute([$userId, $accountNumber]);
+        if (!$hasAccount) {
+            $accountNumber = generateUniqueAccountNumber($pdo);
+            $stmt = $pdo->prepare("INSERT INTO accounts (user_id, account_number, balance) VALUES (?, ?, 0)");
+            if (!$stmt->execute([$userId, $accountNumber])) {
+                throw new Exception("Failed to create account for user.");
+            }
+        }
 
         $pdo->commit();
         $_SESSION['success'] = "User approved and account created.";
@@ -35,7 +45,7 @@ if (isset($_GET['accept']) && is_numeric($_GET['accept'])) {
     exit();
 }
 
-// Reject user (deletes user)
+// Reject user
 if (isset($_GET['reject']) && is_numeric($_GET['reject'])) {
     $userId = $_GET['reject'];
 
@@ -50,11 +60,10 @@ if (isset($_GET['reject']) && is_numeric($_GET['reject'])) {
     exit();
 }
 
-// Delete user manually
+// Delete user (only if balance is 0)
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $userId = $_GET['delete'];
 
-    // Check user's balance first
     $stmt = $pdo->prepare("SELECT balance FROM accounts WHERE user_id = ?");
     $stmt->execute([$userId]);
     $account = $stmt->fetch();
@@ -67,11 +76,10 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
 
     try {
         $pdo->beginTransaction();
-
         $pdo->prepare("DELETE FROM accounts WHERE user_id = ?")->execute([$userId]);
         $pdo->prepare("DELETE FROM users WHERE user_id = ?")->execute([$userId]);
-
         $pdo->commit();
+
         $_SESSION['success'] = "User deleted successfully.";
     } catch (Exception $e) {
         $pdo->rollBack();
@@ -82,7 +90,25 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     exit();
 }
 
-// Get all users
+// Toggle user activation (Deactivation/Activation)
+if (isset($_GET['toggle_active']) && is_numeric($_GET['toggle_active'])) {
+    $userId = $_GET['toggle_active'];
+    $newStatus = $_GET['status'] == '1' ? 0 : 1;
+
+    try {
+        $stmt = $pdo->prepare("UPDATE users SET is_active = ? WHERE user_id = ?");
+        $stmt->execute([$newStatus, $userId]);
+
+        $_SESSION['success'] = $newStatus ? "User account activated." : "User account deactivated.";
+    } catch (Exception $e) {
+        $_SESSION['error'] = "Failed to change activation status: " . $e->getMessage();
+    }
+
+    header("Location: manage-users.php");
+    exit();
+}
+
+// Fetch all users
 $users = $pdo->query("
     SELECT u.*, a.account_number, a.balance 
     FROM users u 
@@ -95,9 +121,35 @@ $users = $pdo->query("
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SecureBank - Manage Users</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 90%;
+            margin: 20px auto;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .dashboard-nav {
+            text-align: center;
+            margin: 20px;
+        }
+        .dashboard-nav a {
+            margin: 0 10px;
+            text-decoration: none;
+            color: blue;
+        }
+        .dashboard-nav a.active {
+            font-weight: bold;
+            color: darkblue;
+        }
+    </style>
 </head>
 <body>
 <div class="container">
@@ -110,6 +162,8 @@ $users = $pdo->query("
         <a href="dashboard.php">Dashboard</a>
         <a href="manage-users.php" class="active">Manage Users</a>
         <a href="manage-loans.php">Manage Loans</a>
+        <a href="role.php">Roles</a>
+        <a href="recent_transactions.php">Transactions</a>
     </nav>
 
     <div class="content">
@@ -130,40 +184,43 @@ $users = $pdo->query("
         <?php else: ?>
             <table class="users-table">
                 <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Account</th>
-                    <th>Balance</th>
-                    <th>Status</th>
-                    <th>Joined On</th>
-                    <th>Actions</th>
-                </tr>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Account</th>
+                        <th>Balance</th>
+                        <th>Status</th>
+                        <th>Active</th>
+                        <th>Joined On</th>
+                        <th>Actions</th>
+                    </tr>
                 </thead>
                 <tbody>
-                <?php foreach ($users as $user): ?>
-                    <tr>
-                        <td><?= htmlspecialchars($user['full_name']) ?></td>
-                        <td><?= htmlspecialchars($user['email']) ?></td>
-                        <td><?= $user['account_number'] ?: 'N/A' ?></td>
-                        <td>$<?= $user['balance'] ? number_format($user['balance'], 2) : '0.00' ?></td>
-                        <td>
-                            <?= $user['status'] === 'approved' ? '✅ Approved' : '⏳ Pending' ?>
-                        </td>
-                        <td><?= date('M j, Y', strtotime($user['created_at'])) ?></td>
-                        <td>
-                            <?php if ($user['status'] !== 'approved'): ?>
-                                <a href="manage-users.php?accept=<?= $user['user_id'] ?>" class="btn btn-sm btn-success">Accept</a>
-                                <a href="manage-users.php?reject=<?= $user['user_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Reject and delete this user?')">Reject</a>
-                            <?php endif; ?>
-                            <?php if ($user['balance'] == 0): ?>
-                                <a href="manage-users.php?delete=<?= $user['user_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this user?')">Delete</a>
-                            <?php else: ?>
-                                <span class="btn btn-sm btn-secondary" title="User must have zero balance to delete">🔒 Can't Delete</span>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
+                    <?php foreach ($users as $user): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($user['full_name']) ?></td>
+                            <td><?= htmlspecialchars($user['email']) ?></td>
+                            <td><?= $user['account_number'] ?: 'N/A' ?></td>
+                            <td>$<?= number_format($user['balance'] ?? 0, 2) ?></td>
+                            <td><?= $user['status'] === 'approved' ? '✅ Approved' : '⏳ Pending' ?></td>
+                            <td><?= $user['is_active'] ? '🟢 Active' : '🔴 Inactive' ?></td>
+                            <td><?= date('M j, Y', strtotime($user['created_at'])) ?></td>
+                            <td>
+                                <?php if ($user['status'] !== 'approved'): ?>
+                                    <a href="manage-users.php?accept=<?= $user['user_id'] ?>" class="btn btn-sm btn-success">Accept</a>
+                                    <a href="manage-users.php?reject=<?= $user['user_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Reject and delete this user?')">Reject</a>
+                                <?php endif; ?>
+
+                                <?php if ($user['status'] === 'approved'): ?>
+                                    <?php if ($user['is_active']): ?>
+                                        <a href="manage-users.php?toggle_active=<?= $user['user_id'] ?>&status=1" class="btn btn-sm btn-warning" onclick="return confirm('Deactivate this user?')">Deactivate</a>
+                                    <?php else: ?>
+                                        <a href="manage-users.php?toggle_active=<?= $user['user_id'] ?>&status=0" class="btn btn-sm btn-success" onclick="return confirm('Activate this user?')">Activate</a>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         <?php endif; ?>
