@@ -1,5 +1,5 @@
 <?php
-// Enable error reporting for debugging purposes
+// Enable error reporting for debugging (optional in production)
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -13,59 +13,101 @@ $userId = $_SESSION['user_id'];
 $error = '';
 $success = '';
 
-// Fetch user's loans
+// Fetch user's account and balance
+$stmt = $pdo->prepare("SELECT account_id, balance FROM accounts WHERE user_id = ?");
+$stmt->execute([$userId]);
+$account = $stmt->fetch();
+if (!$account) {
+    die("User account not found.");
+}
+$accountId = $account['account_id'];
+$balance = $account['balance'];
+
+// Fetch unpaid loans (explicit cast to unsigned int)
 $stmt = $pdo->prepare("
     SELECT * FROM loans 
     WHERE user_id = ? 
+    AND CAST(is_paid AS UNSIGNED) = 0 
     ORDER BY created_at DESC
 ");
 $stmt->execute([$userId]);
 $loans = $stmt->fetchAll();
 
-// Fetch balance from the accounts table (optional - not currently used in this page)
-$accountStmt = $pdo->prepare("SELECT balance FROM accounts WHERE user_id = ?");
-$accountStmt->execute([$userId]);
-$account = $accountStmt->fetch();
-$balance = $account ? $account['balance'] : 0;
-
-// Generate and store CSRF token to prevent double submissions
-if (empty($_SESSION['loan_token'])) {
-    $_SESSION['loan_token'] = bin2hex(random_bytes(32));
+// CSRF token for form submission
+if (empty($_SESSION['loan_payment_token'])) {
+    $_SESSION['loan_payment_token'] = bin2hex(random_bytes(32));
 }
-$token = $_SESSION['loan_token'];
+$token = $_SESSION['loan_payment_token'];
 
+// Handle loan payment
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!isset($_POST['token']) || $_POST['token'] !== $_SESSION['loan_token']) {
-        $error = "Duplicate submission or invalid token.";
+    if (!isset($_POST['token']) || $_POST['token'] !== $_SESSION['loan_payment_token']) {
+        $error = "Invalid or duplicate submission.";
     } else {
-        // Sanitize and validate input
-        $amount = filter_var($_POST['amount'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
-        $term = intval($_POST['term']);
-        $purpose = htmlspecialchars($_POST['purpose'], ENT_QUOTES, 'UTF-8');
+        $loanId = $_POST['loan_id'];
+        $paymentAmount = filter_var($_POST['payment_amount'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
 
-        if ($amount < 100) {
-            $error = "Minimum loan amount is $100";
-        } elseif ($term < 1 || $term > 60) {
-            $error = "Loan term must be between 1 and 60 months";
+        // Validate input
+        if ($paymentAmount <= 0) {
+            $error = "Invalid payment amount.";
         } else {
-            // Calculate interest rate
-            $interestRate = 5.0;
-            if ($amount > 10000) $interestRate = 4.5;
-            if ($term > 36) $interestRate += 1.0;
+            // Verify loan belongs to user
+            $stmt = $pdo->prepare("SELECT * FROM loans WHERE loan_id = ? AND user_id = ?");
+            $stmt->execute([$loanId, $userId]);
+            $loan = $stmt->fetch();
 
-            try {
-                $stmt = $pdo->prepare("
-                    INSERT INTO loans (user_id, amount, interest_rate, term_months, status, purpose)
-                    VALUES (?, ?, ?, ?, 'pending', ?)
-                ");
-                $stmt->execute([$userId, $amount, $interestRate, $term, $purpose]);
+            if (!$loan) {
+                $error = "Loan not found.";
+            } elseif ($loan['is_paid']) {
+                $error = "Loan is already marked as paid.";
+            } elseif ($paymentAmount > $loan['total_due']) {
+                $error = "Payment exceeds total due.";
+            } elseif ($balance < $paymentAmount) {
+                $error = "Insufficient balance.";
+            } else {
+                try {
+                    // Begin transaction
+                    $pdo->beginTransaction();
 
-                // Regenerate token to prevent double submissions
-                $_SESSION['loan_token'] = bin2hex(random_bytes(32));
+                    // Deduct from account
+                    $stmt = $pdo->prepare("UPDATE accounts SET balance = balance - ? WHERE user_id = ?");
+                    $stmt->execute([$paymentAmount, $userId]);
 
-                $success = "Loan application submitted successfully!";
-            } catch (Exception $e) {
-                $error = "Failed to submit loan application: " . $e->getMessage();
+                    $remaining = round($loan['total_due'] - $paymentAmount, 2);
+
+                    if ($remaining > 0) {
+                        $stmt = $pdo->prepare("UPDATE loans SET total_due = ? WHERE loan_id = ?");
+                        $stmt->execute([$remaining, $loanId]);
+
+                        $desc = "Partial Loan Payment";
+                    } else {
+                        $stmt = $pdo->prepare("UPDATE loans SET is_paid = 1, total_due = 0 WHERE loan_id = ?");
+                        $stmt->execute([$loanId]);
+
+                        $desc = "Full Loan Payment";
+
+                        // Optional: Delete loan after full payment
+                        $stmt = $pdo->prepare("DELETE FROM loans WHERE loan_id = ?");
+                        $stmt->execute([$loanId]);
+                    }
+
+                    // Log transaction
+                    $stmt = $pdo->prepare("
+                        INSERT INTO transactions (account_id, type, amount, description, related_account_id, created_at)
+                        VALUES (?, 'loan_payment', ?, ?, NULL, ?)
+                    ");
+                    $stmt->execute([$accountId, $paymentAmount, $desc, date('Y-m-d H:i:s')]);
+
+                    $pdo->commit();
+
+                    $_SESSION['loan_payment_token'] = bin2hex(random_bytes(32));
+                    $_SESSION['success_message'] = $desc . " successful.";
+                    header("Location: loan-payment.php");
+                    exit();
+                } catch (Exception $e) {
+                    $pdo->rollBack();
+                    $error = "Payment failed: " . $e->getMessage();
+                }
             }
         }
     }
@@ -76,14 +118,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureBank - Loans</title>
+    <title>SecureBank - Loan Payment</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <script>
+        <?php if (isset($_SESSION['success_message'])): ?>
+        window.onload = function() {
+            alert("<?= $_SESSION['success_message'] ?>");
+            <?php unset($_SESSION['success_message']); ?>
+        };
+        <?php endif; ?>
+    </script>
 </head>
 <body>
 <div class="container">
     <header>
-        <h1>Loan Management</h1>
+        <h1>Loan Payment</h1>
         <a href="../logout.php" class="logout">Logout</a>
     </header>
 
@@ -96,55 +145,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </nav>
 
     <div class="content">
-        <h2>Apply for a Loan</h2>
+        <h2>Make a Loan Payment</h2>
 
         <?php if ($error): ?>
             <div class="alert alert-danger"><?= $error ?></div>
         <?php endif; ?>
 
-        <?php if ($success): ?>
-            <div class="alert alert-success"><?= $success ?></div>
-        <?php endif; ?>
-
         <form method="POST">
             <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
             <div class="form-group">
-                <label>Loan Amount ($)</label>
-                <input type="number" name="amount" min="100" step="100" required>
+                <label for="loan_id">Loan ID</label>
+                <input type="number" name="loan_id" id="loan_id" required>
             </div>
             <div class="form-group">
-                <label>Loan Term (months)</label>
-                <input type="number" name="term" min="1" max="60" required>
+                <label for="payment_amount">Payment Amount ($)</label>
+                <input type="number" name="payment_amount" id="payment_amount" min="0.01" step="0.01" required>
             </div>
-            <div class="form-group">
-                <label>Purpose</label>
-                <textarea name="purpose" required></textarea>
-            </div>
-            <button type="submit" class="btn">Apply for Loan</button>
+            <button type="submit" class="btn">Submit Payment</button>
         </form>
 
-        <h2>Your Loans</h2>
+        <h2>Your Unpaid Loans</h2>
 
         <?php if (empty($loans)): ?>
             <p>You have no active loans.</p>
         <?php else: ?>
             <table class="loans-table">
                 <thead>
-                    <tr>
-                        <th>Amount</th>
-                        <th>Interest Rate</th>
-                        <th>Term</th>
-                        <th>Status</th>
-                        <th>Applied On</th>
-                    </tr>
+                <tr>
+                    <th>Amount Due</th>
+                    <th>Interest Rate</th>
+                    <th>Term</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                </tr>
                 </thead>
                 <tbody>
                 <?php foreach ($loans as $loan): ?>
                     <tr>
-                        <td>$<?= number_format($loan['amount'], 2) ?></td>
+                        <td>$<?= number_format($loan['total_due'], 2) ?></td>
                         <td><?= $loan['interest_rate'] ?>%</td>
                         <td><?= $loan['term_months'] ?> months</td>
-                        <td class="status-<?= $loan['status'] ?>"><?= ucfirst($loan['status']) ?></td>
+                        <td><?= $loan['is_paid'] ? 'Paid' : 'Active' ?></td>
                         <td><?= date('M j, Y', strtotime($loan['created_at'])) ?></td>
                     </tr>
                 <?php endforeach; ?>

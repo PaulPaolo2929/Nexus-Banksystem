@@ -66,6 +66,7 @@ $transactions = $stmt->fetchAll();
                     <a href="deposit.php" class="btn">Deposit Money</a>
                     <a href="withdraw.php" class="btn">Withdraw Funds</a>
                     <a href="transfer.php" class="btn">Transfer Funds</a>
+                    <a href="investment.php" class="btn">Investment</a>
                     <a href="transactions.php" class="btn">View Transactions</a>
                     <a href="loan.php" class="btn">Apply for Loan</a>
                     <a href="loan-payment.php" class="btn">Pay Loan</a>
