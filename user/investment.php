@@ -9,65 +9,106 @@ $userId = $_SESSION['user_id'];
 $error = '';
 $success = '';
 
-// Fetch matured investments that are eligible for withdrawal
-$stmt = $pdo->prepare("
-    SELECT inv.investment_id, inv.amount, inv.interest_rate, inv.created_at, plans.plan_name
-    FROM investments inv
-    JOIN investment_plans plans ON inv.plan_id = plans.plan_id
-    WHERE inv.user_id = ? AND inv.status = 'matured'
-");
+// Fetch available investment plans
+$stmt = $pdo->query("SELECT * FROM investment_plans ORDER BY duration_months ASC");
+$plans = $stmt->fetchAll();
+
+// Fetch user's account balance
+$stmt = $pdo->prepare("SELECT account_id, balance FROM accounts WHERE user_id = ?");
 $stmt->execute([$userId]);
-$maturedInvestments = $stmt->fetchAll();
+$account = $stmt->fetch();
+if (!$account) {
+    die("Account not found.");
+}
+$balance = $account['balance'];
 
-// Handle withdrawal request
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['withdraw_id'])) {
-    $investmentId = $_POST['withdraw_id'];
+// Handle new investment form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['plan_id'], $_POST['amount'])) {
+    $planId = $_POST['plan_id'];
+    $amount = (float) $_POST['amount'];
 
-    // Fetch investment details
-    $stmt = $pdo->prepare("
-        SELECT inv.*, plans.interest_rate, plans.duration_months 
-        FROM investments inv
-        JOIN investment_plans plans ON inv.plan_id = plans.plan_id
-        WHERE inv.investment_id = ? AND inv.user_id = ?
-    ");
-    $stmt->execute([$investmentId, $userId]);
-    $investment = $stmt->fetch();
+    $stmt = $pdo->prepare("SELECT * FROM investment_plans WHERE plan_id = ?");
+    $stmt->execute([$planId]);
+    $plan = $stmt->fetch();
 
-    if (!$investment) {
-        $error = "Investment not found.";
-    } elseif ($investment['status'] !== 'matured') {
-        $error = "Investment has not matured yet.";
+    if (!$plan) {
+        $error = "Invalid investment plan.";
+    } elseif ($amount < $plan['min_amount']) {
+        $error = "Amount must be at least $" . number_format($plan['min_amount'], 2);
+    } elseif ($amount > $balance) {
+        $error = "Insufficient balance.";
     } else {
         try {
-            // Begin transaction
             $pdo->beginTransaction();
 
-            // Calculate total amount (investment + interest)
-            $totalAmount = $investment['amount'] + ($investment['amount'] * $investment['interest_rate'] / 100);
+            $stmt = $pdo->prepare("UPDATE accounts SET balance = balance - ? WHERE user_id = ?");
+            $stmt->execute([$amount, $userId]);
 
-            // Update user's account balance
-            $stmt = $pdo->prepare("UPDATE accounts SET balance = balance + ? WHERE user_id = ?");
-            $stmt->execute([$totalAmount, $userId]);
+            $stmt = $pdo->prepare("INSERT INTO investments (user_id, plan_id, amount, created_at, status) VALUES (?, ?, ?, NOW(), 'active')");
+            $stmt->execute([$userId, $planId, $amount]);
 
-            // Update investment status to 'withdrawn'
-            $stmt = $pdo->prepare("UPDATE investments SET status = 'withdrawn', matured_at = NOW() WHERE investment_id = ?");
-            $stmt->execute([$investmentId]);
-
-            // Commit transaction
             $pdo->commit();
-            $_SESSION['success'] = "Withdrawal of $" . number_format($totalAmount, 2) . " successful!";
+            $_SESSION['success'] = "Investment of $" . number_format($amount, 2) . " placed in " . htmlspecialchars($plan['plan_name']) . "!";
             header("Location: investment.php");
             exit();
         } catch (Exception $e) {
             $pdo->rollBack();
-            $error = "Error processing withdrawal: " . $e->getMessage();
+            $error = "Error placing investment: " . $e->getMessage();
         }
     }
 }
 
-// Fetch user's investments to show status and options for withdrawal
+// Handle withdrawal of matured investment
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['withdraw_investment_id'])) {
+    $investmentId = $_POST['withdraw_investment_id'];
+
+    $stmt = $pdo->prepare("
+        SELECT inv.*, plans.interest_rate 
+        FROM investments inv 
+        JOIN investment_plans plans ON inv.plan_id = plans.plan_id
+        WHERE inv.investment_id = ? AND inv.user_id = ? AND inv.status = 'matured' AND inv.withdrawn_at IS NULL
+    ");
+    $stmt->execute([$investmentId, $userId]);
+    $investment = $stmt->fetch();
+
+    if ($investment) {
+        try {
+            $pdo->beginTransaction();
+
+            $totalReturn = $investment['amount'] + ($investment['amount'] * $investment['interest_rate'] / 100);
+
+            $stmt = $pdo->prepare("UPDATE accounts SET balance = balance + ? WHERE user_id = ?");
+            $stmt->execute([$totalReturn, $userId]);
+
+            $stmt = $pdo->prepare("UPDATE investments SET withdrawn_at = NOW() WHERE investment_id = ?");
+            $stmt->execute([$investmentId]);
+
+            $pdo->commit();
+            $_SESSION['success'] = "Successfully withdrawn $" . number_format($totalReturn, 2) . " from matured investment.";
+            header("Location: investment.php");
+            exit();
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            $error = "Withdrawal failed: " . $e->getMessage();
+        }
+    } else {
+        $error = "Invalid or already withdrawn investment.";
+    }
+}
+
+// Update matured investments (once matured, mark them as such)
 $stmt = $pdo->prepare("
-    SELECT inv.*, plans.plan_name, plans.interest_rate, plans.duration_months
+    UPDATE investments inv
+    JOIN investment_plans plans ON inv.plan_id = plans.plan_id
+    SET inv.status = 'matured', inv.matured_at = NOW()
+    WHERE inv.status = 'active' 
+    AND DATE_ADD(inv.created_at, INTERVAL plans.duration_months MONTH) <= NOW()
+");
+$stmt->execute();
+
+// Fetch user's investment history
+$stmt = $pdo->prepare("
+    SELECT inv.*, plans.plan_name, plans.interest_rate, plans.duration_months 
     FROM investments inv
     JOIN investment_plans plans ON inv.plan_id = plans.plan_id
     WHERE inv.user_id = ?
@@ -84,10 +125,7 @@ $investments = $stmt->fetchAll();
     <title>SecureBank - Investments</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <style>
-        .container {
-            max-width: 800px;
-            margin: auto;
-        }
+        .container { max-width: 800px; margin: auto; }
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; }
         .form-group input, .form-group select {
@@ -113,7 +151,6 @@ $investments = $stmt->fetchAll();
         <a href="deposit.php">Deposit</a>
         <a href="withdraw.php">Withdraw</a>
         <a href="transfer.php">Transfer</a>
-        <a href="investment.php" class="active">Investment</a>
         <a href="loan-payment.php">Loan Payment</a>
         <a href="transactions.php">Transactions</a>
     </nav>
@@ -127,6 +164,28 @@ $investments = $stmt->fetchAll();
         <?php unset($_SESSION['success']); ?>
     <?php endif; ?>
 
+    <h2>Make a New Investment</h2>
+    <form method="post">
+        <div class="form-group">
+            <label for="plan_id">Select Investment Plan:</label>
+            <select name="plan_id" id="plan_id" required>
+                <option value="">-- Choose a Plan --</option>
+                <?php foreach ($plans as $plan): ?>
+                    <option value="<?= $plan['plan_id'] ?>">
+                        <?= htmlspecialchars($plan['plan_name']) ?> - <?= $plan['interest_rate'] ?>% for <?= $plan['duration_months'] ?> months (Min: $<?= number_format($plan['min_amount'], 2) ?>)
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="amount">Investment Amount ($):</label>
+            <input type="number" name="amount" id="amount" step="0.01" required>
+        </div>
+
+        <button type="submit" class="btn">Invest</button>
+    </form>
+
     <h2>Your Investment History</h2>
     <?php if (empty($investments)): ?>
         <p>No investments yet.</p>
@@ -138,8 +197,8 @@ $investments = $stmt->fetchAll();
                     <th>Amount</th>
                     <th>Interest</th>
                     <th>Duration</th>
+                    <th>Start Date</th>
                     <th>Status</th>
-                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -149,13 +208,20 @@ $investments = $stmt->fetchAll();
                         <td>$<?= number_format($inv['amount'], 2) ?></td>
                         <td><?= $inv['interest_rate'] ?>%</td>
                         <td><?= $inv['duration_months'] ?> months</td>
-                        <td><?= $inv['status'] ?></td>
+                        <td><?= date('Y-m-d', strtotime($inv['created_at'])) ?></td>
                         <td>
                             <?php if ($inv['status'] === 'matured'): ?>
-                                <form method="post" action="investment.php" style="display:inline;">
-                                    <input type="hidden" name="withdraw_id" value="<?= $inv['investment_id'] ?>">
-                                    <button type="submit" class="btn">Withdraw</button>
-                                </form>
+                                <span>Matured</span><br>
+                                <?php if ($inv['withdrawn_at'] === null): ?>
+                                    <form method="post">
+                                        <input type="hidden" name="withdraw_investment_id" value="<?= $inv['investment_id'] ?>">
+                                        <button type="submit" class="btn" style="margin-top: 5px;">Withdraw</button>
+                                    </form>
+                                <?php else: ?>
+                                    <span>Withdrawn on <?= date('Y-m-d', strtotime($inv['withdrawn_at'])) ?></span>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <span>Active</span>
                             <?php endif; ?>
                         </td>
                     </tr>

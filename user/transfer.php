@@ -1,98 +1,88 @@
 <?php
-require_once '../includes/db.php';
-require_once '../includes/functions.php';
+// Enable error reporting
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+session_start();
+
+require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/otp.php';
 
 redirectIfNotLoggedIn();
 
 $userId = $_SESSION['user_id'];
 $error = '';
 $success = '';
+$balance = 0;
+
+// Get sender's account
+$stmt = $pdo->prepare("SELECT * FROM accounts WHERE user_id = ?");
+$stmt->execute([$userId]);
+$fromAccount = $stmt->fetch();
+
+if (!$fromAccount) {
+    $error = "Your account could not be found.";
+} else {
+    $accountId = $fromAccount['account_id'];
+    $accountNumber = $fromAccount['account_number'];
+
+    // Get latest balance
+    $stmt = $pdo->prepare("SELECT balance FROM accounts WHERE account_id = ?");
+    $stmt->execute([$accountId]);
+    $balance = $stmt->fetchColumn();
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $amount = (float) filter_var($_POST['amount'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
-    $toAccount = trim($_POST['to_account']);
-    $description = trim($_POST['description']);
+    $toAccount = trim($_POST['to_account'] ?? '');
+    $amount = floatval($_POST['amount'] ?? 0);
+    $description = trim($_POST['description'] ?? '');
 
     if ($amount <= 0) {
-        $error = "Amount must be greater than 0";
-    } elseif (empty($toAccount)) {
-        $error = "Recipient account number is required";
+        $error = "Please enter a valid amount.";
+    } elseif ($amount > $balance) {
+        $error = "Insufficient balance for this transfer.";
+    } elseif ($toAccount === $accountNumber) {
+        $error = "You cannot transfer to your own account.";
     } else {
-        try {
-            $pdo->beginTransaction();
+        // Check if recipient exists
+        $stmt = $pdo->prepare("SELECT account_id FROM accounts WHERE account_number = ?");
+        $stmt->execute([$toAccount]);
+        $recipientAccount = $stmt->fetch();
 
-            // Get sender's account
-            $stmt = $pdo->prepare("SELECT account_id, balance, account_number FROM accounts WHERE user_id = ? FOR UPDATE");
+        if (!$recipientAccount) {
+            $error = "Recipient account not found.";
+        } else {
+            // Get user's email
+            $stmt = $pdo->prepare("SELECT email FROM users WHERE user_id = ?");
             $stmt->execute([$userId]);
-            $fromAccount = $stmt->fetch();
+            $user = $stmt->fetch();
+            $email = $user['email'] ?? '';
 
-            // Get recipient's account
-            $stmt = $pdo->prepare("SELECT account_id FROM accounts WHERE account_number = ? FOR UPDATE");
-            $stmt->execute([$toAccount]);
-            $recipientAccount = $stmt->fetch();
+            if ($email && generateOTP($email)) {
+                // Store the pending transfer in session for OTP verification
+                $_SESSION['pending_transfer'] = [
+                    'amount' => $amount,
+                    'to_account' => $toAccount,
+                    'description' => $description
+                ];
 
-            if ($fromAccount && $recipientAccount) {
-                if ($fromAccount['account_number'] === $toAccount) {
-                    $error = "Cannot transfer to your own account";
-                } elseif ((float)$fromAccount['balance'] >= $amount) {
-                    // Deduct from sender
-                    $stmt = $pdo->prepare("UPDATE accounts SET balance = balance - ? WHERE account_id = ?");
-                    $stmt->execute([$amount, $fromAccount['account_id']]);
-
-                    // Add to recipient
-                    $stmt = $pdo->prepare("UPDATE accounts SET balance = balance + ? WHERE account_id = ?");
-                    $stmt->execute([$amount, $recipientAccount['account_id']]);
-
-                    // Sender transaction
-                    $stmt = $pdo->prepare("
-                        INSERT INTO transactions (account_id, type, amount, description, related_account_id)
-                        VALUES (?, 'transfer_out', ?, ?, ?)
-                    ");
-                    $stmt->execute([
-                        $fromAccount['account_id'],
-                        $amount,
-                        $description ?: "Transfer to $toAccount",
-                        $recipientAccount['account_id']
-                    ]);
-
-                    // Recipient transaction
-                    $stmt = $pdo->prepare("
-                        INSERT INTO transactions (account_id, type, amount, description, related_account_id)
-                        VALUES (?, 'transfer_in', ?, ?, ?)
-                    ");
-                    $stmt->execute([
-                        $recipientAccount['account_id'],
-                        $amount,
-                        $description ?: "Transfer from {$fromAccount['account_number']}",
-                        $fromAccount['account_id']
-                    ]);
-
-                    $pdo->commit();
-                    $success = "Successfully transferred $" . number_format($amount, 2) . " to account $toAccount";
-                } else {
-                    $error = "Insufficient funds";
-                }
+                header("Location: ../otp-verification.php?type=transfer");
+                exit();
             } else {
-                $error = "One or both accounts not found";
+                $error = "Failed to send OTP. Please try again.";
             }
-        } catch (Exception $e) {
-            $pdo->rollBack();
-            $error = "Transfer failed: " . $e->getMessage();
         }
     }
 }
-
-// Get current balance
-$stmt = $pdo->prepare("SELECT balance FROM accounts WHERE user_id = ?");
-$stmt->execute([$userId]);
-$balance = $stmt->fetchColumn();
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureBank - Transfer</title>
+    <title>SecureBank - Transfer Funds</title>
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
@@ -112,15 +102,11 @@ $balance = $stmt->fetchColumn();
 
         <div class="content">
             <?php if ($error): ?>
-                <div class="alert alert-danger">
-                    <?= htmlspecialchars($error) ?>
-                </div>
+                <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
             <?php endif; ?>
 
             <?php if ($success): ?>
-                <div class="alert alert-success">
-                    <?= htmlspecialchars($success) ?>
-                </div>
+                <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
             <?php endif; ?>
 
             <div class="balance-info">
@@ -143,7 +129,7 @@ $balance = $stmt->fetchColumn();
                     <input type="text" name="description">
                 </div>
 
-                <button type="submit" class="btn">Transfer</button>
+                <button type="submit" class="btn">Send OTP & Proceed</button>
             </form>
         </div>
     </div>
