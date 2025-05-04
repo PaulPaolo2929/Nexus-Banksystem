@@ -57,32 +57,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SecureBank - Login</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="./assets/css/login.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Login to SecureBank</h1>
-
-        <?php if ($error): ?>
-            <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
-        <?php endif; ?>
-
-        <form method="POST">
-            <div class="form-group">
-                <label>Email</label>
-                <input type="email" name="email" required>
-            </div>
-
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" required>
-            </div>
-
-            <button type="submit" class="btn">Login</button>
-        </form>
-
-        <p>Don't have an account? <a href="register.php">Register here</a></p>
-        <p><a href="forgot-password.php">Forgot your password?</a></p>
+  <div class="wrapper">
+    <div class="left-panel">
+        <div>
+        <img src="./assets/images/Logo.png" alt="Nexus Logo" class="logo" />
+        </div>
+        <div class="handshake-container">
+            <img src="./assets/images/handshake.png" alt="Handshake" class="handshake" />
+        </div>
+    
+      <div class="content">
+        <h2 class="headline">Partnership for<br>Business Growth</h2>
+        <p class="description">
+          Welcome to Nexus Bank System, your trusted partner in secure and efficient banking solutions.
+        </p>
+      </div>
     </div>
+
+    <div class="container" >
+        <div class="login-form">
+                 <p style="text-align: start;"> Welcome Back </p> 
+                <h1 style="text-align: start;">Login to your Account</h1>
+
+                <?php if ($error): ?>
+                    <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+                <?php endif; ?>
+
+                <form method="POST">
+                    <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" required>
+                    </div>
+
+                    <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" required>
+                    </div>
+                    <p style="text-align: end; margin-top: 0; margin-bottom: 0.5rem; "><a href="forgot-password.php">Forgot your password?</a></p>
+                    <button type="submit" class="btn">LOGIN</button>
+                </form>
+            
+                
+                <p>Don't have an account? <a href="register.php">Register here</a></p>
+        </div>
+    </div>
+  </div>
 </body>
 </html>
