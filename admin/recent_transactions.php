@@ -73,11 +73,12 @@ $conn->close();
         </style>
     <!-- Navigation Menu -->
 <nav class="dashboard-nav">
-    <a href="dashboard.php">Dashboard</a>
-    <a href="manage-users.php">Manage Users</a>
-    <a href="manage-loans.php">Manage Loans</a>
-    <a href="role.php" class="active">Roles</a>
-    <a href="recent_transactions.php">Transactions</a>
+            <a href="manage-users.php">Manage Users</a>
+            <a href="manage-loans.php">Manage Loans</a>
+            <a href="manage-investments.php">Manage Investments</a>
+            <a href="track-investments.php">Users Investments</a>
+            <a href="role.php">Roles</a>
+            <a href="recent_transactions.php">Transactions</a>
 </nav>
 
 <div style="max-width: 1000px; margin: 0 auto; padding: 20px; text-align: center;">

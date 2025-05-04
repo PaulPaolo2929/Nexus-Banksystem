@@ -1,0 +1,358 @@
+/* styles.css */
+
+/* reset & globals */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body, html {
+    background-color: #585899;
+    font-family: 'Inter', sans-serif;
+    height: 100vh;
+    margin: 0;
+    overflow: auto;
+  }
+  
+  /* outer container */
+  .container {
+    background-color: #ffffff;
+    width: 400px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* heading */
+  .container h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937; /* slate‐800 */
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  
+  /* error alert */
+  .alert {
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+  }
+  .alert-danger {
+    background-color: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+  }
+  
+  /* form */
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  .form-group label {
+    display: block;
+    font-size: 0.875rem;
+    color: #4b5563; /* gray-600 */
+    margin-bottom: 0.5rem;
+  }
+  .form-group input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    color: #111827; /* gray-900 */
+    background-color: #f9fafb; /* gray-50 */
+    border: 1px solid #d1d5db; /* gray-300 */
+    border-radius: 0.375rem;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus {
+    outline: none;
+    border-color: #6366f1; /* indigo-500 */
+    background-color: #fff;
+  }
+  
+  /* submit button */
+  .btn {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #ffffff;
+    background-color: #4f46e5; /* indigo-600 */
+    border: none;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: background-color 0.2s;
+  }
+  .btn:hover {
+    background-color: #4338ca; /* indigo-700 */
+  }
+  
+  /* links & paragraphs */
+  p {
+    font-size: 0.875rem;
+    color: #6b7280; /* gray-500 */
+    text-align: center;
+    margin-top: 1rem;
+  }
+  p a {
+    color: #4f46e5;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  p a:hover {
+    text-decoration: underline;
+  }
+  
+
+ /* Import font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: #100D2A;
+}
+
+.left-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to top, #585899, #100D2A);
+  color: white;
+  height: 100%;
+  text-align: center;
+  max-width: 35%;
+ 
+  margin: auto; /* Center the panel horizontally and vertically */
+}
+
+
+.content{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.logo {
+  width: 11rem;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  letter-spacing: 2px;
+  color: #d1d5db;
+  text-transform: uppercase;
+  
+}
+
+.handshake-container {
+  width: 100%;
+}
+
+.handshake {
+  width: 100%;
+  height: auto;
+  max-width: 100%; /* max width for larger screens */
+  min-width: 200px; /* min width for smaller screens */
+  display: block; /* removes any default whitespace below image */
+}
+
+.headline {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.description {
+  font-size: 0.875rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+  margin: 2.5rem 2.5rem 0.5rem 2.5rem;
+  text-align: center;
+}
+
+/* Wrapper for left and right sections */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .wrapper {
+    display: flex;
+    height: 100%;
+  }
+  
+  
+  /* Left panel width */
+  .left-panel {
+    flex: 1;
+    min-width: 315px;
+    min-height: 600px;
+  }
+  
+  .container {
+    flex: 1;
+    min-width: 315px;
+    min-height: 600px;
+  }
+  /* Right panel width */
+  .container {
+    flex: 1;
+    max-width: 100%;
+    height: 100%;
+    background-color: #ffffff;
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* .login-form{
+    flex: 1;
+    margin: auto;
+    width: 100%;
+    background-color: rgb(255, 255, 255);
+    max-height:600px ;
+    padding: 5rem 2rem;
+    border-radius: 0.8rem;
+  } */
+  
+/* ===============input fields================= */
+
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .form-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .form-row .form-field {
+    flex: 1;
+    min-width: 100px;
+  }
+  
+  .form-field {
+    position: relative;
+    width: 100%;
+  }
+  
+  .form-field input {
+    width: 100%;
+    padding: 20px 12px 8px;
+    font-size: 15px;
+    border: 1.5px solid #ccc;
+    border-radius: 0.375rem;
+    background-color: #ffffff;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+  
+  .form-field input:focus {
+    border-color: #333;
+    background-color: #ffffff;
+  }
+  
+  .form-field label {
+    position: absolute;
+    top: 56%;
+    left: 13px;
+    transform: translateY(-70%);
+    background-color: #ffffff;
+    padding: 0 10px;
+    color: #797979;
+    pointer-events: none;
+    transition: 0.2s ease all;
+  }
+  
+  .form-field input:focus + label,
+  .form-field input:not(:placeholder-shown) + label {
+    top: -5px;
+    left: 13px;
+    font-size: 13px;
+    color: #333;
+    transform: translateY(0);
+  }
+  
+  .btn-submit {
+    width: 100%;
+    padding: 14px;
+    background-color: #3D3C6F;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .btn-submit:hover {
+    background-color: #585899;
+  }
+  
+
+  
+@media (max-width: 700px) {
+  .wrapper {
+    flex-direction: column;
+  }
+
+  .left-panel,
+  .container {
+    flex: none;
+    width: 100%;
+    max-width: 100%;
+  
+  }
+
+  .left-panel {
+      
+      min-width: 310px;
+  }
+
+  .container {
+      padding: 0rem 1rem;
+      border-radius: 0.5rem;
+  }
+
+  .handshake-container {
+      max-width: 100px;
+      max-width: 100%; /* max width for larger screens */
+      min-width: 100%; /* min width for smaller screens */
+  }
+
+  .handshake{
+      width:100% ;
+  }
+  .login-form {
+      all: unset;
+      padding: 0;
+    }
+  
+}

@@ -45,6 +45,7 @@ $transactions = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SecureBank - Dashboard</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 </head>
 <body>
     <div class="container">
@@ -103,7 +104,67 @@ $transactions = $stmt->fetchAll();
                     <a href="transactions.php" class="view-all">View All Transactions</a>
                 <?php endif; ?>
             </div>
+
+            <div class="weekly-activity-chart">
+                <h2>Weekly Activity </h2>
+                <div id="chart"></div>
+            </div>
         </div>
     </div>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        fetch('get_weekly_activity.php')
+            .then(response => response.json())
+            .then(data => {
+                const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                const deposits = Array(7).fill(0);
+                const withdrawals = Array(7).fill(0);
+
+                data.forEach(entry => {
+                    const index = days.indexOf(entry.day);
+                    if (index !== -1) {
+                        deposits[index] = parseFloat(entry.total_deposit);
+                        withdrawals[index] = parseFloat(entry.total_withdraw);
+                    }
+                });
+
+                const options = {
+                    chart: {
+                        type: 'bar',
+                        height: 350
+                    },
+                    title: {
+                        text: ' '
+                    },
+                    xaxis: {
+                        categories: days
+                    },
+                    yaxis: {
+                        title: {
+                            text: 'Amount ($)'
+                        }
+                    },
+                    series: [
+                        {
+                            name: 'Deposits',
+                            data: deposits
+                        },
+                        {
+                            name: 'Withdrawals',
+                            data: withdrawals
+                        }
+                    ],
+                    colors: ['#706EFF', '#343C6A']
+                };
+
+                const chart = new ApexCharts(document.querySelector("#chart"), options);
+                chart.render();
+            })
+            .catch(error => {
+                console.error('Error loading chart data:', error);
+            });
+    });
+    </script>
 </body>
 </html>

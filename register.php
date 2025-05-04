@@ -119,39 +119,99 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <title>Register - SecureBank</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="./assets/css/register.css">
 </head>
 <body>
-<div class="container">
-    <h1>Create Your Account</h1>
 
-    <?php if (!empty($errors)): ?>
-        <div class="alert alert-danger">
-            <?php foreach ($errors as $error): ?>
-                <p><?= $error ?></p>
-            <?php endforeach; ?>
+<div class="wrapper">
+            <div class="left-panel">
+                <div>
+                <img src="./assets/images/Logo.png" alt="Nexus Logo" class="logo" />
+                </div>
+                <div class="handshake-container">
+                    <img src="./assets/images/handshake.png" alt="Handshake" class="handshake" />
+                </div>
+            
+            <div class="content">
+                <h2 class="headline">Partnership for<br>Business Growth</h2>
+                <p class="description">
+                Welcome to Nexus Bank System, your trusted partner in secure and efficient banking solutions.
+                </p>
+            </div>
+            </div>
+
+        <div class="container">
+              <div class="login-form">
+        <p style="text-align: start;"> Let's get you Started </p> 
+        <h1 style="text-align: start;">Create your Account</h1>
+
+            <?php if (!empty($errors)): ?>
+                <div class="alert alert-danger">
+                    <?php foreach ($errors as $error): ?>
+                        <p><?= $error ?></p>
+                    <?php endforeach; ?>
+                </div>
+            <?php elseif (!empty($success)): ?>
+                <div class="alert alert-success">
+                    <p><?= $success ?></p>
+                </div>
+            <?php endif; ?>
+
+            <form method="POST" id="registrationForm">
+  <div class="form-group">
+    <div class="form-field">
+      <input type="text" name="full_name" required placeholder="" value="<?= htmlspecialchars($data['full_name']) ?>">
+      <label>Full Name</label>
+    </div>
+
+    <div class="form-row">
+    <div class="form-field">
+      <input type="email" name="email" required placeholder=" " value="<?= htmlspecialchars($data['email']) ?>">
+      <label>Email</label>
+    </div>
+    <div class="form-field">
+      <input type="text" name="address" required placeholder=" " value="<?= htmlspecialchars($data['address']) ?>">
+      <label>Address</label>
+    </div>
+    </div>
+    <div class="form-field">
+      <input type="text" name="occupation" required placeholder=" " value="<?= htmlspecialchars($data['occupation']) ?>">
+      <label>Occupation</label>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <input type="tel" name="phone" required placeholder=" " value="<?= htmlspecialchars($data['phone']) ?>">
+        <label>Phone</label>
+      </div>
+      <div class="form-field">
+        <input type="number" name="age" min="18" max="120" required placeholder=" " value="<?= htmlspecialchars($data['age']) ?>">
+        <label>Age</label>
+      </div>
+      <div class="form-field">
+        <input type="number" name="birth_year" min="1900" max="<?= date('Y') ?>" required placeholder=" " value="<?= htmlspecialchars($data['birth_year']) ?>">
+        <label>Birth Year</label>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <input type="password" name="password" required placeholder=" ">
+      <label>Password</label>
+    </div>
+
+    <div class="form-field">
+      <input type="password" name="confirm_password" required placeholder=" ">
+      <label>Confirm Password</label>
+    </div>
+  </div>
+
+  <button type="submit" class="btn-submit">Register</button>
+</form>
+
+            <div class="login-link">
+                Already have an account? <a href="login.php">Sign in</a>
+            </div>
         </div>
-    <?php elseif (!empty($success)): ?>
-        <div class="alert alert-success">
-            <p><?= $success ?></p>
-        </div>
-    <?php endif; ?>
-
-    <form method="POST" id="registrationForm">
-        <input type="text" name="full_name" placeholder="Full Name" required value="<?= htmlspecialchars($data['full_name']) ?>">
-        <input type="email" name="email" placeholder="Email" required value="<?= htmlspecialchars($data['email']) ?>">
-        <input type="text" name="address" placeholder="Address" required value="<?= htmlspecialchars($data['address']) ?>">
-        <input type="text" name="occupation" placeholder="Occupation" required value="<?= htmlspecialchars($data['occupation']) ?>">
-        <input type="tel" name="phone" placeholder="Phone Number" required value="<?= htmlspecialchars($data['phone']) ?>">
-        <input type="number" name="age" placeholder="Age" min="18" max="120" required value="<?= htmlspecialchars($data['age']) ?>">
-        <input type="number" name="birth_year" placeholder="Birth Year" min="1900" max="<?= date('Y') ?>" required value="<?= htmlspecialchars($data['birth_year']) ?>">
-        <input type="password" name="password" placeholder="Password" required>
-        <input type="password" name="confirm_password" placeholder="Confirm Password" required>
-        <button type="submit" class="btn btn-primary">Register</button>
-    </form>
-
-    <div class="login-link">
-        Already have an account? <a href="login.php">Sign in</a>
     </div>
 </div>
 </body>
