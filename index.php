@@ -35,14 +35,14 @@ if (isLoggedIn()) {
             </div>
             
             <div class="hero-image">
-                <img src="assets/images/banking-hero.jpg" alt="Digital Banking">
+                <img src="assets/images/.jpg" alt="Digital Banking">
             </div>
         </div>
         
         <div class="features">
             <div class="feature-card">
                 <h3>Secure Transactions</h3>
-                <p>Bank-level encryption and OTP verification for all your transactions.</p>
+                <p>Bank-level encryption and OTP verification.</p>
             </div>
             
             <div class="feature-card">

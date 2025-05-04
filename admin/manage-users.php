@@ -218,6 +218,10 @@ $users = $pdo->query("
                                     <?php else: ?>
                                         <a href="manage-users.php?toggle_active=<?= $user['user_id'] ?>&status=0" class="btn btn-sm btn-success" onclick="return confirm('Activate this user?')">Activate</a>
                                     <?php endif; ?>
+
+                                    <?php if ($user['balance'] == 0): ?>
+                                        <a href="manage-users.php?delete=<?= $user['user_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this user?')">Delete</a>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </td>
                         </tr>
