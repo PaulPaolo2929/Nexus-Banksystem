@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Log transaction
                     $stmt = $pdo->prepare("
                         INSERT INTO transactions (account_id, type, amount, description, related_account_id, created_at)
-                        VALUES (?, 'loan_payment', ?, ?, NULL, ?)
+                        VALUES (?, 'loanpayment', ?, ?, NULL, ?)
                     ");
                     $stmt->execute([$accountId, $paymentAmount, $desc, date('Y-m-d H:i:s')]);
 
