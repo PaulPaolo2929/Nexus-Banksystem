@@ -80,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['withdraw_investment_i
             $stmt = $pdo->prepare("UPDATE accounts SET balance = balance + ? WHERE user_id = ?");
             $stmt->execute([$totalReturn, $userId]);
 
-            $stmt = $pdo->prepare("UPDATE investments SET withdrawn_at = NOW() WHERE investment_id = ?");
+            $stmt = $pdo->prepare("UPDATE investments SET withdrawn_at = NOW(), status = 'withdrawn' WHERE investment_id = ?");
             $stmt->execute([$investmentId]);
 
             $pdo->commit();
@@ -172,7 +172,7 @@ $investments = $stmt->fetchAll();
                 <option value="">-- Choose a Plan --</option>
                 <?php foreach ($plans as $plan): ?>
                     <option value="<?= $plan['plan_id'] ?>">
-                        <?= htmlspecialchars($plan['plan_name']) ?> - <?= $plan['interest_rate'] ?>% for <?= $plan['duration_months'] ?> months (Min: $<?= number_format($plan['min_amount'], 2) ?>)
+                        <?= htmlspecialchars($plan['plan_name']) ?> - <?= $plan['interest_rate'] ?>% for <?= $plan['duration_months'] ?> months (Min: $<?= number_format($plan['min_amount'], 2) ?>)(Max: $<?= number_format($plan['max_amount'], 2) ?>)
                     </option>
                 <?php endforeach; ?>
             </select>
@@ -212,13 +212,18 @@ $investments = $stmt->fetchAll();
                         <td>
                             <?php if ($inv['status'] === 'matured'): ?>
                                 <span>Matured</span><br>
-                                <?php if ($inv['withdrawn_at'] === null): ?>
+                                <?php if (empty($inv['withdrawn_at'])): ?>
                                     <form method="post">
                                         <input type="hidden" name="withdraw_investment_id" value="<?= $inv['investment_id'] ?>">
                                         <button type="submit" class="btn" style="margin-top: 5px;">Withdraw</button>
                                     </form>
                                 <?php else: ?>
                                     <span>Withdrawn on <?= date('Y-m-d', strtotime($inv['withdrawn_at'])) ?></span>
+                                <?php endif; ?>
+                            <?php elseif ($inv['status'] === 'withdrawn'): ?>
+                                <span>Withdrawn</span><br>
+                                <?php if (!empty($inv['withdrawn_at'])): ?>
+                                    <span>on <?= date('Y-m-d', strtotime($inv['withdrawn_at'])) ?></span>
                                 <?php endif; ?>
                             <?php else: ?>
                                 <span>Active</span>

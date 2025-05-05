@@ -1,4 +1,5 @@
 <?php
+
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
@@ -9,15 +10,12 @@ require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/otp.php';
 
-$type = $_GET['type'] ?? $_POST['type'] ?? 'register'; // fallback for POST
+$type = $_GET['type'] ?? $_POST['type'] ?? 'register';
 
-// Early session debugging
 error_log("OTP Type: " . $type);
 error_log("Session data: " . print_r($_SESSION, true));
 
-// Redirect based on missing data for each type
 $redirect = false;
-
 switch ($type) {
     case 'register':
         $redirect = !isset($_SESSION['temp_email']);
@@ -177,6 +175,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container">
         <h1>Verify Your Identity</h1>
 
+        <!-- Flash messages from resend-otp.php -->
+        <?php if (!empty($_SESSION['otp_error'])): ?>
+            <div class="alert alert-danger"><?= htmlspecialchars($_SESSION['otp_error']) ?></div>
+            <?php unset($_SESSION['otp_error']); ?>
+        <?php endif; ?>
+
+        <?php if (!empty($_SESSION['otp_success'])): ?>
+            <div class="alert alert-success"><?= htmlspecialchars($_SESSION['otp_success']) ?></div>
+            <?php unset($_SESSION['otp_success']); ?>
+        <?php endif; ?>
+
+        <!-- OTP form errors -->
         <?php if ($error): ?>
             <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
