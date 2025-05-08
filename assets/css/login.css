@@ -217,6 +217,8 @@ html, body {
     width: 80%;
     max-width: 600px;
     min-width: 320px ;
+    max-height: 500px;
+    min-height: 400px;
     background-color: rgb(255, 255, 255);
     box-shadow: #cbd5e1 0px 0px 20px 0px;
     padding: 5rem 2rem;

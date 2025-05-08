@@ -11,10 +11,13 @@ if (!isset($_SESSION['user_id'])) {
 $userId = $_SESSION['user_id'];
 
 $query = "
-    SELECT 
+   SELECT 
         DAYNAME(created_at) as day,
         SUM(CASE WHEN LOWER(type) = 'deposit' THEN amount ELSE 0 END) as total_deposit,
-        SUM(CASE WHEN LOWER(type) = 'withdrawal' THEN amount ELSE 0 END) as total_withdraw
+        SUM(CASE WHEN LOWER(type) = 'withdrawal' THEN amount ELSE 0 END) as total_withdraw,
+        SUM(CASE WHEN LOWER(type) = 'transfer_in' THEN amount ELSE 0 END) as total_transfer_in,
+        SUM(CASE WHEN LOWER(type) = 'transfer_out' THEN amount ELSE 0 END) as total_transfer_out,
+        SUM(CASE WHEN LOWER(type) = 'loanpayment' THEN amount ELSE 0 END) as total_loanpayment
     FROM transactions
     WHERE account_id = (SELECT account_id FROM accounts WHERE user_id = ?)
       AND created_at >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)
@@ -22,6 +25,7 @@ $query = "
     GROUP BY DAYOFWEEK(created_at)
     ORDER BY FIELD(DAYNAME(created_at), 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
 ";
+
 
 $stmt = $pdo->prepare($query);
 $stmt->execute([$userId]);
