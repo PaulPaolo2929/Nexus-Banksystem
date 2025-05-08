@@ -142,75 +142,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="container">
               <div class="login-form">
-        <p style="text-align: start;"> Let's get you Started </p> 
-        <h1 style="text-align: start;">Create your Account</h1>
+                    <p style="text-align: start;"> Let's get you Started </p> 
+                    <h1 style="text-align: start;">Create your Account</h1>
 
-            <?php if (!empty($errors)): ?>
-                <div class="alert alert-danger">
-                    <?php foreach ($errors as $error): ?>
-                        <p><?= $error ?></p>
-                    <?php endforeach; ?>
+                        <?php if (!empty($errors)): ?>
+                            <div class="alert alert-danger">
+                                <?php foreach ($errors as $error): ?>
+                                    <p><?= $error ?></p>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php elseif (!empty($success)): ?>
+                            <div class="alert alert-success">
+                                <p><?= $success ?></p>
+                            </div>
+                        <?php endif; ?>
+
+                        <form method="POST" id="registrationForm">
+            <div class="form-group">
+                <div class="form-field">
+                <input type="text" name="full_name" required placeholder="" value="<?= htmlspecialchars($data['full_name']) ?>">
+                <label>Full Name</label>
                 </div>
-            <?php elseif (!empty($success)): ?>
-                <div class="alert alert-success">
-                    <p><?= $success ?></p>
+
+                <div class="form-row">
+                <div class="form-field">
+                <input type="email" name="email" required placeholder=" " value="<?= htmlspecialchars($data['email']) ?>">
+                <label>Email</label>
                 </div>
-            <?php endif; ?>
+                <div class="form-field">
+                <input type="text" name="address" required placeholder=" " value="<?= htmlspecialchars($data['address']) ?>">
+                <label>Address</label>
+                </div>
+                </div>
+                <div class="form-field">
+                <input type="text" name="occupation" required placeholder=" " value="<?= htmlspecialchars($data['occupation']) ?>">
+                <label>Occupation</label>
+                </div>
 
-            <form method="POST" id="registrationForm">
-  <div class="form-group">
-    <div class="form-field">
-      <input type="text" name="full_name" required placeholder="" value="<?= htmlspecialchars($data['full_name']) ?>">
-      <label>Full Name</label>
-    </div>
+                <div class="form-row">
+                <div class="form-field">
+                    <input type="tel" name="phone" required placeholder=" " value="<?= htmlspecialchars($data['phone']) ?>">
+                    <label>Phone</label>
+                </div>
+                <div class="form-field">
+                    <input type="number" name="age" min="18" max="120" required placeholder=" " value="<?= htmlspecialchars($data['age']) ?>">
+                    <label>Age</label>
+                </div>
+                <div class="form-field">
+                    <input type="number" name="birth_year" min="1900" max="<?= date('Y') ?>" required placeholder=" " value="<?= htmlspecialchars($data['birth_year']) ?>">
+                    <label>Birth Year</label>
+                </div>
+                </div>
 
-    <div class="form-row">
-    <div class="form-field">
-      <input type="email" name="email" required placeholder=" " value="<?= htmlspecialchars($data['email']) ?>">
-      <label>Email</label>
-    </div>
-    <div class="form-field">
-      <input type="text" name="address" required placeholder=" " value="<?= htmlspecialchars($data['address']) ?>">
-      <label>Address</label>
-    </div>
-    </div>
-    <div class="form-field">
-      <input type="text" name="occupation" required placeholder=" " value="<?= htmlspecialchars($data['occupation']) ?>">
-      <label>Occupation</label>
-    </div>
+                <div class="form-field">
+                <input type="password" name="password" required placeholder=" ">
+                <label>Password</label>
+                </div>
 
-    <div class="form-row">
-      <div class="form-field">
-        <input type="tel" name="phone" required placeholder=" " value="<?= htmlspecialchars($data['phone']) ?>">
-        <label>Phone</label>
-      </div>
-      <div class="form-field">
-        <input type="number" name="age" min="18" max="120" required placeholder=" " value="<?= htmlspecialchars($data['age']) ?>">
-        <label>Age</label>
-      </div>
-      <div class="form-field">
-        <input type="number" name="birth_year" min="1900" max="<?= date('Y') ?>" required placeholder=" " value="<?= htmlspecialchars($data['birth_year']) ?>">
-        <label>Birth Year</label>
-      </div>
-    </div>
-
-    <div class="form-field">
-      <input type="password" name="password" required placeholder=" ">
-      <label>Password</label>
-    </div>
-
-    <div class="form-field">
-      <input type="password" name="confirm_password" required placeholder=" ">
-      <label>Confirm Password</label>
-    </div>
-  </div>
-
-  <button type="submit" class="btn-submit">Register</button>
-</form>
-
-            <div class="login-link">
-                Already have an account? <a href="login.php">Sign in</a>
+                <div class="form-field">
+                <input type="password" name="confirm_password" required placeholder=" ">
+                <label>Confirm Password</label>
+                </div>
             </div>
+
+            <button type="submit" class="btn-submit">Register</button>
+            </form>
+
+                        <div class="login-link">
+                            Already have an account? <a href="login.php">Sign in</a>
+                        </div>
         </div>
     </div>
 </div>

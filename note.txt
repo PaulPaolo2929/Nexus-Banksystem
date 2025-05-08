@@ -1,0 +1,54 @@
+createing table balance:
+1. Table for Recording Balance Changes:
+You can create a balance table like this to store the changes:
+
+sql
+Copy
+Edit
+CREATE TABLE IF NOT EXISTS `balance` (
+  `balance_id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` INT NOT NULL,
+  `full_name` VARCHAR(100) NOT NULL,
+  `total_balance` DECIMAL(12, 2) NOT NULL,
+  `last_updated` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`balance_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+
+
+
+
+
+2. Create Trigger for Automatic Record Insertion:
+Now, you’ll need to create a trigger that fires whenever the balance in the accounts table is updated. The trigger will insert the updated balance into the balance table along with the user information.
+
+sql
+Copy
+Edit
+DELIMITER $$
+
+CREATE TRIGGER `after_balance_update`
+AFTER UPDATE ON `accounts`
+FOR EACH ROW
+BEGIN
+    DECLARE user_full_name VARCHAR(100);
+
+    -- Retrieve the full name from the users table
+    SELECT full_name INTO user_full_name FROM users WHERE user_id = NEW.user_id;
+
+    -- Insert the new balance into the balance table
+    INSERT INTO `balance` (`user_id`, `full_name`, `total_balance`, `last_updated`)
+    VALUES (NEW.user_id, user_full_name, NEW.balance, NOW());
+END $$
+
+DELIMITER ;
+Explanation:
+Trigger: This trigger runs after an update to the accounts table. It will insert the new balance into the balance table after each update.
+
+full_name: The trigger fetches the full_name from the users table based on the user_id.
+
+last_updated: This is automatically set to the current timestamp when a balance change occurs.
+
+NEW keyword: Refers to the updated values in the accounts table.

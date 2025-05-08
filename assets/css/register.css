@@ -228,15 +228,16 @@ html, body {
     justify-content: center;
   }
 
-  /* .login-form{
+  .login-form{
     flex: 1;
     margin: auto;
     width: 100%;
     background-color: rgb(255, 255, 255);
     max-height:600px ;
+    max-width: 600;
     padding: 5rem 2rem;
     border-radius: 0.8rem;
-  } */
+  } 
   
 /* ===============input fields================= */
 
@@ -350,9 +351,20 @@ html, body {
   .handshake{
       width:100% ;
   }
-  .login-form {
+  /* .login-form {
       all: unset;
       padding: 0;
-    }
+    } */
   
 }
+
+.login-form{
+  flex: 1;
+  margin: auto;
+  width: 100%;
+  background-color: rgb(255, 255, 255);
+  max-height:600px ;
+  max-width: 600;
+  padding: 5rem 2rem;
+  border-radius: 0.8rem;
+} 
