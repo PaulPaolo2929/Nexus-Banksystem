@@ -78,80 +78,176 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SecureBank - Loans</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/loans.css">
+
+    <!-- NAVIGATION EFFECTS -->
+    <script src="../assets/js/navhover.js"></script>
 </head>
+
 <body>
-<div class="container">
-    <header>
-        <h1>Loan Management</h1>
-        <a href="../logout.php" class="logout">Logout</a>
-    </header>
+    <div class="wrapper">
 
-    <nav class="dashboard-nav">
-        <a href="dashboard.php">Dashboard</a>
-        <a href="deposit.php">Deposit</a>
-        <a href="withdraw.php">Withdraw</a>
-        <a href="transfer.php">Transfer</a>
-        <a href="transactions.php">Transactions</a>
-    </nav>
+        <aside>
+                        
+            <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
 
-    <div class="content">
-        <h2>Apply for a Loan</h2>
+            <nav>
+                    <a href="dashboard.php" class="btn">
+                        <img 
+                        src="../assets/images/inactive-dashboard.png" 
+                        alt="dashboard-logo" 
+                        class="nav-icon"
+                        data-default="../assets/images/inactive-dashboard.png"
+                        data-hover="../assets/images/hover-dashboard.png"
+                        > 
+                        Dashboard
+                    </a>
 
-        <?php if ($error): ?>
-            <div class="alert alert-danger"><?= $error ?></div>
-        <?php endif; ?>
+                    <a href="deposit.php" class="btn">
+                        <img 
+                        src="../assets/images/inactive-deposit.png" 
+                        alt="deposit-logo" 
+                        class="nav-icon"
+                        data-default="../assets/images/inactive-deposit.png"
+                        data-hover="../assets/images/hover-deposit.png"
+                        > 
+                        Deposit
+                    </a>
 
-        <?php if ($success): ?>
-            <div class="alert alert-success"><?= $success ?></div>
-        <?php endif; ?>
+                    <a href="withdraw.php" class="btn">
+                        <img 
+                        src="../assets/images/inactive-withdraw.png" 
+                        alt="withdraw-logo" 
+                        class="nav-icon"
+                        data-default="../assets/images/inactive-withdraw.png"
+                        data-hover="../assets/images/hover-withdraw.png"
+                        > 
+                        Withdraw
+                    </a>
 
-        <form method="POST">
-            <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
-            <div class="form-group">
-                <label>Loan Amount ($)</label>
-                <input type="number" name="amount" min="100" step="100" required>
+                    <a href="transfer.php" class="btn">
+                        <img 
+                        src="../assets/images/inactive-transfer.png" 
+                        alt="transfer-logo" 
+                        class="nav-icon"
+                        data-default="../assets/images/inactive-transfer.png"
+                        data-hover="../assets/images/hover-transfer.png"
+                        > 
+                        Transfer
+                    </a>
+
+                    <a href="transactions.php" class="btn">
+                        <img 
+                        src="../assets/images/inactive-transaction.png" 
+                        alt="transactions-logo" 
+                        class="nav-icon"
+                        data-default="../assets/images/inactive-transaction.png"
+                        data-hover="../assets/images/hover-transaction.png"
+                        > 
+                        Transactions
+                    </a>
+
+                    <a href="investment.php" class="btn">
+                        <img 
+                        src="../assets/images/inactive-investment.png" 
+                        alt="investment-logo" 
+                        class="nav-icon"
+                        data-default="../assets/images/inactive-investment.png"
+                        data-hover="../assets/images/hover-investment.png"
+                        > 
+                        Investment
+                    </a>
+
+                    <a href="loan.php" class="btn dash-text">
+                        <img 
+                        src="../assets/images/hover-loans.png" 
+                        alt="loans-logo" 
+                        class="nav-icon"
+                        data-default="../assets/images/hover-loans.png"
+                        data-hover="../assets/images/hover-loans.png"
+                        > 
+                        Loans
+                    </a>
+                </nav>       
+
+            <div class="logout-cont">
+                <a href="../logout.php" class="logout">Logout</a>
             </div>
-            <div class="form-group">
-                <label>Loan Term (months)</label>
-                <input type="number" name="term" min="1" max="60" required>
-            </div>
-            <div class="form-group">
-                <label>Purpose</label>
-                <textarea name="purpose" required></textarea>
-            </div>
-            <button type="submit" class="btn">Apply for Loan</button>
-        </form>
+        </aside>
+    
+        <main class="container">
+            <header>
+                <h1>Loan Management</h1>
+                <a href="../logout.php" class="logout">Logout</a>
+            </header>
 
-        <h2>Your Loans</h2>
+            <nav class="dashboard-nav">
+                <a href="dashboard.php">Dashboard</a>
+                <a href="deposit.php">Deposit</a>
+                <a href="withdraw.php">Withdraw</a>
+                <a href="transfer.php">Transfer</a>
+                <a href="transactions.php">Transactions</a>
+            </nav>
 
-        <?php if (empty($loans)): ?>
-            <p>You have no active loans.</p>
-        <?php else: ?>
-            <table class="loans-table">
-                <thead>
-                    <tr>
-                        <th>Amount</th>
-                        <th>Interest Rate</th>
-                        <th>Term</th>
-                        <th>Status</th>
-                        <th>Applied On</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php foreach ($loans as $loan): ?>
-                    <tr>
-                        <td>$<?= number_format($loan['amount'], 2) ?></td>
-                        <td><?= $loan['interest_rate'] ?>%</td>
-                        <td><?= $loan['term_months'] ?> months</td>
-                        <td class="status-<?= $loan['status'] ?>"><?= ucfirst($loan['status']) ?></td>
-                        <td><?= date('M j, Y', strtotime($loan['created_at'])) ?></td>
-                    </tr>
-                <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php endif; ?>
+            <main class="content">
+                    <h2>Apply for a Loan</h2>
+
+                    <?php if ($error): ?>
+                        <div class="alert alert-danger"><?= $error ?></div>
+                    <?php endif; ?>
+
+                    <?php if ($success): ?>
+                        <div class="alert alert-success"><?= $success ?></div>
+                    <?php endif; ?>
+
+                    <form method="POST">
+                        <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
+                        <div class="form-group">
+                            <label>Loan Amount ($)</label>
+                            <input type="number" name="amount" min="100" step="100" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Loan Term (months)</label>
+                            <input type="number" name="term" min="1" max="60" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Purpose</label>
+                            <textarea name="purpose" required></textarea>
+                        </div>
+                        <button type="submit" class="btn">Apply for Loan</button>
+                    </form>
+
+                    <h2>Your Loans</h2>
+
+                    <?php if (empty($loans)): ?>
+                        <p>You have no active loans.</p>
+                    <?php else: ?>
+                        <table class="loans-table">
+                            <thead>
+                                <tr>
+                                    <th>Amount</th>
+                                    <th>Interest Rate</th>
+                                    <th>Term</th>
+                                    <th>Status</th>
+                                    <th>Applied On</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            <?php foreach ($loans as $loan): ?>
+                                <tr>
+                                    <td>$<?= number_format($loan['amount'], 2) ?></td>
+                                    <td><?= $loan['interest_rate'] ?>%</td>
+                                    <td><?= $loan['term_months'] ?> months</td>
+                                    <td class="status-<?= $loan['status'] ?>"><?= ucfirst($loan['status']) ?></td>
+                                    <td><?= date('M j, Y', strtotime($loan['created_at'])) ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
+            </>
+        </main>
     </div>
-</div>
 </body>
 </html>
