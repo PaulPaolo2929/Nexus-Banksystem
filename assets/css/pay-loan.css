@@ -1,0 +1,193 @@
+/* ===== Investment Card ===== */
+.content {
+    display: flex;
+    flex-direction: column;
+    background: var(--main-color);
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(52, 60, 106, 0.08);
+    margin: 5.5rem 1.5rem 2rem 1.5rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .content::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, var(--bg-sidecolor-2), #7e6cf1);
+  }
+  
+  /* Section Titles */
+  .content h2 {
+    font-size: 1.75rem;
+    color: var(--font-color);
+    margin-bottom: 1rem;
+    font-weight: 700;
+  }
+  
+  /* Alerts (inherits your existing .alert styles) */
+  .alert {
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Form Styling */
+  form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .form-group label {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    color: var(--font-color);
+    font-weight: 500;
+  }
+  
+  .form-group select,
+  .form-group input[type="number"] {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #dfe6f3;
+    background: #f9f9fb;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  
+  .form-group select:focus,
+  .form-group input[type="number"]:focus {
+    border-color: var(--bg-sidecolor-2);
+    box-shadow: 0 0 0 3px rgba(99, 89, 233, 0.15);
+    outline: none;
+  }
+
+  
+/* Textarea Styling */
+.form-group textarea[name="purpose"] {
+    grid-column: 1 / -1; /* Covers the whole column */
+    grid-row: 1 / 3;
+    padding: 0.75rem 1rem;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #dfe6f3;
+    background: #f9f9fb;
+    font-size: 1rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 120px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+textarea[name="purpose"]:focus {
+    border-color: var(--bg-sidecolor-2);
+    box-shadow: 0 0 0 3px rgba(99, 89, 233, 0.15);
+    outline: none;
+}
+  /* Submit Button */
+  button.btn {
+    grid-column: 1 / -1;
+    justify-self: start;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--main-color);
+    background-color: var(--bg-sidecolor-2);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(99, 89, 233, 0.2);
+    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  }
+  
+  button.btn:hover {
+    background-color: #4f4ad1;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(99, 89, 233, 0.25);
+  }
+  
+  button.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 10px rgba(99, 89, 233, 0.15);
+  }
+  
+  /* ===== Investment History Table ===== */
+  .content table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+  }
+  
+  .content thead {
+    background: var(--bg-sidecolor-2);
+  }
+  
+  .content thead th {
+    padding: 0.75rem 1rem;
+    font-size: 0. nine rem;
+    font-weight: 600;
+    color: var(--main-color);
+    text-align: left;
+    white-space: nowrap;
+  }
+  
+  .content tbody tr {
+    transition: background 0.2s;
+  }
+  
+  .content tbody tr:nth-child(even) {
+    background: #F9FAFC;
+  }
+  
+  .content tbody tr:hover {
+    background: #EFF2F7;
+  }
+  
+  .content tbody td {
+    padding: 0.75rem 1rem;
+    font-size: 0. nine rem;
+    color: var(--font-color);
+    border-bottom: 1px solid #E0E4EB;
+    white-space: nowrap;
+  }
+  
+  /* Status badges inside table */
+  .content tbody span {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    font-size: 0. eight rem;
+    font-weight: 600;
+    border-radius: 6px;
+  }
+  
+  .content tbody span:contains("Matured") {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28A745;
+  }
+  
+  .content tbody span:contains("Active") {
+    background: rgba(99, 89, 233, 0.1);
+    color: var(--bg-sidecolor-2);
+  }
+  
+  .content tbody span:contains("Withdrawn") {
+    background: rgba(220, 53, 69, 0.1);
+    color: #DC3545;
+  }
+  
+  /* Withdraw button in table rows */
+  .content tbody .btn {
+    padding: 0.25rem 0.75rem;
+    font-size: 0. eight rem;
+    border-radius: 8px;
+  }
+  

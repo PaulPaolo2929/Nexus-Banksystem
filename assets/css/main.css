@@ -9,6 +9,7 @@
     --font-color: #343C6A;
     --thin-font-color: #718EBF;
     --inactive-font-color: #a3a3a3;
+    --hover-effects: #efeeff;
   
     /* Font Sizes */
     --big-font-size: 6.6rem;
@@ -69,6 +70,8 @@
       cursor: pointer;
     
       & a {
+        display: flex;
+        align-items: center;
         color: var(--inactive-font-color);
         text-decoration: none;
         font-weight: 400;
@@ -76,15 +79,19 @@
         display: flex;
         align-items: center;
         gap: 0.6rem;
+        height: 42.2px; /* Fixed height for consistency */
 
         & img {
             width: 25px;
-            height: 100%;
+            
             margin-right: 10px;
           }
       }
     }
   }
+
+  
+
 
   .logout-cont{
     display: flex;
@@ -117,16 +124,34 @@
     color: var(--inactive-font-color);
     border-radius: 8px;
     font-weight: 500;
-    /* transition: all 0.3s ease; */
+    height: 42.2px; /* Fixed height for consistency */
   }
   
   .btn:hover {
+    /* background-color: var(--hover-effects);
+    color: var(--font-color); */
+    transform: scale(1.00);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.06);
+    height: 42.2px; /* Fixed height for consistency */
+  }
+  
+  /* Dashboard icon active page */
+  .dash-text{
     background-color:var(--bg-sidecolor-2);
     color: var(--main-color);
     transform: scale(1.00);
     box-shadow: 0 4px 12px rgba(255, 255, 255, 0.06);
+    height: 42.2px; /* Fixed height for consistency */
+
+    & ::hover{
+      background-color:var(--bg-sidecolor-2);
+      color: var(--main-color);
+      transform: scale(1.00);
+      box-shadow: 0 4px 12px rgba(255, 255, 255, 0.06);
+      height: 42.2px; /* Fixed height for consistency */
+    }
   }
-  
+
   /* =======Parent Container========= */
   .container {
     flex: 1;
@@ -311,7 +336,7 @@
     position: absolute;
     top: 0; left: 0;
     width: 100%;
-    height: 4px;
+    height: 5px;
     background: linear-gradient(90deg, var(--bg-sidecolor-2), #7e6cf1);
   }
   .account-summary:hover {
@@ -355,6 +380,7 @@
     border-radius: 12px;
     border: 1px solid rgba(52, 60, 106, 0.1);
     box-shadow: 0 2px 8px rgba(52, 60, 106, 0.05);
+    overflow: hidden;
   }
   
   .quick-actions h2 {

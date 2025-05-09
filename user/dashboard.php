@@ -44,15 +44,17 @@ $transactions = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexus-Banksystem - Dashboard</title>
-    <link rel="stylesheet" href="../assets/css/Userdash.css">
+    <link rel="stylesheet" href="../assets/css/main.css">
+
 
     <!-- Apexchart -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
+    <!-- NAVIGATION EFFECTS -->
+    <script src="../assets/js/navhover.js"></script>
     <style>
     
        .transaction-distribution-chart, .weekly-activity-chart, .balance-over-time-chart {
-    margin-top: 2rem;
     background: #fff;
     padding: 1rem;
     border-radius: 8px;
@@ -73,16 +75,84 @@ $transactions = $stmt->fetchAll();
                        
                 <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
 
-                            <nav>
-                            <a href="dashboard.php" class="btn"> <img src="../assets/images/Dashboard-logo.png" alt="dashboard-logo"> Dashboard</a>
-                                <a href="deposit.php" class="btn"> <img src="../assets/images/Deposit.png" alt="dashboard-logo"> Deposit</a>
-                                <a href="withdraw.php" class="btn"> <img src="../assets/images/withdraw.png" alt="dashboard-logo"> Withdraw</a>
-                                <a href="transfer.php" class="btn"> <img src="../assets/images/transfer.png" alt="dashboard-logo">Transfer</a>
-                                <a href="transactions.php" class="btn"> <img src="../assets/images/transaction-logo.png" alt="Transactions-logo">Transactions</a>
-                                <a href="investment.php" class="btn"> <img src="../assets/images/investment-logo.png" alt="dashboard-logo">Investment</a>
-                                <a href="loan.php" class="btn"> <img src="../assets/images/loans-logo.png" alt="dashboard-logo">Loans</a>
-                                
-                            </nav>       
+                <nav>
+                    <a href="dashboard.php" class="btn dash-text">
+                        <img 
+                        src="../assets/images/hover-dashboard.png" 
+                        alt="dashboard-logo" 
+                        class="nav-icon "
+                        data-default="../assets/images/hover-dashboard.png"
+                        data-hover="../assets/images/hover-dashboard.png"
+                        > 
+                        Dashboard
+                    </a>
+
+                    <a href="deposit.php" class="btn">
+                        <img 
+                        src="../assets/images/inactive-deposit.png" 
+                        alt="deposit-logo" 
+                        class="nav-icon"
+                        data-default="../assets/images/inactive-deposit.png"
+                        data-hover="../assets/images/hover-deposit.png"
+                        > 
+                        Deposit
+                    </a>
+
+                    <a href="withdraw.php" class="btn">
+                        <img 
+                        src="../assets/images/inactive-withdraw.png" 
+                        alt="withdraw-logo" 
+                        class="nav-icon"
+                        data-default="../assets/images/inactive-withdraw.png"
+                        data-hover="../assets/images/hover-withdraw.png"
+                        > 
+                        Withdraw
+                    </a>
+
+                    <a href="transfer.php" class="btn">
+                        <img 
+                        src="../assets/images/inactive-transfer.png" 
+                        alt="transfer-logo" 
+                        class="nav-icon"
+                        data-default="../assets/images/inactive-transfer.png"
+                        data-hover="../assets/images/hover-transfer.png"
+                        > 
+                        Transfer
+                    </a>
+
+                    <a href="transactions.php" class="btn">
+                        <img 
+                        src="../assets/images/inactive-transaction.png" 
+                        alt="transactions-logo" 
+                        class="nav-icon"
+                        data-default="../assets/images/inactive-transaction.png"
+                        data-hover="../assets/images/hover-transaction.png"
+                        > 
+                        Transactions
+                    </a>
+
+                    <a href="investment.php" class="btn">
+                        <img 
+                        src="../assets/images/inactive-investment.png" 
+                        alt="investment-logo" 
+                        class="nav-icon"
+                        data-default="../assets/images/inactive-investment.png"
+                        data-hover="../assets/images/hover-investment.png"
+                        > 
+                        Investment
+                    </a>
+
+                    <a href="loan.php" class="btn">
+                        <img 
+                        src="../assets/images/inactive-loans.png" 
+                        alt="loans-logo" 
+                        class="nav-icon"
+                        data-default="../assets/images/inactive-loans.png"
+                        data-hover="../assets/images/hover-loans.png"
+                        > 
+                        Loans
+                    </a>
+                </nav>      
 
                             <div class="logout-cont">
                                  <a href="../logout.php" class="logout">Logout</a>
@@ -118,7 +188,7 @@ $transactions = $stmt->fetchAll();
                         <h2>Recent Transactions</h2>
                         <div class="transactions-container">
                             
-                                        ``<div class="transactions-tabs">
+                                        <div class="transactions-tabs">
                                             <button class="tab active">All Transactions</button>
                                             <button class="tab">Deposit</button>
                                             <button class="tab">Withdraw</button>
@@ -130,10 +200,9 @@ $transactions = $stmt->fetchAll();
                                             <thead>
                                                 <tr>
                                                 <th></th>
-                                                <th>Description</th>
                                                 <th>Transaction ID</th>
+                                                <th>Description</th>
                                                 <th>Type</th>
-                                                <th>Card</th>
                                                 <th>Date</th>
                                                 <th>Amount</th>
                                                 <th>Receipt</th>
@@ -151,11 +220,9 @@ $transactions = $stmt->fetchAll();
                                                     <?php endif; ?>
                                                 </td>
 
-
+                                                <td><?= htmlspecialchars($txn['transaction_id']) ?></td>
                                                 <td><?= htmlspecialchars($txn['description']) ?></td>
-                                                <td><?= htmlspecialchars($txn['transaction_id']) ?></td>
                                                 <td><?= ucfirst($txn['type']) ?></td>
-                                                <td><?= htmlspecialchars($txn['transaction_id']) ?></td>
                                                 <td><?= date('j M, g:i A', strtotime($txn['created_at'])) ?></td>
                                                 <td class="amount <?= in_array($txn['type'],['deposit','transfer_in'])? 'positive':'negative' ?>">
                                                     <?= (in_array($txn['type'],['deposit','transfer_in'])? '+':'−') .
@@ -171,36 +238,6 @@ $transactions = $stmt->fetchAll();
                                         </div>
                                 </div>
 
-<!-- <div class="recent-transactions">
-                            <h2>Recent Transactions</h2>
-                            <?php if (empty($transactions)): ?>
-                                <p>No transactions found.</p>
-                            <?php else: ?>
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Type</th>
-                                            <th>Amount</th>
-                                            <th>Description</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <?php foreach ($transactions as $txn): ?>
-                                            <tr>
-                                                <td><?= date('M j, Y', strtotime($txn['created_at'])) ?></td>
-                                                <td><?= ucfirst($txn['type']) ?></td>
-                                                <td class="<?= in_array($txn['type'], ['deposit', 'transfer_in']) ? 'text-success' : 'text-danger' ?>">
-                                                    $<?= number_format($txn['amount'], 2) ?>
-                                                </td>
-                                                <td><?= htmlspecialchars($txn['description']) ?></td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    </tbody>
-                                </table>
-                                <a href="transactions.php" class="view-all">View All Transactions</a>
-                            <?php endif; ?>
-                        </div> -->
 
                         <div class="weekly-activity-chart">
                             <h2>Weekly Activity </h2>
@@ -270,7 +307,7 @@ $transactions = $stmt->fetchAll();
                         data: withdrawals
                     },
                     {
-                        name: 'Transfers',
+                        name: 'Transfers In',
                         data: transferIn
                     },
                     {

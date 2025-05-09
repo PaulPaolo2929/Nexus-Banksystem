@@ -1,0 +1,103 @@
+/* === Container === */
+.content {
+    background: var(--main-color);
+    padding: 2rem 2rem 2rem  2rem; 
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(52, 60, 106, 0.08);
+    margin: 5rem 2rem;
+  }
+  
+  /* === Alerts === */
+  .alert {
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+  
+  .alert-danger {
+    background: #ffe5e5;
+    color: #c0392b;
+    border-left: 5px solid #c0392b;
+  }
+  
+  .alert-success {
+    background: #e7f9ed;
+    color: #2ecc71;
+    border-left: 5px solid #2ecc71;
+  }
+  
+  /* === Balance Info === */
+  .balance-info {
+    font-size: 1.1rem;
+    color: var(--font-color);
+    margin-bottom: 1.5rem;
+  }
+  
+  .balance-info strong {
+    color: var(--bg-sidecolor-2);
+    font-weight: 700;
+    font-size: 1.3rem;
+  }
+  
+  /* === Form === */
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .form-group label {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+    color: var(--font-color);
+    font-weight: 500;
+  }
+  
+  .form-group input[type="number"] {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #dfe6f3;
+    background: #f9f9fb;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  
+  .form-group input[type="number"]:focus {
+    border-color: var(--bg-sidecolor-2);
+    box-shadow: 0 0 0 3px rgba(99, 89, 233, 0.15);
+    outline: none;
+  }
+  
+  /* === Submit Button === */
+  button.btn {
+    align-self: flex-start;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--main-color);
+    background-color: var(--bg-sidecolor-2);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(99, 89, 233, 0.2);
+    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+  }
+  
+  button.btn:hover {
+    background-color: #4f4ad1;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(99, 89, 233, 0.25);
+  }
+  
+  button.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 10px rgba(99, 89, 233, 0.15);
+  }
+  
