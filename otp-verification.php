@@ -12,9 +12,6 @@ require_once __DIR__ . '/includes/otp.php';
 
 $type = $_GET['type'] ?? $_POST['type'] ?? 'register';
 
-error_log("OTP Type: " . $type);
-error_log("Session data: " . print_r($_SESSION, true));
-
 $redirect = false;
 switch ($type) {
     case 'register':
@@ -26,13 +23,18 @@ switch ($type) {
     case 'transfer':
         $redirect = !isset($_SESSION['pending_transfer']) || !isset($_SESSION['user_id']);
         break;
+    case 'withdraw':
+        $redirect = !isset($_SESSION['pending_withdrawal']) || !isset($_SESSION['user_id']);
+        break;
+    case 'deposit':
+        $redirect = !isset($_SESSION['pending_deposit']) || !isset($_SESSION['user_id']);
+        break;
     default:
         $redirect = true;
         break;
 }
 
 if ($redirect) {
-    error_log("Redirecting to login.php — incomplete session data for OTP type: $type");
     header("Location: login.php");
     exit();
 }
@@ -157,13 +159,105 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $error = "Invalid OTP.";
                 }
             }
+
+        } elseif ($type === 'withdraw') {
+            $user_id = $_SESSION['user_id'] ?? null;
+
+            if (!$user_id || !isset($_SESSION['pending_withdrawal'])) {
+                $error = "Session expired. Please try again.";
+            } else {
+                $stmt = $pdo->prepare("SELECT email FROM users WHERE user_id = ?");
+                $stmt->execute([$user_id]);
+                $user = $stmt->fetch();
+
+                if ($user && verifyOTP($user['email'], $submittedOTP)) {
+                    $withdrawal = $_SESSION['pending_withdrawal'];
+                    unset($_SESSION['pending_withdrawal']);
+
+                    try {
+                        $pdo->beginTransaction();
+
+                        $stmt = $pdo->prepare("SELECT account_id, balance FROM accounts WHERE user_id = ? FOR UPDATE");
+                        $stmt->execute([$user_id]);
+                        $account = $stmt->fetch();
+
+                        if ((float)$account['balance'] < $withdrawal['amount']) {
+                            throw new Exception("Insufficient funds.");
+                        }
+
+                        $pdo->prepare("UPDATE accounts SET balance = balance - ? WHERE account_id = ?")
+                            ->execute([$withdrawal['amount'], $account['account_id']]);
+
+                        $desc = "Withdrawal of {$withdrawal['amount']}";
+                        $pdo->prepare("INSERT INTO transactions (account_id, type, amount, description) VALUES (?, 'withdrawal', ?, ?)")
+                            ->execute([$account['account_id'], $withdrawal['amount'], $desc]);
+
+                        $pdo->commit();
+
+                        $_SESSION['flash_success'] = "Successfully withdrew $" . number_format($withdrawal['amount'], 2);
+                        header("Location: user/withdraw.php");
+                        exit();
+
+                    } catch (Exception $e) {
+                        $pdo->rollBack();
+                        $error = "Withdrawal failed: " . $e->getMessage();
+                    }
+                } else {
+                    $error = "Invalid OTP.";
+                }
+            }
+
+        } elseif ($type === 'deposit') {
+            $user_id = $_SESSION['user_id'] ?? null;
+
+            if (!$user_id || !isset($_SESSION['pending_deposit'])) {
+                $error = "Session expired. Please try again.";
+            } else {
+                $stmt = $pdo->prepare("SELECT email FROM users WHERE user_id = ?");
+                $stmt->execute([$user_id]);
+                $user = $stmt->fetch();
+
+                if ($user && verifyOTP($user['email'], $submittedOTP)) {
+                    $deposit = $_SESSION['pending_deposit'];
+                    unset($_SESSION['pending_deposit']);
+
+                    try {
+                        $pdo->beginTransaction();
+
+                        $stmt = $pdo->prepare("SELECT account_id FROM accounts WHERE user_id = ? FOR UPDATE");
+                        $stmt->execute([$user_id]);
+                        $account = $stmt->fetch();
+
+                        if (!$account) {
+                            throw new Exception("Account not found.");
+                        }
+
+                        $stmt = $pdo->prepare("UPDATE accounts SET balance = balance + ? WHERE account_id = ?");
+                        $stmt->execute([$deposit['amount'], $account['account_id']]);
+
+                        $stmt = $pdo->prepare("INSERT INTO transactions (account_id, type, amount, description) VALUES (?, 'deposit', ?, ?)");
+                        $stmt->execute([$account['account_id'], $deposit['amount'], "Cash deposit"]);
+
+                        $pdo->commit();
+
+                        $_SESSION['flash_success'] = "Successfully deposited $" . number_format($deposit['amount'], 2);
+                        header("Location: user/deposit.php");
+                        exit();
+                    } catch (Exception $e) {
+                        $pdo->rollBack();
+                        $error = "Deposit failed: " . $e->getMessage();
+                    }
+                } else {
+                    $error = "Invalid OTP.";
+                }
+            }
         }
     } catch (PDOException $e) {
-        error_log("Database Error: " . $e->getMessage());
         $error = "System error. Please try again.";
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -175,7 +269,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container">
         <h1>Verify Your Identity</h1>
 
-        <!-- Flash messages from resend-otp.php -->
         <?php if (!empty($_SESSION['otp_error'])): ?>
             <div class="alert alert-danger"><?= htmlspecialchars($_SESSION['otp_error']) ?></div>
             <?php unset($_SESSION['otp_error']); ?>
@@ -186,12 +279,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php unset($_SESSION['otp_success']); ?>
         <?php endif; ?>
 
-        <!-- OTP form errors -->
         <?php if ($error): ?>
             <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
         <?php endif; ?>
 
-        <p>We've sent a 6-digit code to your <?= $type === 'register' ? 'registered email address' : 'account email' ?>.</p>
+        <p>We've sent a 6-digit code to your email. Please enter it below.</p>
 
         <form method="POST">
             <input type="hidden" name="type" value="<?= htmlspecialchars($type) ?>">
