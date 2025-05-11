@@ -152,6 +152,17 @@ $transactions = $stmt->fetchAll();
                         > 
                         Loans
                     </a>
+
+                    <a href="loan.php" class="btn">
+                        <img 
+                        src="../assets/images/inactive-loans.png" 
+                        alt="loans-logo" 
+                        class="nav-icon"
+                        data-default="../assets/images/inactive-loans.png"
+                        data-hover="../assets/images/hover-loans.png"
+                        > 
+                        Profile
+                    </a>
                 </nav>      
 
                             <div class="logout-cont">

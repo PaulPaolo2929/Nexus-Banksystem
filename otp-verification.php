@@ -167,42 +167,95 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>OTP Verification - SecureBank</title>
-    <link rel="stylesheet" href="assets/css/style.css">
+  <meta charset="UTF-8">
+  <title>OTP Verification - Nexus E‑Banking</title>
+  <link rel="stylesheet" href="./assets/css/main.css">
+  <link rel="stylesheet" href="./assets/css/otp.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Verify Your Identity</h1>
+    
+  <div class="otp-page">
+    <img src="./assets/images/Logo.png" alt="Nexus Logo" class="otp-logo">
+    <div class="otp-card">
 
-        <!-- Flash messages from resend-otp.php -->
-        <?php if (!empty($_SESSION['otp_error'])): ?>
-            <div class="alert alert-danger"><?= htmlspecialchars($_SESSION['otp_error']) ?></div>
-            <?php unset($_SESSION['otp_error']); ?>
-        <?php endif; ?>
+      <h2 class="otp-title">OTP Verification</h2>
+      <p class="otp-desc">
+        Please enter the OTP (One‑Time Password) sent to your registered email account to complete your verification
+      </p>
 
-        <?php if (!empty($_SESSION['otp_success'])): ?>
-            <div class="alert alert-success"><?= htmlspecialchars($_SESSION['otp_success']) ?></div>
-            <?php unset($_SESSION['otp_success']); ?>
-        <?php endif; ?>
+      <?php if ($error): ?>
+        <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+      <?php endif; ?>
 
-        <!-- OTP form errors -->
-        <?php if ($error): ?>
-            <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
-        <?php endif; ?>
+      <form id="otp-form" method="POST" novalidate>
+        <input type="hidden" name="type" value="<?= htmlspecialchars($type) ?>">
 
-        <p>We've sent a 6-digit code to your <?= $type === 'register' ? 'registered email address' : 'account email' ?>.</p>
+        <div class="otp-inputs">
+          <?php for ($i = 0; $i < 6; $i++): ?>
+            <input
+              type="text"
+              inputmode="numeric"
+              pattern="\d"
+              maxlength="1"
+              class="otp-input"
+              data-index="<?= $i ?>"
+            >
+          <?php endfor; ?>
+        </div>
+        <input type="hidden" name="otp" id="otp">
 
-        <form method="POST">
-            <input type="hidden" name="type" value="<?= htmlspecialchars($type) ?>">
-            <div class="form-group">
-                <label for="otp">Enter OTP</label>
-                <input type="text" id="otp" name="otp" pattern="\d{6}" required autocomplete="one-time-code" inputmode="numeric">
-            </div>
-            <button type="submit" class="btn btn-primary">Verify</button>
-        </form>
+        <div class="timer-resend">
+          <div>Remaining time: <span id="countdown">00:60s</span></div>
+          <div>Didn’t get the code? 
+            <a href="resend-otp.php?type=<?= htmlspecialchars($type) ?>"
+               id="resend-link"
+               class="disabled"
+            >Resend</a>
+          </div>
+        </div>
 
-        <p><a href="resend-otp.php?type=<?= htmlspecialchars($type) ?>">Resend OTP</a></p>
+        <button type="submit" class="btn-verify">Verify</button>
+        <a href="login.php" class="btn-cancel">Cancel</a>
+      </form>
     </div>
+  </div>
+
+<script>
+    // -- Auto‐tab between inputs and collect on submit --
+    const inputs = document.querySelectorAll('.otp-input');
+    inputs.forEach((input, i) => {
+        input.addEventListener('input', () => {
+            input.value = input.value.replace(/[^0-9]/g,'').charAt(0) || '';
+            if (input.value && i < inputs.length - 1) {
+                inputs[i + 1].focus();
+            }
+        });
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Backspace' && !input.value && i > 0) {
+                inputs[i - 1].focus();
+            }
+        });
+    });
+
+    document.getElementById('otp-form').addEventListener('submit', e => {
+        document.getElementById('otp').value =
+            Array.from(inputs).map(i => i.value).join('');
+    });
+
+    // -- Countdown timer & enable resend --
+    let time = 120; // 2 minutes in seconds
+    const countdownEl = document.getElementById('countdown');
+    const resendLink = document.getElementById('resend-link');
+    const timerId = setInterval(() => {
+        time--;
+        const minutes = Math.floor(time / 60);
+        const seconds = time % 60;
+        countdownEl.textContent = String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0') + 's';
+        if (time <= 0) {
+            clearInterval(timerId);
+            resendLink.classList.remove('disabled');
+        }
+    }, 1000);
+</script>
 </body>
 </html>
