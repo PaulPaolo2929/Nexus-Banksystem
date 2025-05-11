@@ -1,208 +1,157 @@
 <?php
-// TEMPORARY DEBUGGING - REMOVE IN PRODUCTION
+// Enable error reporting
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-// Ensure session is started
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+session_start();
 
-require_once '../includes/db.php';
-require_once '../includes/functions.php';
+require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/../includes/otp.php';
 
-redirectIfNotLoggedIn();
+redirectIfNotLoggedIn();  // Ensure user is logged in
 
 $userId = $_SESSION['user_id'];
 $error = '';
 $success = '';
+$otpSent = false;
+$balance = 0;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $amount = filter_var($_POST['amount'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
-
-    if ($amount <= 0) {
-        $error = "Amount must be greater than 0";
-    } else {
-        try {
-            $pdo->beginTransaction();
-
-            // Get account with balance
-            $stmt = $pdo->prepare("SELECT account_id, balance FROM accounts WHERE user_id = ? FOR UPDATE");
-            $stmt->execute([$userId]);
-            $account = $stmt->fetch();
-
-            if ($account) {
-                if ($account['balance'] >= $amount) {
-                    // Update balance
-                    $stmt = $pdo->prepare("UPDATE accounts SET balance = balance - ? WHERE account_id = ?");
-                    $stmt->execute([$amount, $account['account_id']]);
-
-                    // Record transaction
-                    $stmt = $pdo->prepare("
-                        INSERT INTO transactions (account_id, type, amount, description)
-                        VALUES (?, 'withdrawal', ?, ?)
-                    ");
-                    $stmt->execute([
-                        $account['account_id'],
-                        $amount,
-                        "Cash withdrawal"
-                    ]);
-
-                    $pdo->commit();
-                    $success = "Successfully withdrew $" . number_format($amount, 2);
-                } else {
-                    $error = "Insufficient funds";
-                }
-            } else {
-                $error = "Account not found";
-            }
-        } catch (Exception $e) {
-            $pdo->rollBack();
-            $error = "Transaction failed: " . $e->getMessage();
-        }
-    }
-}
-
-// Get current balance
+// Get user's account balance
 $stmt = $pdo->prepare("SELECT balance FROM accounts WHERE user_id = ?");
 $stmt->execute([$userId]);
 $balance = $stmt->fetchColumn();
+
+// Handle withdrawal form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['amount'])) {
+        $amount = filter_var($_POST['amount'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+
+        // Validate amount
+        if ($amount <= 0) {
+            $error = "Amount must be greater than 0.";
+        } elseif ($amount > $balance) {
+            $error = "Insufficient balance.";
+        } else {
+            // Get user's email for OTP generation
+            $stmt = $pdo->prepare("SELECT email FROM users WHERE user_id = ?");
+            $stmt->execute([$userId]);
+            $user = $stmt->fetch();
+            $email = $user['email'];
+
+            // Generate OTP and send to email
+            if ($email && generateOTP($email)) {
+                // Store pending withdrawal in session
+                $_SESSION['pending_withdrawal'] = [
+                    'amount' => $amount
+                ];
+
+                // Redirect to OTP verification page
+                header("Location: ../otp-verification.php?type=withdraw");
+                exit();
+            } else {
+                $error = "Failed to send OTP. Please try again.";
+            }
+        }
+    }
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureBank - Withdraw</title>
+    <title>Nexus-Banksystem - Withdraw</title>
     <link rel="stylesheet" href="../assets/css/main.css">
     <link rel="stylesheet" href="../assets/css/withdraw.css">
 
-    <!-- NAVIGATION EFFECTS -->
     <script src="../assets/js/navhover.js"></script>
 </head>
 <body>
-    <div class="wrapper">
-                <aside>
-                       
-                            <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
+<div class="wrapper">
+    <aside>
+        <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
+        <nav>
+            <a href="dashboard.php" class="btn">
+                <img src="../assets/images/inactive-dashboard.png" alt="dashboard-logo" class="nav-icon" data-default="../assets/images/inactive-dashboard.png" data-hover="../assets/images/hover-dashboard.png"> 
+                Dashboard
+            </a>
 
-                            <nav>
-                                <a href="dashboard.php" class="btn">
-                                    <img 
-                                    src="../assets/images/inactive-dashboard.png" 
-                                    alt="dashboard-logo" 
-                                    class="nav-icon"
-                                    data-default="../assets/images/inactive-dashboard.png"
-                                    data-hover="../assets/images/hover-dashboard.png"
-                                    > 
-                                    Dashboard
-                                </a>
+            <a href="deposit.php" class="btn">
+                <img src="../assets/images/inactive-deposit.png" alt="deposit-logo" class="nav-icon" data-default="../assets/images/inactive-deposit.png" data-hover="../assets/images/hover-deposit.png"> 
+                Deposit
+            </a>
 
-                                <a href="deposit.php" class="btn">
-                                    <img 
-                                    src="../assets/images/inactive-deposit.png" 
-                                    alt="deposit-logo" 
-                                    class="nav-icon"
-                                    data-default="../assets/images/inactive-deposit.png"
-                                    data-hover="../assets/images/hover-deposit.png"
-                                    > 
-                                    Deposit
-                                </a>
+            <a href="withdraw.php" class="btn dash-text">
+                <img src="../assets/images/hover-withdraw.png" alt="withdraw-logo" class="nav-icon" data-default="../assets/images/hover-withdraw.png" data-hover="../assets/images/hover-withdraw.png"> 
+                Withdraw
+            </a>
 
-                                <a href="withdraw.php" class="btn dash-text">
-                                    <img 
-                                    src="../assets/images/hover-withdraw.png" 
-                                    alt="withdraw-logo" 
-                                    class="nav-icon"
-                                    data-default="../assets/images/hover-withdraw.png"
-                                    data-hover="../assets/images/hover-withdraw.png"
-                                    > 
-                                    Withdraw
-                                </a>
+            <a href="transfer.php" class="btn">
+                <img src="../assets/images/inactive-transfer.png" alt="transfer-logo" class="nav-icon" data-default="../assets/images/inactive-transfer.png" data-hover="../assets/images/hover-transfer.png"> 
+                Transfer
+            </a>
 
-                                <a href="transfer.php" class="btn">
-                                    <img 
-                                    src="../assets/images/inactive-transfer.png" 
-                                    alt="transfer-logo" 
-                                    class="nav-icon"
-                                    data-default="../assets/images/inactive-transfer.png"
-                                    data-hover="../assets/images/hover-transfer.png"
-                                    > 
-                                    Transfer
-                                </a>
+            <a href="transactions.php" class="btn">
+                <img src="../assets/images/inactive-transaction.png" alt="transactions-logo" class="nav-icon" data-default="../assets/images/inactive-transaction.png" data-hover="../assets/images/hover-transaction.png"> 
+                Transactions
+            </a>
 
-                                <a href="transactions.php" class="btn">
-                                    <img 
-                                    src="../assets/images/inactive-transaction.png" 
-                                    alt="transactions-logo" 
-                                    class="nav-icon"
-                                    data-default="../assets/images/inactive-transaction.png"
-                                    data-hover="../assets/images/hover-transaction.png"
-                                    > 
-                                    Transactions
-                                </a>
+            <a href="investment.php" class="btn">
+                <img src="../assets/images/inactive-investment.png" alt="investment-logo" class="nav-icon" data-default="../assets/images/inactive-investment.png" data-hover="../assets/images/hover-investment.png"> 
+                Investment
+            </a>
 
-                                <a href="investment.php" class="btn">
-                                    <img 
-                                    src="../assets/images/inactive-investment.png" 
-                                    alt="investment-logo" 
-                                    class="nav-icon"
-                                    data-default="../assets/images/inactive-investment.png"
-                                    data-hover="../assets/images/hover-investment.png"
-                                    > 
-                                    Investment
-                                </a>
+            <a href="loan.php" class="btn">
+                <img src="../assets/images/inactive-loans.png" alt="loans-logo" class="nav-icon" data-default="../assets/images/inactive-loans.png" data-hover="../assets/images/hover-loans.png"> 
+                Loans
+            </a>
+        </nav>       
 
-                                <a href="loan.php" class="btn">
-                                    <img 
-                                    src="../assets/images/inactive-loans.png" 
-                                    alt="loans-logo" 
-                                    class="nav-icon"
-                                    data-default="../assets/images/inactive-loans.png"
-                                    data-hover="../assets/images/hover-loans.png"
-                                    > 
-                                    Loans
-                                </a>
-                            </nav>       
+        <div class="logout-cont">
+            <a href="../logout.php" class="logout">Logout</a>
+        </div>
+    </aside>
 
-                            <div class="logout-cont">
-                                 <a href="../logout.php" class="logout">Logout</a>
-                            </div>
-                </aside>
-    
-                <main class="container">
-                    <header>
-                        <h1>Withdraw Funds</h1>
-                    </header>
+    <main class="container">
+        <header>
+            <h1>Withdraw Funds</h1>
+            <a href="../logout.php" class="logout">Logout</a>
+        </header>
 
-                    <div class="content">
-                        <?php if ($error): ?>
-                            <div class="alert alert-danger">
-                                <?= htmlspecialchars($error) ?>
-                            </div>
-                        <?php endif; ?>
+        <nav class="dashboard-nav">
+            <a href="dashboard.php">Dashboard</a>
+            <a href="deposit.php">Deposit</a>
+            <a href="withdraw.php" class="active">Withdraw</a>
+            <a href="transfer.php">Transfer</a>
+            <a href="transactions.php">Transactions</a>
+        </nav>
 
-                        <?php if ($success): ?>
-                            <div class="alert alert-success">
-                                <?= htmlspecialchars($success) ?>
-                            </div>
-                        <?php endif; ?>
+        <div class="content">
+            <?php if ($error): ?>
+                <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+            <?php endif; ?>
 
-                        <div class="balance-info">
-                            <p>Current Balance: <strong>$<?= number_format($balance, 2) ?></strong></p>
-                        </div>
+            <?php if ($success): ?>
+                <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
+            <?php endif; ?>
 
-                        <form method="POST">
-                            <div class="form-group">
-                                <label>Amount to Withdraw</label>
-                                <input type="number" name="amount" step="0.01" min="0.01" required>
-                            </div>
+            <div class="balance-info">
+                <p>Current Balance: <strong>$<?= number_format($balance, 2) ?></strong></p>
+            </div>
 
-                            <button type="submit" class="btn">Withdraw</button>
-                        </form>
-                    </div>
-                </main>
-    </div>
+            <form method="POST">
+                <div class="form-group">
+                    <label>Amount to Withdraw</label>
+                    <input type="number" name="amount" step="0.01" min="0.01" required>
+                </div>
+
+                <button type="submit" class="btn">Withdraw</button>
+            </form>
+        </div>
+    </main>
+</div>
 </body>
 </html>

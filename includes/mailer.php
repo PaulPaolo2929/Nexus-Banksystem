@@ -17,12 +17,12 @@ function sendOTP($recipientEmail, $otpCode) {
         $mail->Port       = 587;
 
         // Recipients
-        $mail->setFrom('shaison62@gmail.com', 'SecureBank');
+        $mail->setFrom('shaison62@gmail.com', 'Nexus Bank');
         $mail->addAddress($recipientEmail);
 
         // Content
         $mail->isHTML(true);
-        $mail->Subject = 'Your SecureBank OTP Code';
+        $mail->Subject = 'Your Nexus Bank OTP Code';
         $mail->Body    = "Your OTP code is: <strong>$otpCode</strong><br>Valid for 5 minutes.";
         $mail->AltBody = "Your OTP code is: $otpCode (valid for 5 minutes)";
 
