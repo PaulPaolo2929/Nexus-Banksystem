@@ -1,0 +1,148 @@
+/* page background */
+.otp-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: start;
+  background: linear-gradient(to top, #585899, #100D2A);
+  padding: 20px;
+}
+
+/* card */
+.otp-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 500px;
+  height: 100%;
+  max-height: px;
+  padding: 29px 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  position: relative;
+  transform: scale(0.9);
+}
+
+/* logo */
+.otp-logo {
+  width: 18%;
+  max-width: 195px;
+  margin-bottom: 1rem;
+}
+
+/* heading */
+.otp-title {
+  font-size: 24px;
+  margin-bottom: 8px;
+  color: #1A202C;
+}
+
+/* description */
+.otp-desc {
+  font-size: 14px;
+  color: #4A5568;
+  margin-bottom: 24px;
+  line-height: 1.4;
+}
+
+/* OTP inputs */
+.otp-inputs {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 2rem;
+    gap: 12px;
+}
+.otp-input {
+    width: 65px;
+    height: 65px;
+    border: 1.7px solid #CBD5E0;
+    border-radius: 8px;
+    font-size: 20px;
+    text-align: center;
+    outline: none;
+    transition: border-color .2s;
+    font-weight: 500; /* Added bold font weight */
+    color: #2D3748; /* Added font color */
+}
+.otp-input:focus {
+    border-color: #5A67D8;
+}
+
+/* timer & resend row */
+.timer-resend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #1A202C;
+  margin-bottom: 2rem;
+}
+#countdown {
+  color: #5A67D8;
+    font-weight: bold;
+}
+#resend-link {
+  text-decoration: none;
+  color: #5A67D8;
+  pointer-events: none;
+  opacity: 0.5;
+  transition: opacity .2s;
+ 
+}
+#resend-link:not(.disabled) {
+  pointer-events: auto;
+  font-weight: bold;
+  opacity: 1;
+}
+
+/* buttons */
+.btn-verify,
+.btn-cancel {
+    display: block;
+    width: 100%;
+    padding: 12px 0;
+    font-size: 16px;
+    border-radius: 999px;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+    margin-bottom: 12px;
+    border: none;
+    transition: background-color 0.2s, color 0.2s, opacity 0.2s;
+}
+.btn-verify {
+    background-color: #5A67D8;
+    color: #FFFFFF;
+}
+.btn-verify:hover {
+    background-color: #5956bd;
+    transform: scale(1.01);
+}
+.btn-verify:active {
+    opacity: 0.9;
+}
+.btn-cancel {
+    background: transparent;
+    border: 2px solid #5A67D8;
+    color: #5A67D8;
+}
+.btn-cancel:hover {
+    transform: scale(1.01);
+}
+
+.btn-cancel:active {
+    opacity: 0.7;
+}
+
+/* flash & error */
+.alert {
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    font-size: 14px;
+}
+.alert-danger {
+    background: #FED7D7;
+    color: #C53030;
+}
