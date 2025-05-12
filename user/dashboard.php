@@ -37,6 +37,13 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$userId]);
 $transactions = $stmt->fetchAll();
+
+// Check if the user has a profile picture
+$stmt = $pdo->prepare("SELECT profile_picture FROM users WHERE user_id = ?");
+$profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'] : '../assets/images/default-avatar.png';
+// Fetch user's profile information
+
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -72,8 +79,16 @@ $transactions = $stmt->fetchAll();
 
 <div class="wrapper">
                 <aside>
-                       
+
+                <div class="Logos-cont">
                 <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
+                </div>
+
+                <div class="profile-container">
+                    <img src="<?= $profilePic ?>" alt="Profile Picture" class="img-fluid">
+                        <h5><?= htmlspecialchars($user['full_name']) ?></h5>
+                        <p><?= htmlspecialchars($user['account_number']) ?></p>
+                </div>
 
                 <nav>
                     <a href="dashboard.php" class="btn dash-text">
@@ -153,7 +168,7 @@ $transactions = $stmt->fetchAll();
                         Loans
                     </a>
 
-                    <a href="loan.php" class="btn">
+                    <a href="profile.php" class="btn">
                         <img 
                         src="../assets/images/inactive-loans.png" 
                         alt="loans-logo" 
@@ -173,6 +188,9 @@ $transactions = $stmt->fetchAll();
                 <main class="container">
                     <header>
                         <h1>Overview</h1>
+                        <div class="profile-conts">
+                            <img src="<?= $profilePic ?>" alt="Profile Picture" class="img-fluid"> 
+                        </div>
                     </header>
                     
                     

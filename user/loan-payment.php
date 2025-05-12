@@ -111,6 +111,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+// Get user account information
+$userId = $_SESSION['user_id'];
+$stmt = $pdo->prepare("
+    SELECT u.*, a.account_number, a.balance 
+    FROM users u 
+    JOIN accounts a ON u.user_id = a.user_id 
+    WHERE u.user_id = ?
+");
+$stmt->execute([$userId]);
+$user = $stmt->fetch();
+
+if (!$user) {
+    die('User account not found.');
+}
+
+// Check if the user has a profile picture
+$stmt = $pdo->prepare("SELECT profile_picture FROM users WHERE user_id = ?");
+$profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'] : '../assets/images/default-avatar.png';
+// Fetch user's profile information
+
 ?>
 
 <!DOCTYPE html>
@@ -135,86 +156,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 <div class="wrapper">
                 <aside> 
-                        <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
 
-                        <nav>
-                    <a href="dashboard.php" class="btn">
-                        <img 
-                        src="../assets/images/inactive-dashboard.png" 
-                        alt="dashboard-logo" 
-                        class="nav-icon"
-                        data-default="../assets/images/inactive-dashboard.png"
-                        data-hover="../assets/images/hover-dashboard.png"
-                        > 
-                        Dashboard
-                    </a>
+                        <div class="Logos-cont">
+                            <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
+                        </div>
 
-                    <a href="deposit.php" class="btn">
-                        <img 
-                        src="../assets/images/inactive-deposit.png" 
-                        alt="deposit-logo" 
-                        class="nav-icon"
-                        data-default="../assets/images/inactive-deposit.png"
-                        data-hover="../assets/images/hover-deposit.png"
-                        > 
-                        Deposit
-                    </a>
+                        <div class="profile-container">
+                            <img src="<?= $profilePic ?>" alt="Profile Picture" class="img-fluid">
+                            <h5><?= htmlspecialchars($user['full_name']) ?></h5>
+                            <p><?= htmlspecialchars($user['account_number']) ?></p>
+                        </div>
+                                <nav>
+                            <a href="dashboard.php" class="btn">
+                                <img 
+                                src="../assets/images/inactive-dashboard.png" 
+                                alt="dashboard-logo" 
+                                class="nav-icon"
+                                data-default="../assets/images/inactive-dashboard.png"
+                                data-hover="../assets/images/hover-dashboard.png"
+                                > 
+                                Dashboard
+                            </a>
 
-                    <a href="withdraw.php" class="btn">
-                        <img 
-                        src="../assets/images/inactive-withdraw.png" 
-                        alt="withdraw-logo" 
-                        class="nav-icon"
-                        data-default="../assets/images/inactive-withdraw.png"
-                        data-hover="../assets/images/hover-withdraw.png"
-                        > 
-                        Withdraw
-                    </a>
+                            <a href="deposit.php" class="btn">
+                                <img 
+                                src="../assets/images/inactive-deposit.png" 
+                                alt="deposit-logo" 
+                                class="nav-icon"
+                                data-default="../assets/images/inactive-deposit.png"
+                                data-hover="../assets/images/hover-deposit.png"
+                                > 
+                                Deposit
+                            </a>
 
-                    <a href="transfer.php" class="btn">
-                        <img 
-                        src="../assets/images/inactive-transfer.png" 
-                        alt="transfer-logo" 
-                        class="nav-icon"
-                        data-default="../assets/images/inactive-transfer.png"
-                        data-hover="../assets/images/hover-transfer.png"
-                        > 
-                        Transfer
-                    </a>
+                            <a href="withdraw.php" class="btn">
+                                <img 
+                                src="../assets/images/inactive-withdraw.png" 
+                                alt="withdraw-logo" 
+                                class="nav-icon"
+                                data-default="../assets/images/inactive-withdraw.png"
+                                data-hover="../assets/images/hover-withdraw.png"
+                                > 
+                                Withdraw
+                            </a>
 
-                    <a href="transactions.php" class="btn">
-                        <img 
-                        src="../assets/images/inactive-transaction.png" 
-                        alt="transactions-logo" 
-                        class="nav-icon"
-                        data-default="../assets/images/inactive-transaction.png"
-                        data-hover="../assets/images/hover-transaction.png"
-                        > 
-                        Transactions
-                    </a>
+                            <a href="transfer.php" class="btn">
+                                <img 
+                                src="../assets/images/inactive-transfer.png" 
+                                alt="transfer-logo" 
+                                class="nav-icon"
+                                data-default="../assets/images/inactive-transfer.png"
+                                data-hover="../assets/images/hover-transfer.png"
+                                > 
+                                Transfer
+                            </a>
 
-                    <a href="investment.php" class="btn">
-                        <img 
-                        src="../assets/images/inactive-investment.png" 
-                        alt="investment-logo" 
-                        class="nav-icon"
-                        data-default="../assets/images/inactive-investment.png"
-                        data-hover="../assets/images/hover-investment.png"
-                        > 
-                        Investment
-                    </a>
+                            <a href="transactions.php" class="btn">
+                                <img 
+                                src="../assets/images/inactive-transaction.png" 
+                                alt="transactions-logo" 
+                                class="nav-icon"
+                                data-default="../assets/images/inactive-transaction.png"
+                                data-hover="../assets/images/hover-transaction.png"
+                                > 
+                                Transactions
+                            </a>
 
-                    <a href="loan.php" class="btn">
-                        <img 
-                        src="../assets/images/inactive-loans.png" 
-                        alt="loans-logo" 
-                        class="nav-icon"
-                        data-default="../assets/images/inactive-loans.png"
-                        data-hover="../assets/images/hover-loans.png"
-                        > 
-                        Loans
-                    </a>
-                </nav>       
+                            <a href="investment.php" class="btn">
+                                <img 
+                                src="../assets/images/inactive-investment.png" 
+                                alt="investment-logo" 
+                                class="nav-icon"
+                                data-default="../assets/images/inactive-investment.png"
+                                data-hover="../assets/images/hover-investment.png"
+                                > 
+                                Investment
+                            </a>
+
+                            <a href="loan.php" class="btn">
+                                <img 
+                                src="../assets/images/inactive-loans.png" 
+                                alt="loans-logo" 
+                                class="nav-icon"
+                                data-default="../assets/images/inactive-loans.png"
+                                data-hover="../assets/images/hover-loans.png"
+                                > 
+                                Loans
+                            </a>
+                        </nav>       
 
                         <div class="logout-cont">
                                 <a href="../logout.php" class="logout">Logout</a>

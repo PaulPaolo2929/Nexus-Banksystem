@@ -12,9 +12,9 @@
     --hover-effects: #efeeff;
   
     /* Font Sizes */
-    --big-font-size: 6.6rem;
-    --semi-big-font-size: 2rem;
-    --paragraph-font-size: 0.8rem; /* assuming "pfont -rem" meant 1rem */
+    --big-font-size: clamp(4rem, 6vw, 6.6rem);
+    --semi-big-font-size: clamp(1.5rem, 3vw, 1.6rem);
+    --paragraph-font-size: clamp(0.7rem, 1.5vw, 0.8rem);
   }
   
   
@@ -54,16 +54,58 @@
     border-right: 1px solid #e7e5e5;
     z-index: 1000;
 
+    h5{
+        font-size: var(--paragraph-font-size);
+        color: var(--font-color);
+        font-weight: 600;
+    }
+    
+    p{
+        font-size: var(--paragraph-font-size);
+        color: var(--inactive-font-color);
+        font-weight: 500;
+    }
+
+    .Logos-cont{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+    }
+
     & .logo-container{
-        width: 90%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 80%;
         margin-top: 0rem;
+    }
+
+    .profile-container{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin-top: 1.3rem;
+        background-color: var(--main-color);
+        border-radius: 12px;
+        /* box-shadow: 0 4px 10px rgba(52,60,106,0.1); */
+        width: 100%;
+        /* padding: 1rem; */
+    }
+    & .img-fluid, .profile-pic{
+        width: 33%;
+        margin-bottom:0.5rem;
+        border-radius:50% ;
+        border: 2px solid var(--inactive-font-color);
+        aspect-ratio: 1/1;
     }
 
     & nav {
       display: flex;
       flex-direction: column;
       gap: 0.2rem;
-      margin-top: 2rem;
+      margin-top: 1rem;
       font-size: var(--paragraph-font-size);
       color: var(--inactive-font-color);
       font-weight: 500;
@@ -84,7 +126,6 @@
 
         & img {
             width: 20px;
-            
             margin-right: 5px;
           }
       }
@@ -125,15 +166,15 @@
     color: var(--inactive-font-color);
     border-radius: 8px;
     font-weight: 500;
-    height: 37.2px; /* Fixed height for consistency */
+    height: 34.2px; /* Fixed height for consistency */
   }
   
   .btn:hover {
-    /* background-color: var(--hover-effects);
-    color: var(--font-color); */
+    /* background-color: var(--hover-effects); */
+    color: var(--font-color);
     transform: scale(1.00);
     box-shadow: 0 4px 12px rgba(255, 255, 255, 0.06);
-    height: 37.2px; /* Fixed height for consistency */
+    height: 34.2px; /* Fixed height for consistency */
   }
   
   /* Dashboard icon active page */
@@ -142,14 +183,14 @@
     color: var(--main-color);
     transform: scale(1.00);
     box-shadow: 0 4px 12px rgba(255, 255, 255, 0.06);
-    height: 37.2px; /* Fixed height for consistency */
+    height: 34.2px; /* Fixed height for consistency */
 
     & ::hover{
       background-color:var(--bg-sidecolor-2);
       color: var(--main-color);
       transform: scale(1.00);
       box-shadow: 0 4px 12px rgba(255, 255, 255, 0.06);
-      height: 42.2px; /* Fixed height for consistency */
+      height: 34.2px; /* Fixed height for consistency */
     }
   }
 
@@ -165,7 +206,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 1rem;
+    padding: 0.7rem 1rem;
     background-color: var(--main-color);
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     position: fixed;
@@ -176,6 +217,27 @@
       font-size: var(--semi-big-font-size);
       color: var(--font-color);
       font-weight: 600;
+    }
+
+    .profile-conts{
+      display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: end;
+        background-color: var(--main-color);
+        border-radius: 12px;
+        /* box-shadow: 0 4px 10px rgba(52,60,106,0.1); */
+        width: 100%;
+        /* padding: 1rem; */
+
+        & .img-fluid {
+            width: 3.6%;
+            max-width: 35px;
+            min-width: 40px;
+            border-radius:50% ;
+            border: 2px solid var(--inactive-font-color);
+            aspect-ratio: 1/1;
+        }
     }
   }
 
@@ -195,7 +257,7 @@
     border: 1px solid var(--bg-sidecolor-2);
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(52,60,106,0.05);
-    overflow: hidden;
+    overflow: auto;
   }
   
   /* Tabs */
