@@ -10,18 +10,52 @@ require_once '../includes/functions.php';
 redirectIfNotLoggedIn();
 
 $userId = $_SESSION['user_id'];
-$error = '';
-$success = '';
+$error  = '';
+$success= '';
 
-$userId = $_SESSION['user_id'];
-$stmt = $pdo->prepare("SELECT profile_picture FROM users WHERE user_id = ?");
+// ─── Handle profile update ───
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_profile') {
+    $full_name  = htmlspecialchars($_POST['full_name'],  ENT_QUOTES, 'UTF-8');
+    $email      = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
+    $age        = intval($_POST['age']);
+    $birth_year = intval($_POST['birth_year']);
+    $address    = htmlspecialchars($_POST['address'],     ENT_QUOTES, 'UTF-8');
+    $occupation = htmlspecialchars($_POST['occupation'],  ENT_QUOTES, 'UTF-8');
+    $phone      = htmlspecialchars($_POST['phone'],       ENT_QUOTES, 'UTF-8');
+
+    try {
+        $stmt = $pdo->prepare("
+            UPDATE users 
+            SET full_name=?, email=?, age=?, birth_year=?, address=?, occupation=?, phone=?
+            WHERE user_id=?
+        ");
+        $stmt->execute([
+            $full_name,
+            $email,
+            $age,
+            $birth_year,
+            $address,
+            $occupation,
+            $phone,
+            $userId
+        ]);
+        $success = "Profile updated successfully!";
+    } catch (Exception $e) {
+        $error = "Failed to update profile: " . $e->getMessage();
+    }
+}
+
+// ─── Fetch user data ───
+$stmt = $pdo->prepare("SELECT * FROM users WHERE user_id = ?");
 $stmt->execute([$userId]);
 $user = $stmt->fetch();
 
-$profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'] : '../assets/images/default-avatar.png';
-// Fetch user's profile information
+// ─── Fetch profile picture ───
+$profilePic = $user['profile_picture']
+    ? '../uploads/' . $user['profile_picture']
+    : '../assets/images/default-avatar.png';
 
-// Fetch user's loans
+// ─── (rest of your loans code unchanged) ───
 $stmt = $pdo->prepare("
     SELECT * FROM loans 
     WHERE user_id = ? 
@@ -30,25 +64,26 @@ $stmt = $pdo->prepare("
 $stmt->execute([$userId]);
 $loans = $stmt->fetchAll();
 
-// Fetch balance from the accounts table (optional - not currently used in this page)
 $accountStmt = $pdo->prepare("SELECT balance FROM accounts WHERE user_id = ?");
 $accountStmt->execute([$userId]);
 $account = $accountStmt->fetch();
 $balance = $account ? $account['balance'] : 0;
 
-// Generate and store CSRF token to prevent double submissions
+// CSRF token for loans
 if (empty($_SESSION['loan_token'])) {
     $_SESSION['loan_token'] = bin2hex(random_bytes(32));
 }
 $token = $_SESSION['loan_token'];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// Handle loan form submission (unchanged)…
+if ($_SERVER['REQUEST_METHOD'] === 'POST' 
+    && (!isset($_POST['action']) || $_POST['action'] !== 'update_profile')
+) {
     if (!isset($_POST['token']) || $_POST['token'] !== $_SESSION['loan_token']) {
         $error = "Duplicate submission or invalid token.";
     } else {
-        // Sanitize and validate input
-        $amount = filter_var($_POST['amount'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
-        $term = intval($_POST['term']);
+        $amount  = filter_var($_POST['amount'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+        $term    = intval($_POST['term']);
         $purpose = htmlspecialchars($_POST['purpose'], ENT_QUOTES, 'UTF-8');
 
         if ($amount < 100) {
@@ -56,27 +91,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($term < 1 || $term > 60) {
             $error = "Loan term must be between 1 and 60 months";
         } else {
-            // Calculate interest rate
             $interestRate = 5.0;
             if ($amount > 10000) $interestRate = 4.5;
-            if ($term > 36) $interestRate += 1.0;
+            if ($term > 36)     $interestRate += 1.0;
 
             try {
-                $stmt = $pdo->prepare("
+                $loanStmt = $pdo->prepare("
                     INSERT INTO loans (user_id, amount, interest_rate, term_months, status, purpose)
                     VALUES (?, ?, ?, ?, 'pending', ?)
                 ");
-                $stmt->execute([$userId, $amount, $interestRate, $term, $purpose]);
+                $loanStmt->execute([$userId, $amount, $interestRate, $term, $purpose]);
 
-                // Regenerate token to prevent double submissions
                 $_SESSION['loan_token'] = bin2hex(random_bytes(32));
-
                 $success = "Loan application submitted successfully!";
             } catch (Exception $e) {
-                $error = "Failed to submit loan application: " . $e->getMessage();
+                $error = "Failed to submit loan: " . $e->getMessage();
             }
         }
     }
+}
+
+// Get user account information
+$userId = $_SESSION['user_id'];
+$stmt = $pdo->prepare("
+    SELECT u.*, a.account_number, a.balance 
+    FROM users u 
+    JOIN accounts a ON u.user_id = a.user_id 
+    WHERE u.user_id = ?
+");
+$stmt->execute([$userId]);
+$user = $stmt->fetch();
+
+if (!$user) {
+    die('User account not found.');
 }
 ?>
 
@@ -266,35 +313,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
         <main class="container">
             <header>
-                <h1>Profile Information</h1>
-                <a href="../logout.php" class="logout">Logout</a>
-            </header>
+                        <h1>Profile Information</h1>
+                    <a href="../logout.php" class="logout">Logout</a>
+                </header>
 
-            <main class="content">
-                 <form action="upload_picture.php" method="POST" enctype="multipart/form-data">
+                <main class="content">
+                    <!-- Error / Success -->
+                    <?php if ($error):   ?><p style="color:red;"><?= $error   ?></p><?php endif; ?>
+                    <?php if ($success): ?><p style="color:green;"><?= $success ?></p><?php endif; ?>
+
+                    <!-- Upload picture (unchanged) -->
+                    <form action="upload_profile.php" method="POST" enctype="multipart/form-data">
                     <label>Upload Profile Picture:</label>
                     <input type="file" name="profile_picture" accept="image/*" required>
                     <button type="submit">Upload</button>
-                </form>
+                    </form>
 
-            <img src="<?= $profilePic ?>" alt="Profile Picture" class="profile-picture" data-toggle="modal" data-target="#imageModal">
+                    <img src="<?= $profilePic ?>" alt="Profile Picture" class="profile-picture" data-toggle="modal">
 
-               <!-- Modal -->
-                <div id="imageModal" class="modal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
+                    <!-- Image modal (unchanged) -->
+                    <div id="imageModal" class="modal">
+                    <div class="modal-dialog">
                         <div class="modal-content">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
-                                <button type="button" class="btn btn-secondary" id="backButton">Back</button>
-                            </div>
-                            <div class="modal-body">
-                                <img src="<?= $profilePic ?>" alt="Profile Picture" class="img-fluid">
-                            </div>
+                        <div class="modal-header">
+                            <span class="close">&times;</span>
+                            <button id="backButton">Back</button>
+                        </div>
+                        <div class="modal-body">
+                            <img src="<?= $profilePic ?>" alt="Profile Picture" class="img-fluid">
+                        </div>
                         </div>
                     </div>
-                </div>
+                    </div>
+
+                    <!-- ── Editable Profile Form ── -->
+                    <button id="editProfileBtn">Edit Profile</button>
+                        
+                    <form id="profileForm" method="POST">
+                    <input type="hidden" name="action" value="update_profile">
+
+                     <label>Account Number</label>
+                    <input type="text" value="<?= htmlspecialchars($user['account_number']) ?>" disabled>
+
+                    <label>Password</label>                  
+                    <input type="password" value="********" disabled>
+
+                    <label>Full Name</label>
+                    <input type="text"   name="full_name"  value="<?= htmlspecialchars($user['full_name']) ?>"  disabled>
+
+                    <label>Email</label>
+                    <input type="email"  name="email"      value="<?= htmlspecialchars($user['email']) ?>"      disabled>
+
+                    <label>Age</label>
+                    <input type="number" name="age"        value="<?= htmlspecialchars($user['age']) ?>"        disabled>
+
+                    <label>Birth Year</label>
+                    <input type="number" name="birth_year" value="<?= htmlspecialchars($user['birth_year']) ?>" disabled>
+
+                    <label>Address</label>
+                    <textarea name="address" disabled><?= htmlspecialchars($user['address']) ?></textarea>
+
+                    <label>Occupation</label>
+                    <input type="text"   name="occupation" value="<?= htmlspecialchars($user['occupation']) ?>" disabled>
+
+                    <label>Phone</label>
+                    <input type="text"   name="phone"      value="<?= htmlspecialchars($user['phone']) ?>"      disabled>
+
+                    <button type="submit" id="saveProfileBtn" disabled>Save Changes</button>
+                    </form>
 
 
 
@@ -327,6 +413,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         };
 
+        // Edit Profile button functionality
+         
+  const editBtn  = document.getElementById('editProfileBtn');
+  const form     = document.getElementById('profileForm');
+  const inputs   = form.querySelectorAll('input, textarea');
+  const saveBtn  = document.getElementById('saveProfileBtn');
+
+  editBtn.addEventListener('click', () => {
+    inputs.forEach(i => i.disabled = false);
+    saveBtn.disabled = true;  // still disabled until change
+    editBtn.disabled = true;  // prevent re‐click
+  });
+
+  // Enable save button only once any field changes
+  inputs.forEach(i => {
+    i.addEventListener('input', () => {
+      saveBtn.disabled = false;
+    });
+  });
 
 </script>
 </body>

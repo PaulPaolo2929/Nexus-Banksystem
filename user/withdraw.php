@@ -56,6 +56,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+// Get user account information
+$userId = $_SESSION['user_id'];
+$stmt = $pdo->prepare("
+    SELECT u.*, a.account_number, a.balance 
+    FROM users u 
+    JOIN accounts a ON u.user_id = a.user_id 
+    WHERE u.user_id = ?
+");
+$stmt->execute([$userId]);
+$user = $stmt->fetch();
+
+if (!$user) {
+    die('User account not found.');
+}
+
+// Check if the user has a profile picture
+$stmt = $pdo->prepare("SELECT profile_picture FROM users WHERE user_id = ?");
+$profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'] : '../assets/images/default-avatar.png';
+// Fetch user's profile information
+
 ?>
 
 <!DOCTYPE html>
@@ -72,7 +93,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 <div class="wrapper">
     <aside>
-        <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
+       <div class="Logos-cont">
+                    <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
+                </div>
+
+                <div class="profile-container">
+                    <img src="<?= $profilePic ?>" alt="Profile Picture" class="img-fluid">
+                    <h5><?= htmlspecialchars($user['full_name']) ?></h5>
+                    <p><?= htmlspecialchars($user['account_number']) ?></p>
+                </div>
         <nav>
             <a href="dashboard.php" class="btn">
                 <img src="../assets/images/inactive-dashboard.png" alt="dashboard-logo" class="nav-icon" data-default="../assets/images/inactive-dashboard.png" data-hover="../assets/images/hover-dashboard.png"> 
