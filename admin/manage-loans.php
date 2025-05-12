@@ -1,6 +1,7 @@
 <?php 
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
+require_once '../includes/notification.php';  // Include notification script
 
 // Redirect if not admin
 redirectIfNotAdmin();
@@ -10,12 +11,18 @@ if (isset($_GET['id']) && isset($_GET['action'])) {
     $loanId = $_GET['id'];
     $action = $_GET['action'];
 
+    // Initialize the status and email variables
+    $status = null;
+    $subject = '';
+    $messageHtml = '';
+    $messagePlain = '';
+
     if ($action == 'approve' || $action == 'reject') {
         $status = ($action == 'approve') ? 'approved' : 'rejected';
         $approvedAt = ($status == 'approved') ? date('Y-m-d H:i:s') : null;
 
         // Fetch loan details
-        $stmt = $pdo->prepare("SELECT amount, interest_rate FROM loans WHERE loan_id = ?");
+        $stmt = $pdo->prepare("SELECT amount, interest_rate, user_id FROM loans WHERE loan_id = ?");
         $stmt->execute([$loanId]);
         $loan = $stmt->fetch();
 
@@ -34,14 +41,29 @@ if (isset($_GET['id']) && isset($_GET['action'])) {
 
             // If the loan is approved, update the user's account balance
             if ($status == 'approved') {
-                $stmt = $pdo->prepare("SELECT user_id FROM loans WHERE loan_id = ?");
-                $stmt->execute([$loanId]);
-                $loan = $stmt->fetch();
+                $stmt = $pdo->prepare("UPDATE accounts SET balance = balance + ? WHERE user_id = ?");
+                $stmt->execute([$amount, $loan['user_id']]);
+            }
 
-                if ($loan) {
-                    $stmt = $pdo->prepare("UPDATE accounts SET balance = balance + ? WHERE user_id = ?");
-                    $stmt->execute([$amount, $loan['user_id']]);
+            // Fetch user's email for notification
+            $stmt = $pdo->prepare("SELECT email FROM users WHERE user_id = ?");
+            $stmt->execute([$loan['user_id']]);
+            $user = $stmt->fetch();
+
+            if ($user) {
+                // Prepare the email content
+                if ($status == 'approved') {
+                    $subject = 'Your Loan Request Has Been Approved';
+                    $messageHtml = "<p>Dear User,</p><p>Your loan request has been <strong>approved</strong>.</p><p>Amount: $".number_format($amount, 2)."<br>Total Due: $".number_format($totalDue, 2)."</p><p>Thank you for choosing us.</p>";
+                    $messagePlain = "Dear User, Your loan request has been approved.\nAmount: $".number_format($amount, 2)."\nTotal Due: $".number_format($totalDue, 2)."\nThank you for choosing us.";
+                } else {
+                    $subject = 'Your Loan Request Has Been Rejected';
+                    $messageHtml = "<p>Dear User,</p><p>Your loan request has been <strong>rejected</strong>.</p><p>We regret to inform you that we are unable to process your loan request at this time.</p><p>Thank you.</p>";
+                    $messagePlain = "Dear User, Your loan request has been rejected.\nWe regret to inform you that we are unable to process your loan request at this time.\nThank you.";
                 }
+
+                // Send the notification email
+                sendNotification($user['email'], $subject, $messageHtml, $messagePlain);
             }
         }
     } elseif ($action == 'delete') {
@@ -52,6 +74,16 @@ if (isset($_GET['id']) && isset($_GET['action'])) {
         // Delete loan history
         $stmt = $pdo->prepare("DELETE FROM loan_history WHERE loan_id = ?");
         $stmt->execute([$loanId]);
+
+        // Fetch user's email for notification
+        $stmt = $pdo->prepare("SELECT email FROM users WHERE user_id = ?");
+        $stmt->execute([$loan['user_id']]);
+        $user = $stmt->fetch();
+
+        if ($user) {
+            // Send deletion notification email
+            sendNotification($user['email'], 'Your Loan Has Been Deleted', 'Your loan request has been deleted from our system.', 'Your loan request has been deleted from our system.');
+        }
     }
 
     header("Location: manage-loans.php");
@@ -95,7 +127,7 @@ $approvedLoans = $approvedLoansStmt->fetchAll();
     <title>Manage Loans - SecureBank Admin</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <style>
-        table {
+                table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 1rem;
