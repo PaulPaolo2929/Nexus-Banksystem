@@ -6,6 +6,7 @@ error_reporting(E_ALL);
 
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
+require_once '../includes/notification.php'; // NEW
 
 // Ensure only admin can access this page
 redirectIfNotAdmin();
@@ -35,6 +36,24 @@ if (isset($_GET['accept']) && is_numeric($_GET['accept'])) {
         }
 
         $pdo->commit();
+
+        // Send email notification
+        $stmt = $pdo->prepare("SELECT email, full_name FROM users WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+
+        if ($user) {
+            $email = $user['email'];
+            $name = $user['full_name'];
+
+            $subject = "Your Nexus Bank Account Has Been Approved";
+            $body = "<p>Hi <strong>$name</strong>,</p>
+                     <p>Your Nexus Bank account has been <strong>approved</strong> and is now active. You can now log in and use our services.</p>
+                     <p>Thank you for joining Nexus Bank!</p>";
+
+            sendNotification($email, $subject, $body);
+        }
+
         $_SESSION['success'] = "User approved and account created.";
     } catch (Exception $e) {
         $pdo->rollBack();
@@ -64,7 +83,7 @@ if (isset($_GET['reject']) && is_numeric($_GET['reject'])) {
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $userId = $_GET['delete'];
 
-    $stmt = $pdo->prepare("SELECT balance FROM accounts WHERE user_id = ?");
+    $stmt = $pdo->prepare("SELECT balance, email, full_name FROM accounts LEFT JOIN users ON accounts.user_id = users.user_id WHERE users.user_id = ?");
     $stmt->execute([$userId]);
     $account = $stmt->fetch();
 
@@ -80,7 +99,18 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
         $pdo->prepare("DELETE FROM users WHERE user_id = ?")->execute([$userId]);
         $pdo->commit();
 
-        $_SESSION['success'] = "User deleted successfully.";
+        // Send email notification for account deletion
+        $email = $account['email'];
+        $name = $account['full_name'];
+
+        $subject = "Your Nexus Bank Account Has Been Deleted";
+        $body = "<p>Hi <strong>$name</strong>,</p>
+                 <p>Your Nexus Bank account has been <strong>deleted</strong> by an administrator. All associated data has been removed from our system.</p>
+                 <p>If you believe this is a mistake, please contact our support team immediately.</p>";
+
+        sendNotification($email, $subject, $body);
+
+        $_SESSION['success'] = "User deleted successfully and notified.";
     } catch (Exception $e) {
         $pdo->rollBack();
         $_SESSION['error'] = "Failed to delete user: " . $e->getMessage();
@@ -98,6 +128,24 @@ if (isset($_GET['toggle_active']) && is_numeric($_GET['toggle_active'])) {
     try {
         $stmt = $pdo->prepare("UPDATE users SET is_active = ? WHERE user_id = ?");
         $stmt->execute([$newStatus, $userId]);
+
+        // Send activation/deactivation email
+        $stmt = $pdo->prepare("SELECT email, full_name FROM users WHERE user_id = ?");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+
+        if ($user) {
+            $email = $user['email'];
+            $name = $user['full_name'];
+            $statusText = $newStatus ? 'activated' : 'deactivated';
+
+            $subject = "Your Nexus Bank Account Has Been $statusText";
+            $body = "<p>Hi <strong>$name</strong>,</p>
+                     <p>Your Nexus Bank account has been <strong>$statusText</strong> by an administrator.</p>
+                     <p>If you have any concerns, please contact support.</p>";
+
+            sendNotification($email, $subject, $body);
+        }
 
         $_SESSION['success'] = $newStatus ? "User account activated." : "User account deactivated.";
     } catch (Exception $e) {
@@ -218,7 +266,7 @@ $users = $pdo->query("
                                     <?php else: ?>
                                         <a href="manage-users.php?toggle_active=<?= $user['user_id'] ?>&status=0" class="btn btn-sm btn-success" onclick="return confirm('Activate this user?')">Activate</a>
                                     <?php endif; ?>
-
+                                    
                                     <?php if ($user['balance'] == 0): ?>
                                         <a href="manage-users.php?delete=<?= $user['user_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this user?')">Delete</a>
                                     <?php endif; ?>
