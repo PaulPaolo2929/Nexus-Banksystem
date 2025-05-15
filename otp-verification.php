@@ -9,6 +9,7 @@ session_start();
 require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/otp.php';
+require_once __DIR__ . '/includes/notification.php';
 
 $type = $_GET['type'] ?? $_POST['type'] ?? 'register';
 
@@ -86,6 +87,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['is_admin'] = $is_admin;
                     unset($_SESSION['temp_user_id'], $_SESSION['temp_is_admin']);
 
+                    // --- Send login success notification email ---
+                    $subject = "Login Successful - Nexus E-Banking";
+                    $body = "Hello,<br><br>"
+                          . "You have successfully logged in to your Nexus E-Banking account.<br><br>"
+                          . "If this wasn't you, please contact support immediately.<br><br>"
+                          . "Thank you,<br>Nexus Bank";
+                    sendNotification($user['email'], $subject, $body);
+
                     header("Location: " . ($is_admin ? "admin/dashboard.php" : "user/dashboard.php"));
                     exit();
                 } else {
@@ -114,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmt->execute([$user_id]);
                         $fromAccount = $stmt->fetch();
 
-                        $stmt = $pdo->prepare("SELECT account_id FROM accounts WHERE account_number = ? FOR UPDATE");
+                        $stmt = $pdo->prepare("SELECT account_id, user_id FROM accounts WHERE account_number = ? FOR UPDATE");
                         $stmt->execute([$transfer['to_account']]);
                         $recipientAccount = $stmt->fetch();
 
@@ -147,10 +156,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         $pdo->commit();
 
-                        $_SESSION['flash_success'] = "Successfully transferred $" . number_format($transfer['amount'], 2) . " to account {$transfer['to_account']}";
+                        // Notify recipient
+                        $stmt = $pdo->prepare("SELECT email FROM users WHERE user_id = ?");
+                        $stmt->execute([$recipientAccount['user_id']]);
+                        $recipientUser = $stmt->fetch();
+
+                        if ($recipientUser) {
+                            $recipientEmail = $recipientUser['email'];
+                            $subject = "You've received a transfer";
+                            $body = "Hello,<br><br>"
+                                  . "You received <strong>$" . number_format($transfer['amount'], 2) . "</strong> from account <strong>{$fromAccount['account_number']}</strong>.<br><br>"
+                                  . "Description: <em>" . htmlspecialchars($descIn) . "</em><br><br>"
+                                  . "Thank you,<br>Nexus Bank";
+                            sendNotification($recipientEmail, $subject, $body);
+                        }
+
+                        // Notify sender
+                        $subjectSender = "Transfer Successful";
+                        $bodySender = "Hello,<br><br>"
+                                    . "You successfully transferred <strong>$" . number_format($transfer['amount'], 2) . "</strong> to account <strong>{$transfer['to_account']}</strong>.<br><br>"
+                                    . "Description: <em>" . htmlspecialchars($descOut) . "</em><br><br>"
+                                    . "Thank you,<br>Nexus Bank";
+                        sendNotification($user['email'], $subjectSender, $bodySender);
+
+                        $_SESSION['flash_success'] = "Successfully transferred $" . number_format($transfer['amount'], 2);
                         header("Location: user/transfer.php");
                         exit();
-
                     } catch (Exception $e) {
                         $pdo->rollBack();
                         $error = "Transfer failed: " . $e->getMessage();
@@ -161,101 +192,104 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
         } elseif ($type === 'withdraw') {
-            $user_id = $_SESSION['user_id'] ?? null;
+            $user_id = $_SESSION['user_id'];
+            $withdraw = $_SESSION['pending_withdrawal'];
+            unset($_SESSION['pending_withdrawal']);
 
-            if (!$user_id || !isset($_SESSION['pending_withdrawal'])) {
-                $error = "Session expired. Please try again.";
-            } else {
-                $stmt = $pdo->prepare("SELECT email FROM users WHERE user_id = ?");
-                $stmt->execute([$user_id]);
-                $user = $stmt->fetch();
+            $stmt = $pdo->prepare("SELECT email FROM users WHERE user_id = ?");
+            $stmt->execute([$user_id]);
+            $user = $stmt->fetch();
 
-                if ($user && verifyOTP($user['email'], $submittedOTP)) {
-                    $withdrawal = $_SESSION['pending_withdrawal'];
-                    unset($_SESSION['pending_withdrawal']);
+            if ($user && verifyOTP($user['email'], $submittedOTP)) {
+                try {
+                    $pdo->beginTransaction();
 
-                    try {
-                        $pdo->beginTransaction();
+                    $stmt = $pdo->prepare("SELECT account_id, balance FROM accounts WHERE user_id = ? FOR UPDATE");
+                    $stmt->execute([$user_id]);
+                    $account = $stmt->fetch();
 
-                        $stmt = $pdo->prepare("SELECT account_id, balance FROM accounts WHERE user_id = ? FOR UPDATE");
-                        $stmt->execute([$user_id]);
-                        $account = $stmt->fetch();
-
-                        if ((float)$account['balance'] < $withdrawal['amount']) {
-                            throw new Exception("Insufficient funds.");
-                        }
-
-                        $pdo->prepare("UPDATE accounts SET balance = balance - ? WHERE account_id = ?")
-                            ->execute([$withdrawal['amount'], $account['account_id']]);
-
-                        $desc = "Withdrawal of {$withdrawal['amount']}";
-                        $pdo->prepare("INSERT INTO transactions (account_id, type, amount, description) VALUES (?, 'withdrawal', ?, ?)")
-                            ->execute([$account['account_id'], $withdrawal['amount'], $desc]);
-
-                        $pdo->commit();
-
-                        $_SESSION['flash_success'] = "Successfully withdrew $" . number_format($withdrawal['amount'], 2);
-                        header("Location: user/withdraw.php");
-                        exit();
-
-                    } catch (Exception $e) {
-                        $pdo->rollBack();
-                        $error = "Withdrawal failed: " . $e->getMessage();
+                    if ((float)$account['balance'] < $withdraw['amount']) {
+                        throw new Exception("Insufficient funds.");
                     }
-                } else {
-                    $error = "Invalid OTP.";
+
+                    $pdo->prepare("UPDATE accounts SET balance = balance - ? WHERE account_id = ?")
+                        ->execute([$withdraw['amount'], $account['account_id']]);
+
+                    $pdo->prepare("INSERT INTO transactions (account_id, type, amount, description) VALUES (?, 'withdrawal', ?, ?)")
+                        ->execute([$account['account_id'], $withdraw['amount'], $withdraw['description']]);
+
+                    $pdo->commit();
+
+                    // Send withdrawal email
+                    $subject = "Withdrawal Successful";
+                    $body = "Hello,<br><br>"
+                          . "You have successfully withdrawn <strong>$" . number_format($withdraw['amount'], 2) . "</strong> from your account.<br><br>"
+                          . "Description: <em>" . htmlspecialchars($withdraw['description']) . "</em><br><br>"
+                          . "Thank you,<br>Nexus Bank";
+                    sendNotification($user['email'], $subject, $body);
+
+                    $_SESSION['flash_success'] = "Withdrawal successful.";
+                    header("Location: user/withdraw.php");
+                    exit();
+
+                } catch (Exception $e) {
+                    $pdo->rollBack();
+                    $error = "Withdrawal failed: " . $e->getMessage();
                 }
+            } else {
+                $error = "Invalid OTP.";
             }
 
         } elseif ($type === 'deposit') {
-            $user_id = $_SESSION['user_id'] ?? null;
+            $user_id = $_SESSION['user_id'];
+            $deposit = $_SESSION['pending_deposit'];
+            unset($_SESSION['pending_deposit']);
 
-            if (!$user_id || !isset($_SESSION['pending_deposit'])) {
-                $error = "Session expired. Please try again.";
-            } else {
-                $stmt = $pdo->prepare("SELECT email FROM users WHERE user_id = ?");
-                $stmt->execute([$user_id]);
-                $user = $stmt->fetch();
+            $stmt = $pdo->prepare("SELECT email FROM users WHERE user_id = ?");
+            $stmt->execute([$user_id]);
+            $user = $stmt->fetch();
 
-                if ($user && verifyOTP($user['email'], $submittedOTP)) {
-                    $deposit = $_SESSION['pending_deposit'];
-                    unset($_SESSION['pending_deposit']);
+            if ($user && verifyOTP($user['email'], $submittedOTP)) {
+                try {
+                    $pdo->beginTransaction();
 
-                    try {
-                        $pdo->beginTransaction();
+                    $stmt = $pdo->prepare("SELECT account_id FROM accounts WHERE user_id = ? FOR UPDATE");
+                    $stmt->execute([$user_id]);
+                    $account = $stmt->fetch();
 
-                        $stmt = $pdo->prepare("SELECT account_id FROM accounts WHERE user_id = ? FOR UPDATE");
-                        $stmt->execute([$user_id]);
-                        $account = $stmt->fetch();
+                    $pdo->prepare("UPDATE accounts SET balance = balance + ? WHERE account_id = ?")
+                        ->execute([$deposit['amount'], $account['account_id']]);
 
-                        if (!$account) {
-                            throw new Exception("Account not found.");
-                        }
+                    $pdo->prepare("INSERT INTO transactions (account_id, type, amount, description) VALUES (?, 'deposit', ?, ?)")
+                        ->execute([$account['account_id'], $deposit['amount'], $deposit['description']]);
 
-                        $stmt = $pdo->prepare("UPDATE accounts SET balance = balance + ? WHERE account_id = ?");
-                        $stmt->execute([$deposit['amount'], $account['account_id']]);
+                    $pdo->commit();
 
-                        $stmt = $pdo->prepare("INSERT INTO transactions (account_id, type, amount, description) VALUES (?, 'deposit', ?, ?)");
-                        $stmt->execute([$account['account_id'], $deposit['amount'], "Cash deposit"]);
+                    // Send deposit email
+                    $subject = "Deposit Successful";
+                    $body = "Hello,<br><br>"
+                          . "You have successfully deposited <strong>$" . number_format($deposit['amount'], 2) . "</strong> into your account.<br><br>"
+                          . "Description: <em>" . htmlspecialchars($deposit['description']) . "</em><br><br>"
+                          . "Thank you,<br>Nexus Bank";
+                    sendNotification($user['email'], $subject, $body);
 
-                        $pdo->commit();
+                    $_SESSION['flash_success'] = "Deposit successful.";
+                    header("Location: user/deposit.php");
+                    exit();
 
-                        $_SESSION['flash_success'] = "Successfully deposited $" . number_format($deposit['amount'], 2);
-                        header("Location: user/deposit.php");
-                        exit();
-                    } catch (Exception $e) {
-                        $pdo->rollBack();
-                        $error = "Deposit failed: " . $e->getMessage();
-                    }
-                } else {
-                    $error = "Invalid OTP.";
+                } catch (Exception $e) {
+                    $pdo->rollBack();
+                    $error = "Deposit failed: " . $e->getMessage();
                 }
+            } else {
+                $error = "Invalid OTP.";
             }
         }
-    } catch (PDOException $e) {
-        $error = "System error. Please try again.";
+    } catch (Exception $ex) {
+        $error = "Error: " . $ex->getMessage();
     }
 }
+
 ?>
 
 <!DOCTYPE html>

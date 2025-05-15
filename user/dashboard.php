@@ -7,11 +7,29 @@ session_start();
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
 
+// Set the timeout duration (15 minutes in seconds)
+$timeoutDuration = 900;  // 15 minutes
+
+// Set the logout redirect URL
+$logoutRedirectUrl = '../logout.php';
+
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header('Location: ../login.php');
     exit();
 }
+
+// Check if session has expired
+if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeoutDuration) {
+    // If session expired, log out user
+    session_unset();
+    session_destroy();
+    header("Location: $logoutRedirectUrl"); // Redirect to logout page
+    exit();
+}
+
+// Update last activity time
+$_SESSION['last_activity'] = time();
 
 // Get user account information
 $userId = $_SESSION['user_id'];
@@ -37,13 +55,6 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$userId]);
 $transactions = $stmt->fetchAll();
-
-// Check if the user has a profile picture
-$stmt = $pdo->prepare("SELECT profile_picture FROM users WHERE user_id = ?");
-$profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'] : '../assets/images/default-avatar.png';
-// Fetch user's profile information
-
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -79,16 +90,8 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
 
 <div class="wrapper">
                 <aside>
-
-                <div class="Logos-cont">
+                       
                 <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
-                </div>
-
-                <div class="profile-container">
-                    <img src="<?= $profilePic ?>" alt="Profile Picture" class="img-fluid">
-                        <h5><?= htmlspecialchars($user['full_name']) ?></h5>
-                        <p><?= htmlspecialchars($user['account_number']) ?></p>
-                </div>
 
                 <nav>
                     <a href="dashboard.php" class="btn dash-text">
@@ -168,7 +171,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                         Loans
                     </a>
 
-                    <a href="profile.php" class="btn">
+                    <a href="loan.php" class="btn">
                         <img 
                         src="../assets/images/inactive-loans.png" 
                         alt="loans-logo" 
@@ -188,9 +191,6 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                 <main class="container">
                     <header>
                         <h1>Overview</h1>
-                        <div class="profile-conts">
-                            <img src="<?= $profilePic ?>" alt="Profile Picture" class="img-fluid"> 
-                        </div>
                     </header>
                     
                     
@@ -250,7 +250,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                                 </td>
 
                                                 <td><?= htmlspecialchars($txn['transaction_id']) ?></td>
-                                                <td><?= htmlspecialchars($txn['description']) ?></td>
+                                                <td><?= htmlspecialchars($txn['description'] ?? '') ?></td>
                                                 <td><?= ucfirst($txn['type']) ?></td>
                                                 <td><?= date('j M, g:i A', strtotime($txn['created_at'])) ?></td>
                                                 <td class="amount <?= in_array($txn['type'],['deposit','transfer_in'])? 'positive':'negative' ?>">
@@ -540,8 +540,33 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                 console.error('Error loading balance history:', error);
             });
     });
-    </script>
-    <!-- <script src="../assets/js/Userdash.js"></script> -->
+
     
+    </script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inactivity Timeout Logic
+        const inactivityTime = 1 * 20 * 1000; // 20 seconds for testing
+        let inactivityTimer;
+
+        const resetInactivityTimer = () => {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                if (window.location.pathname !== '/login.php' && 
+                    window.location.pathname !== '/register.php') {
+                    window.location.href = 'logout.php?timeout=1';
+                }
+            }, inactivityTime);
+        };
+
+        ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+            document.addEventListener(event, resetInactivityTimer);
+        });
+
+        resetInactivityTimer();
+    });
+</script>
+
+    <!-- <script src="../assets/js/Userdash.js"></script> -->
 </body>
 </html>
