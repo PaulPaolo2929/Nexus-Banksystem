@@ -125,6 +125,12 @@ $user = $stmt->fetch();
 if (!$user) {
     die('User account not found.');
 }
+
+// Check if the user has a profile picture
+$stmt = $pdo->prepare("SELECT profile_picture FROM users WHERE user_id = ?");
+$profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'] : '../assets/images/default-avatar.png';
+// Fetch user's profile information
+
 ?>
 
 <!DOCTYPE html>
@@ -226,7 +232,19 @@ if (!$user) {
 
         <aside class="sidebar">
                         
-            <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
+           <div class="Logos-cont">
+                    <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
+                </div>
+                
+                <hr>
+
+                <div class="profile-container">
+                    <img src="<?= $profilePic ?>" alt="Profile Picture" class="img-fluid">
+                    <h5><?= htmlspecialchars($user['full_name']) ?></h5>
+                    <p><?= htmlspecialchars($user['account_number']) ?></p>
+                </div>
+
+                <hr>
 
             <nav>
                     <a href="dashboard.php" class="btn">
@@ -306,7 +324,7 @@ if (!$user) {
                         Loans
                     </a>
                 </nav>       
-
+<hr>
             <div class="logout-cont">
                 <a href="../logout.php" class="logout">Logout</a>
             </div>

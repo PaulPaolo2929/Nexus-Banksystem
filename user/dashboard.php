@@ -206,7 +206,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                         Loans
                     </a>
 
-                    <a href="loan.php" class="btn">
+                    <a href="profile.php" class="btn">
                         <img 
                         src="../assets/images/inactive-loans.png" 
                         alt="loans-logo" 
