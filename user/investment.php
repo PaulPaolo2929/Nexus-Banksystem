@@ -149,22 +149,23 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
     
     <!-- NAVIGATION EFFECTS -->
     <script src="../assets/js/navhover.js"></script>
+    <script src="../assets/js/sidebar.js"></script>
 </head>
 <body>
     <div class="wrapper">
 
-            <aside> 
+            <aside class="sidebar"> 
                 
                 <div class="Logos-cont">
                 <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
                 </div>
-
+ <hr>
                 <div class="profile-container">
                     <img src="<?= $profilePic ?>" alt="Profile Picture" class="img-fluid">
                     <h5><?= htmlspecialchars($user['full_name']) ?></h5>
                     <p><?= htmlspecialchars($user['account_number']) ?></p>
                 </div>
-
+ <hr>
                     <nav>
                     <a href="dashboard.php" class="btn">
                         <img 
@@ -243,7 +244,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                         Loans
                     </a>
                 </nav>       
-
+ <hr>
                     <div class="logout-cont">
                         <a href="../logout.php" class="logout">Logout</a>
                     </div>              
@@ -252,6 +253,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
             <main class="container">
                 <header>
                     <h1>Investments</h1>
+                    <button class="hamburger">&#9776;</button> <!-- Hamburger icon -->
                 </header>
 
                 <div class="content">

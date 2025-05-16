@@ -104,22 +104,24 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
 
     <!-- NAVIGATION EFFECTS -->
     <script src="../assets/js/navhover.js"></script>
+    <script src="../assets/js/sidebar.js"></script>
 </head>
 
 <body>
     <div class="wrapper">
 
-        <aside>       
+        <aside class="sidebar">       
                 <div class="Logos-cont">
                     <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
                 </div>
-
+ <hr>
                 <div class="profile-container">
                     <img src="<?= $profilePic ?>" alt="Profile Picture" class="img-fluid">
                     <h5><?= htmlspecialchars($user['full_name']) ?></h5>
                     <p><?= htmlspecialchars($user['account_number']) ?></p>
                 </div>
-            <nav>
+             <hr>
+                <nav>
                     <a href="dashboard.php" class="btn">
                         <img 
                         src="../assets/images/inactive-dashboard.png" 
@@ -197,7 +199,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                         Loans
                     </a>
                 </nav>       
-
+ <hr>
             <div class="logout-cont">
                 <a href="../logout.php" class="logout">Logout</a>
             </div>
@@ -206,7 +208,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
         <main class="container">
             <header>
                 <h1>Loan Management</h1>
-                <a href="../logout.php" class="logout">Logout</a>
+                <button class="hamburger">&#9776;</button> <!-- Hamburger icon -->
             </header>
 
             <nav class="dashboard-nav">

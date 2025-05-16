@@ -55,6 +55,27 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$userId]);
 $transactions = $stmt->fetchAll();
+
+// Get user account information
+$userId = $_SESSION['user_id'];
+$stmt = $pdo->prepare("
+    SELECT u.*, a.account_number, a.balance 
+    FROM users u 
+    JOIN accounts a ON u.user_id = a.user_id 
+    WHERE u.user_id = ?
+");
+$stmt->execute([$userId]);
+$user = $stmt->fetch();
+
+if (!$user) {
+    die('User account not found.');
+}
+
+// Check if the user has a profile picture
+$stmt = $pdo->prepare("SELECT profile_picture FROM users WHERE user_id = ?");
+$profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'] : '../assets/images/default-avatar.png';
+// Fetch user's profile information
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -70,6 +91,7 @@ $transactions = $stmt->fetchAll();
 
     <!-- NAVIGATION EFFECTS -->
     <script src="../assets/js/navhover.js"></script>
+    <script src="../assets/js/sidebar.js"></script>
     <style>
     
        .transaction-distribution-chart, .weekly-activity-chart, .balance-over-time-chart {
@@ -89,9 +111,22 @@ $transactions = $stmt->fetchAll();
 <body>
 
 <div class="wrapper">
-                <aside>
-                       
-                <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
+                   
+                <aside class="sidebar">                   
+                             
+                <div class="Logos-cont">
+                    <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
+                </div>
+                
+                <hr>
+
+                <div class="profile-container">
+                    <img src="<?= $profilePic ?>" alt="Profile Picture" class="img-fluid">
+                    <h5><?= htmlspecialchars($user['full_name']) ?></h5>
+                    <p><?= htmlspecialchars($user['account_number']) ?></p>
+                </div>
+
+                <hr>
 
                 <nav>
                     <a href="dashboard.php" class="btn dash-text">
@@ -181,16 +216,21 @@ $transactions = $stmt->fetchAll();
                         > 
                         Profile
                     </a>
-                </nav>      
 
+                    
+                </nav>      
+                <hr>
                             <div class="logout-cont">
                                  <a href="../logout.php" class="logout">Logout</a>
                             </div>
+
+                            
                 </aside>
 
                 <main class="container">
                     <header>
                         <h1>Overview</h1>
+                        <button class="hamburger">&#9776;</button> <!-- Hamburger icon -->
                     </header>
                     
                     
@@ -569,8 +609,6 @@ $transactions = $stmt->fetchAll();
         resetInactivityTimer();
     });
 </script>
-
-
     <!-- <script src="../assets/js/Userdash.js"></script> -->
 </body>
 </html>
