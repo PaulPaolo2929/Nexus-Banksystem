@@ -13,13 +13,13 @@ if (isLoggedIn()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureBank - Digital Banking System</title>
+    <title>Nexus eBanking System</title>
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Welcome to SecureBank</h1>
+            <h1>Welcome to Nexus Bank</h1>
             <p>Your trusted digital banking partner</p>
         </header>
         
@@ -35,7 +35,7 @@ if (isLoggedIn()) {
             </div>
             
             <div class="hero-image">
-                <img src="assets/images/.jpg" alt="Digital Banking">
+                <img src="assets/images/Logo-color-1.png" alt="Digital Banking">
             </div>
         </div>
         
@@ -57,12 +57,7 @@ if (isLoggedIn()) {
         </div>
         
         <footer>
-            <p>&copy; <?php echo date('Y'); ?> SecureBank. All rights reserved.</p>
-            <nav>
-                <a href="#">Privacy Policy</a>
-                <a href="#">Terms of Service</a>
-                <a href="#">Contact Us</a>
-            </nav>
+            <p>&copy; <?php echo date('Y'); ?> Nexus eBank. All rights reserved.</p>
         </footer>
     </div>
     <script src="assets/js/script.js"></script>
