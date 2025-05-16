@@ -138,6 +138,7 @@ if (!$user) {
 
     <!-- NAVIGATION EFFECTS -->
     <script src="../assets/js/navhover.js"></script>
+    <script src="../assets/js/sidebar.js"></script>
 
     <style>
     .profile-picture {
@@ -223,7 +224,7 @@ if (!$user) {
 <body>
     <div class="wrapper">
 
-        <aside>
+        <aside class="sidebar">
                         
             <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
 
@@ -312,9 +313,9 @@ if (!$user) {
         </aside>
     
         <main class="container">
-            <header>
-                        <h1>Profile Information</h1>
-                    <a href="../logout.php" class="logout">Logout</a>
+                <header>
+                    <h1>Profile Information</h1>
+                    <button class="hamburger">&#9776;</button> <!-- Hamburger icon -->
                 </header>
 
                 <main class="content">
@@ -349,14 +350,14 @@ if (!$user) {
                     <!-- ── Editable Profile Form ── -->
                     <button id="editProfileBtn">Edit Profile</button>
                         
-                    <form id="profileForm" method="POST">
-                    <input type="hidden" name="action" value="update_profile">
-
-                     <label>Account Number</label>
+                    <label>Account Number</label>
                     <input type="text" value="<?= htmlspecialchars($user['account_number']) ?>" disabled>
 
                     <label>Password</label>                  
                     <input type="password" value="********" disabled>
+                        
+                    <form id="profileForm" method="POST">
+                    <input type="hidden" name="action" value="update_profile">
 
                     <label>Full Name</label>
                     <input type="text"   name="full_name"  value="<?= htmlspecialchars($user['full_name']) ?>"  disabled>

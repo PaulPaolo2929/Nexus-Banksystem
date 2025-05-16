@@ -54,6 +54,13 @@
     border-right: 1px solid #e7e5e5;
     z-index: 1000;
 
+    hr{
+        margin: 1rem 0 0 0;
+        border: 2px solid #f0f0f0;
+        border-radius: 50rem;
+        width: 800;
+    }
+
     h5{
         font-size: var(--paragraph-font-size);
         color: var(--font-color);
@@ -77,7 +84,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 80%;
+        width: 70%;
         margin-top: 0rem;
     }
 
@@ -481,3 +488,44 @@
   .quick-actions .btn1:active {
     transform: translateY(0);
   }
+
+  /* HAMBURGER STYLE */
+.hamburger {
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: none; /* hidden on large screens */
+}
+
+/* Responsive adjustments */
+@media (max-width: 810px) {
+  aside.sidebar {
+    position: fixed;
+    left: -230px;
+    top: 0;
+    height: 100%;
+    background-color: var(--main-color);
+    transition: left 0.3s ease;
+    z-index: 9999;
+  }
+
+  aside.sidebar.active {
+    left: 0;
+  }
+
+  .hamburger {
+    display: block;
+    z-index: 10000;
+    background-color: transparent;
+    color: var(--font-color);
+  }
+
+  .wrapper {
+    flex-direction: column;
+  }
+
+  .container {
+    padding-left: 0;
+  }
+}
