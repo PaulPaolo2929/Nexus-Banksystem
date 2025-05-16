@@ -215,7 +215,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                 <tr>
                                 <th></th>
                                 <th>Date</th>
-                                <th>Transaction ID</th>
+                                <th>Transaction ID</th>
                                 <th>Type</th>
                                 <th>Amount</th>
                                 <th>Related Account</th>
@@ -234,7 +234,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                     <?php endif; ?>
                                 </td>
 
-                                <td><?= date('j M, g:i A', strtotime($txn['created_at'])) ?></td>
+                                <td><?= date('j M, g:i A', strtotime($txn['created_at'])) ?></td>
                                 <td><?= htmlspecialchars($txn['transaction_id']) ?></td>
                                 <td><?= ucfirst($txn['type']) ?></td>
                                 <td class="amount <?= in_array($txn['type'],['deposit','transfer_in'])? 'positive':'negative' ?>">
@@ -385,4 +385,30 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
 });
     </script>
 </body>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set session timeout to 10 minutes
+        const inactivityTime = 600000;
+        let inactivityTimer;
+
+        const resetInactivityTimer = () => {
+            // Clear existing timer
+            if (inactivityTimer) clearTimeout(inactivityTimer);
+
+            // Set timeout
+            inactivityTimer = setTimeout(() => {
+                window.location.href = '../logout.php?timeout=1';
+            }, inactivityTime);
+        };
+
+        // Reset timer on user activity
+        const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+        events.forEach(event => {
+            document.addEventListener(event, resetInactivityTimer);
+        });
+
+        // Initial timer start
+        resetInactivityTimer();
+    });
+    </script>
 </html>

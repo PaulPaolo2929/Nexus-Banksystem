@@ -11,13 +11,29 @@ require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/otp.php';
 
 $error = '';
+if (isset($_GET['error'])) {
+    switch ($_GET['error']) {
+        case 'unauthorized_login':
+            $error = "Login attempt was denied. If this wasn't you, please change your password.";
+            break;
+        case 'verification_failed':
+            $error = "Verification failed. Please try logging in again.";
+            break;
+        case 'verification_expired':
+            $error = "Verification expired. Please try logging in again.";
+            break;
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = strtolower(trim(filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL))); // Normalize email to lowercase
+    $email = strtolower(trim(filter_input(INPUT_POST, 'email', FILTER_SANITIZE_EMAIL)));
     $password = $_POST['password'] ?? '';
 
     try {
-        // Case-insensitive email match, ensuring the email is in lowercase
+        // Clear any existing session data
+        session_unset();
+        
+        // Case-insensitive email match
         $stmt = $pdo->prepare("SELECT user_id, password_hash, is_admin, status, is_active FROM users WHERE LOWER(email) = ?");
         $stmt->execute([strtolower($email)]);
         $user = $stmt->fetch();
@@ -26,13 +42,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($user['status'] !== 'approved') {
                 $error = "Your account is still pending approval.";
             } elseif ($user['is_active'] == 0) {
-                // Check if user is deactivated
                 $error = "Your account is deactivated. Please contact the admin.";
             } elseif (password_verify($password, $user['password_hash'])) {
-                // Send OTP before proceeding
+                // Store temporary session data
+                $_SESSION['temp_user_id'] = $user['user_id'];
+                $_SESSION['temp_is_admin'] = $user['is_admin'];
+                
+                // Send OTP
                 if (generateOTP($email)) {
-                    $_SESSION['temp_user_id'] = $user['user_id'];
-                    $_SESSION['temp_is_admin'] = $user['is_admin'];
                     header("Location: otp-verification.php?type=login");
                     exit();
                 } else {

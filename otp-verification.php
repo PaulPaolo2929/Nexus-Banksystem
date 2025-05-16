@@ -11,7 +11,18 @@ require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/otp.php';
 require_once __DIR__ . '/includes/notification.php';
 
-$type = $_GET['type'] ?? $_POST['type'] ?? 'register';
+$type = $_GET['type'] ?? '';
+
+if ($type !== 'login') {
+    header("Location: login.php");
+    exit();
+}
+
+// Check if we have necessary session data
+if (!isset($_SESSION['temp_user_id'])) {
+    header("Location: login.php");
+    exit();
+}
 
 $redirect = false;
 switch ($type) {
@@ -87,16 +98,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['is_admin'] = $is_admin;
                     unset($_SESSION['temp_user_id'], $_SESSION['temp_is_admin']);
 
-                    // --- Send login success notification email ---
-                    $subject = "Login Successful - Nexus E-Banking";
+                    // Delete any existing tokens for this user
+                    $stmt = $pdo->prepare("DELETE FROM login_verifications WHERE user_id = ?");
+                    $stmt->execute([$user_id]);
+                    
+                    // Generate verification token
+                    $verificationToken = bin2hex(random_bytes(32));
+                    
+                    // Store verification token in database
+                    date_default_timezone_set('UTC');
+                    $expires_at = gmdate('Y-m-d H:i:s', strtotime('+15 minutes'));
+                    $stmt = $pdo->prepare("INSERT INTO login_verifications (user_id, token, expires_at) VALUES (?, ?, ?)");
+                    $stmt->execute([$user_id, $verificationToken, $expires_at]);
+                    
+                    // Store token in session
+                    $_SESSION['login_verification_token'] = $verificationToken;
+                    $_SESSION['login_verification_email'] = $user['email'];
+                    
+                    // Get the correct base URL
+                    $baseUrl = "http://" . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']);
+                    $baseUrl = rtrim($baseUrl, '/');
+                    
+                    $verifyUrl = $baseUrl . "/verify-login.php?token=" . urlencode($verificationToken) . "&action=verify";
+                    $denyUrl = $baseUrl . "/verify-login.php?token=" . urlencode($verificationToken) . "&action=deny";
+                    
+                    // Send verification email
+                    $subject = "Verify Your Login - Nexus E-Banking";
                     $body = "Hello,<br><br>"
-                          . "You have successfully logged in to your Nexus E-Banking account.<br><br>"
-                          . "If this wasn't you, please contact support immediately.<br><br>"
+                          . "A login attempt was made to your Nexus E-Banking account.<br>"
+                          . "Was this you?<br><br>"
+                          . "<div style='text-align: center;'>"
+                          . "<a href='" . htmlspecialchars($verifyUrl) . "' style='display: inline-block; margin: 10px; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;'>Yes, it was me</a>"
+                          . "<a href='" . htmlspecialchars($denyUrl) . "' style='display: inline-block; margin: 10px; padding: 10px 20px; background-color: #f44336; color: white; text-decoration: none; border-radius: 5px;'>No, it wasn't me</a>"
+                          . "</div><br>"
+                          . "If you did not attempt to log in, please click the 'No' button and change your password immediately.<br><br>"
                           . "Thank you,<br>Nexus Bank";
-                    sendNotification($user['email'], $subject, $body);
-
-                    header("Location: " . ($is_admin ? "admin/dashboard.php" : "user/dashboard.php"));
-                    exit();
+                    
+                    if (sendNotification($user['email'], $subject, $body)) {
+                        header("Location: verify-pending.php");
+                        exit();
+                    } else {
+                        throw new Exception("Failed to send verification email");
+                    }
                 } else {
                     $error = "Invalid OTP.";
                 }
@@ -333,7 +376,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <div class="timer-resend">
           <div>Remaining time: <span id="countdown">00:60s</span></div>
-          <div>Didn’t get the code? 
+          <div>Didn't get the code? 
             <a href="resend-otp.php?type=<?= htmlspecialchars($type) ?>"
                id="resend-link"
                class="disabled"
@@ -348,7 +391,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </div>
 
 <script>
-    // -- Auto‐tab between inputs and collect on submit --
+    // -- Auto-tab between inputs and collect on submit --
     const inputs = document.querySelectorAll('.otp-input');
     inputs.forEach((input, i) => {
         input.addEventListener('input', () => {

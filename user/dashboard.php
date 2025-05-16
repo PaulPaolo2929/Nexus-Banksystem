@@ -585,8 +585,8 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
     </script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Set session timeout to 30 seconds (for testing)
-        const inactivityTime = 30000;
+        // Set session timeout to 10 minutes
+        const inactivityTime = 600000;
         let inactivityTimer;
 
         const resetInactivityTimer = () => {
