@@ -91,6 +91,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
 
     <!-- NAVIGATION EFFECTS -->
     <script src="../assets/js/navhover.js"></script>
+    <script src="../assets/js/sidebar.js"></script>
     <style>
     
        .transaction-distribution-chart, .weekly-activity-chart, .balance-over-time-chart {
@@ -606,23 +607,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
     });
 </script>
 
-<script>
-  const hamburger = document.querySelector('.hamburger');
-  const sidebar = document.querySelector('aside.sidebar');
 
-  hamburger.addEventListener('click', () => {
-    sidebar.classList.toggle('active');
-  });
-</script>
-<script>
-document.querySelectorAll('aside.sidebar nav a').forEach(link => {
-  link.addEventListener('click', () => {
-    if (window.innerWidth <= 768) {
-      sidebar.classList.remove('active');
-    }
-  });
-});
-</script>
 
     <!-- <script src="../assets/js/Userdash.js"></script> -->
 </body>
