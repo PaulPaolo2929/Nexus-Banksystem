@@ -203,10 +203,19 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
         };
 
         // Reset timer on user activity
-        const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+        const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'submit'];
         events.forEach(event => {
             document.addEventListener(event, resetInactivityTimer);
         });
+
+        // Add form submit handler
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                // Reset timer but don't prevent form submission
+                resetInactivityTimer();
+            });
+        }
 
         // Initial timer start
         resetInactivityTimer();
