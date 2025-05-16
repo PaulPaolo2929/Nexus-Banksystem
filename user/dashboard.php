@@ -585,30 +585,30 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
     </script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Inactivity Timeout Logic
-        const inactivityTime = 1 * 20 * 1000; // 20 seconds for testing
+        // Set session timeout to 30 seconds (for testing)
+        const inactivityTime = 30000;
         let inactivityTimer;
 
         const resetInactivityTimer = () => {
-            clearTimeout(inactivityTimer);
+            // Clear existing timer
+            if (inactivityTimer) clearTimeout(inactivityTimer);
+
+            // Set timeout
             inactivityTimer = setTimeout(() => {
-                if (window.location.pathname !== '/login.php' && 
-                    window.location.pathname !== '/register.php') {
-                    window.location.href = 'logout.php?timeout=1';
-                }
+                window.location.href = '../logout.php?timeout=1';
             }, inactivityTime);
         };
 
-        ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+        // Reset timer on user activity
+        const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+        events.forEach(event => {
             document.addEventListener(event, resetInactivityTimer);
         });
 
+        // Initial timer start
         resetInactivityTimer();
     });
 </script>
-
-
-
     <!-- <script src="../assets/js/Userdash.js"></script> -->
 </body>
 </html>
