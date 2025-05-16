@@ -338,5 +338,32 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                 </div>
             </main>
         </div>
+    </div>
 </body>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set session timeout to 10 minutes
+        const inactivityTime = 600000;
+        let inactivityTimer;
+
+        const resetInactivityTimer = () => {
+            // Clear existing timer
+            if (inactivityTimer) clearTimeout(inactivityTimer);
+
+            // Set timeout
+            inactivityTimer = setTimeout(() => {
+                window.location.href = '../logout.php?timeout=1';
+            }, inactivityTime);
+        };
+
+        // Reset timer on user activity
+        const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+        events.forEach(event => {
+            document.addEventListener(event, resetInactivityTimer);
+        });
+
+        // Initial timer start
+        resetInactivityTimer();
+    });
+    </script>
 </html>
