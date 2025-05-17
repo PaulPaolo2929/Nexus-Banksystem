@@ -208,11 +208,11 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
 
                     <a href="profile.php" class="btn">
                         <img 
-                        src="../assets/images/inactive-loans.png" 
+                        src="../assets/images/inactive-profile.png" 
                         alt="loans-logo" 
                         class="nav-icon"
-                        data-default="../assets/images/inactive-loans.png"
-                        data-hover="../assets/images/hover-loans.png"
+                        data-default="../assets/images/inactive-profile.png"
+                        data-hover="../assets/images/inactive-profile"
                         > 
                         Profile
                     </a>
@@ -491,7 +491,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                     title: {
                         text: ' '
                     },
-                    colors: ['#00B8D9', '#0052CC', '#5243AA', '#16DBCC'],
+                    colors: ['#16DBCC', '#0052CC', '#5243AA', '#00B8D9'],
                 };
 
                 const pieChart = new ApexCharts(document.querySelector("#pieChart"), options);
