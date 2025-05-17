@@ -12,10 +12,10 @@
   position: relative;
 }
 
-.content:hover {
+/* .content:hover {
   transform: translateY(-4px);
   box-shadow: 0 16px 32px rgba(52, 60, 106, 0.12);
-}
+} */
 
 /* Section Heading */
 .content h2 {

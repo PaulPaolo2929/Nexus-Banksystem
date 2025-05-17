@@ -499,7 +499,7 @@
 }
 
 /* Responsive adjustments */
-@media (max-width: 810px) {
+@media (max-width: 1084px) {
   aside.sidebar {
     position: fixed;
     left: -230px;
