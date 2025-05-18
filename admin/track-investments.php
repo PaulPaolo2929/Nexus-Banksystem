@@ -20,13 +20,37 @@ $userInvestments = $stmt->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Investments Tracking - SecureBank Admin</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/admin-main.css">
 </head>
 <body>
-    <div class="container">
+     <div class="wrapper">
+            <aside class="sidebar">
+                        
+                            <div class="Logos-cont">
+                                <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
+                            </div>
+
+                            <nav class="dashboard-nav">
+                                <a href="dashboard.php" class="active btn ">Dashboard</a>
+                                <a href="manage-users.php" class="btn ">Manage Users</a>
+                                <a href="manage-loans.php" class="btn">Manage Loans</a>
+                                <a href="manage-investments.php" class="btn">Manage Investments</a>
+                                <a href="track-investments.php" class="btn dash-text">Users Investments</a>
+                                <a href="role.php" class="btn">Roles</a>
+                                <a href="recent_transactions.php" class="btn">Transactions</a>
+                                <a href="recent_transactions.php" class="btn">Loan History</a>
+                            </nav>
+
+                             <div class="logout-cont">
+                                <a href="../logout.php" class="logout">Logout</a>
+                            </div>
+                </aside>
+
+
+    <main class="container">
         <header>
             <h1>User Investments Tracking</h1>
-            <a href="dashboard.php" class="back">Back to Dashboard</a>
+            <button class="hamburger">&#9776;</button> <!-- Hamburger icon -->
         </header>
 
         <nav class="dashboard-nav">
@@ -73,6 +97,7 @@ $userInvestments = $stmt->fetchAll();
                 </table>
             <?php endif; ?>
         </div>
+    </main>
     </div>
 </body>
 </html>

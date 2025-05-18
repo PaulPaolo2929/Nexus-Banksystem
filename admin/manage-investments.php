@@ -55,13 +55,37 @@ $investmentPlans = $pdo->query("SELECT * FROM investment_plans")->fetchAll();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Investments - SecureBank Admin</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/admin-main.css">
 </head>
 <body>
-    <div class="container">
+     <div class="wrapper">
+            <aside class="sidebar">
+                        
+                            <div class="Logos-cont">
+                                <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
+                            </div>
+
+                            <nav class="dashboard-nav">
+                                <a href="dashboard.php" class="active btn ">Dashboard</a>
+                                <a href="manage-users.php" class="btn ">Manage Users</a>
+                                <a href="manage-loans.php" class="btn">Manage Loans</a>
+                                <a href="manage-investments.php" class="btn dash-text">Manage Investments</a>
+                                <a href="track-investments.php" class="btn">Users Investments</a>
+                                <a href="role.php" class="btn">Roles</a>
+                                <a href="recent_transactions.php" class="btn">Transactions</a>
+                                <a href="recent_transactions.php" class="btn">Loan History</a>
+                            </nav>
+
+                             <div class="logout-cont">
+                                <a href="../logout.php" class="logout">Logout</a>
+                            </div>
+                </aside>
+
+
+    <main class="container">
         <header>
             <h1>Manage Investments</h1>
-            <a href="dashboard.php" class="back">Back to Dashboard</a>
+            <button class="hamburger">&#9776;</button> <!-- Hamburger icon -->
         </header>
 
         <nav class="dashboard-nav">
@@ -133,8 +157,7 @@ $investmentPlans = $pdo->query("SELECT * FROM investment_plans")->fetchAll();
                 </table>
             <?php endif; ?>
         </div>
-    </div>
-
+    
     <!-- Edit Investment Plan Modal -->
     <div id="edit-modal" style="display:none;">
         <h2>Edit Investment Plan</h2>
@@ -167,7 +190,8 @@ $investmentPlans = $pdo->query("SELECT * FROM investment_plans")->fetchAll();
             <button type="button" onclick="closeEditForm()">Cancel</button>
         </form>
     </div>
-
+</main>
+</div>
     <script>
         // Function to open the edit form modal and populate it with plan data
         function openEditForm(plan_id, plan_name, interest_rate, min_amount, max_amount, duration_months, risk_level) {

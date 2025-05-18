@@ -237,8 +237,10 @@ if (!$user) {
 
 // Check if the user has a profile picture
 $stmt = $pdo->prepare("SELECT profile_picture FROM users WHERE user_id = ?");
-$profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'] : '../assets/images/default-avatar.png';
-// Fetch user's profile information
+// After fetching the user from the database
+$profilePic = (!empty($user['profile_picture']) && file_exists('../uploads/' . $user['profile_picture']))
+    ? '../uploads/' . $user['profile_picture']
+    : '../assets/images/default-avatars.png';
 
 
 
@@ -603,6 +605,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                     <button type="submit" class="upload-btn">Upload</button>
                                 </form>
                             </div>
+
 
                             <!-- Image Modal -->
                             <div id="imageModal" class="modal">
