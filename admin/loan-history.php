@@ -68,6 +68,7 @@ $loanHistory = $stmt->fetchAll();
             <a href="track-investments.php">Users Investments</a>
             <a href="role.php">Roles</a>
             <a href="recent_transactions.php">Transactions</a>
+            <a href="login-records.php">Login Records</a>
     </nav>
 
     <div class="content">

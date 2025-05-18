@@ -65,11 +65,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['plan_id'], $_POST['am
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['withdraw_investment_id'])) {
     $investmentId = $_POST['withdraw_investment_id'];
 
+    // Fetch the investment to withdraw
     $stmt = $pdo->prepare("
         SELECT inv.*, plans.interest_rate 
-        FROM investments inv 
+        FROM investments inv
         JOIN investment_plans plans ON inv.plan_id = plans.plan_id
-        WHERE inv.investment_id = ? AND inv.user_id = ? AND inv.status = 'matured' AND inv.withdrawn_at IS NULL
+        WHERE inv.investment_id = ? 
+        AND inv.user_id = ? 
+        AND inv.status = 'matured'
+        AND inv.withdrawn_at IS NULL
     ");
     $stmt->execute([$investmentId, $userId]);
     $investment = $stmt->fetch();
@@ -120,7 +124,6 @@ $stmt = $pdo->prepare("
 $stmt->execute([$userId]);
 $investments = $stmt->fetchAll();
 
-
 // Get user account information
 $userId = $_SESSION['user_id'];
 $stmt = $pdo->prepare("
@@ -141,6 +144,8 @@ $stmt = $pdo->prepare("SELECT profile_picture FROM users WHERE user_id = ?");
 $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'] : '../assets/images/default-avatar.png';
 // Fetch user's profile information
 ?>
+
+
 
 <!DOCTYPE html>
 <html lang="en">

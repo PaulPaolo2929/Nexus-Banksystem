@@ -35,6 +35,7 @@ $recentUsers = $pdo->query("SELECT * FROM users ORDER BY created_at DESC LIMIT 5
     <link rel="stylesheet" href="../assets/css/admin-main.css">
 </head>
 <body>
+
 <div class="wrapper">
         <aside class="sidebar">
             
@@ -64,9 +65,7 @@ $recentUsers = $pdo->query("SELECT * FROM users ORDER BY created_at DESC LIMIT 5
         <header>
             <h1>Admin Dashboard</h1>
            <button class="hamburger">&#9776;</button> <!-- Hamburger icon -->/a>
-        </header>
-        
-        
+        </header>     
         
         <div class="content">
             <h2>System Overview</h2>

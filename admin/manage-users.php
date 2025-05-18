@@ -205,7 +205,6 @@ $users = $pdo->query("
         <button class="hamburger">&#9776;</button> <!-- Hamburger icon -->
     </header>
 
-
     <div class="content">
         <?php if (isset($_SESSION['success'])): ?>
             <div class="alert alert-success"><?= $_SESSION['success'] ?></div>
