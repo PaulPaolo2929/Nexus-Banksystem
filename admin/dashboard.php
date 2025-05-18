@@ -23,6 +23,7 @@ $pendingLoans = $pdo->query("SELECT COUNT(*) FROM loans WHERE status = 'pending'
 
 // Get recent users
 $recentUsers = $pdo->query("SELECT * FROM users ORDER BY created_at DESC LIMIT 5")->fetchAll();
+
 ?>
 
 <!DOCTYPE html>
@@ -31,27 +32,45 @@ $recentUsers = $pdo->query("SELECT * FROM users ORDER BY created_at DESC LIMIT 5
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SecureBank - Admin Dashboard</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/admin-main.css">
 </head>
 <body>
-    <div class="container">
+<div class="wrapper">
+        <aside class="sidebar">
+            
+                <div class="Logos-cont">
+                    <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
+                </div>
+
+                <nav class="dashboard-nav">
+                    <a href="dashboard.php" class="active btn dash-text">Dashboard</a>
+                    <a href="manage-users.php" class="btn">Manage Users</a>
+                    <a href="manage-loans.php" class="btn">Manage Loans</a>
+                    <a href="manage-investments.php" class="btn">Manage Investments</a>
+                    <a href="track-investments.php" class="btn">Users Investments</a>
+                    <a href="role.php" class="btn">Roles</a>
+                    <a href="recent_transactions.php" class="btn">Transactions</a>
+                    <a href="recent_transactions.php" class="btn">Loan History</a>
+               
+                </nav>
+
+                    <div class="logout-cont">
+                        <a href="../logout.php" class="logout">Logout</a>
+                    </div>
+    </aside>
+
+
+    <main class="container">
         <header>
             <h1>Admin Dashboard</h1>
-            <a href="../logout.php" class="logout">Logout</a>
+           <button class="hamburger">&#9776;</button> <!-- Hamburger icon -->/a>
         </header>
         
-        <nav class="dashboard-nav">
-            <a href="dashboard.php" class="active">Dashboard</a>
-            <a href="manage-users.php">Manage Users</a>
-            <a href="manage-loans.php">Manage Loans</a>
-            <a href="manage-investments.php">Manage Investments</a>
-            <a href="track-investments.php">Users Investments</a>
-            <a href="role.php">Roles</a>
-        <a href="recent_transactions.php">Transactions</a>
-        </nav>
+        
         
         <div class="content">
             <h2>System Overview</h2>
+            
             
             <div class="stats-grid">
                 <div class="stat-card">
@@ -102,9 +121,9 @@ $recentUsers = $pdo->query("SELECT * FROM users ORDER BY created_at DESC LIMIT 5
                 </table>
             <?php endif; ?>
         </div>
-    </div>
+    </main>
     <!-- Inside your Admin Dashboard (dashboard.php) -->
-
+</div>
 
 </body>
 </html>
