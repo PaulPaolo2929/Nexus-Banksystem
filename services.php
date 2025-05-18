@@ -58,12 +58,70 @@ if (isLoggedIn()) {
             z-index: 1000;
         }
 
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 0;
-        }
+            nav {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 20px 0;
+                position: relative;
+            }
+            .hamburger {
+                display: none;
+                cursor: pointer;
+                width: 30px;
+                height: 25px;
+                flex-direction: column;
+                justify-content: space-between;
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 1100;
+            }
+            .hamburger .bar {
+                height: 4px;
+                width: 100%;
+                background-color: var(--dark);
+                border-radius: 2px;
+            }
+            @media (max-width: 768px) {
+                .nav-links {
+                    display: none;
+                    flex-direction: column;
+                    gap: 15px;
+                    text-align: center;
+                    background-color: white;
+                    position: absolute;
+                    top: 70px;
+                    left: 0;
+                    width: 100%;
+                    padding: 20px 0;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    z-index: 1001;
+                }
+                .nav-links.active {
+                    display: flex;
+                }
+                .auth-buttons {
+                    display: none;
+                    flex-direction: column;
+                    gap: 15px;
+                    text-align: center;
+                    background-color: white;
+                    position: absolute;
+                    top: calc(70px + 100%);
+                    left: 0;
+                    width: 100%;
+                    padding: 20px 0;
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    z-index: 1001;
+                }
+                .auth-buttons.active {
+                    display: flex;
+                }
+                .hamburger {
+                    display: flex;
+                }
+            }
 
         .logo {
             font-size: 24px;
@@ -118,43 +176,48 @@ if (isLoggedIn()) {
             background-color: var(--primary-dark);
         }
 
-        /* Page Title Section */
-        .page-title {
-            padding: 140px 0 60px;
-            text-align: center;
-            background: 
-              linear-gradient(
-                rgba(0, 30, 60, 0.6), 
-                rgba(0, 30, 60, 0.6)
-              ),
-              url('assets/images/background.jpg') no-repeat center center/cover;
-            color: white;
-        }
+    /* Page Title Section */
+    .page-title {
+        padding: 140px 0 60px;
+        text-align: center;
+        background: 
+          linear-gradient(
+            rgba(0, 30, 60, 0.6), 
+            rgba(0, 30, 60, 0.6)
+          ),
+          url('assets/images/background.jpg') no-repeat center center/cover;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
 
-        .page-title h1 {
-            font-size: 48px;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
+    .page-title h1 {
+        font-size: 48px;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
 
-        .page-title p {
-            font-size: 18px;
-            max-width: 700px;
-            margin: 0 auto;
-            color: #ddd;
-        }
+    .page-title p {
+        font-size: 18px;
+        max-width: 700px;
+        margin: 0 auto;
+        color: #ddd;
+    }
 
-        /* Services Section */
-        .services {
-            padding: 60px 0 100px;
-            background-color: var(--light);
-        }
+    /* Services Section */
+    .services {
+        padding: 60px 0 100px;
+        background-color: var(--light);
+        margin-top: 40px;
+    }
 
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 30px;
-        }
+    .services-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px;
+    }
 
         .service-card {
             background-color: white;
@@ -244,31 +307,31 @@ if (isLoggedIn()) {
             font-size: 14px;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            nav {
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            .nav-links {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-
-            .auth-buttons {
-                margin-top: 15px;
-            }
-
-            .page-title h1 {
-                font-size: 36px;
-            }
-
-            .services-grid {
-                grid-template-columns: 1fr;
-            }
+    /* Responsive */
+    @media (max-width: 768px) {
+        nav {
+            flex-direction: column;
+            gap: 20px;
         }
+
+        .nav-links {
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+        }
+
+        .auth-buttons {
+            margin-top: 15px;
+        }
+
+        .page-title h1 {
+            font-size: 36px;
+        }
+
+        .services-grid {
+            grid-template-columns: 1fr;
+        }
+    }
     </style>
 </head>
 <body>
@@ -280,20 +343,35 @@ if (isLoggedIn()) {
                    <img src="assets/images/Logo-color-1.png" alt="Nexus Bank Logo" />
                     
                 </a>
-                <div class="nav-links">
+                <div class="hamburger" id="hamburger" aria-label="Toggle menu" role="button" tabindex="0">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </div>
+                <div class="nav-links" id="nav-links">
                     <a href="index.php">Home</a>
                     <a href="about-us.php">About Us</a>
                     <a href="services.php" class="active">Services</a>
                     <a href="contact.php">Contact</a>
-                    
                 </div>
-                <div class="auth-buttons">
+                <div class="auth-buttons" id="auth-buttons">
                     <a href="login.php">Login</a>
                     <a href="register.php">Sign Up</a>
                 </div>
             </nav>
         </div>
     </header>
+
+    <script>
+        const hamburger = document.getElementById('hamburger');
+        const navLinks = document.getElementById('nav-links');
+        const authButtons = document.getElementById('auth-buttons');
+
+        hamburger.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            authButtons.classList.toggle('active');
+        });
+    </script>
 
     <!-- Page Title Section -->
     <section class="page-title">
@@ -313,11 +391,6 @@ if (isLoggedIn()) {
                     <p>Secure and competitive savings accounts with high interest rates to help grow your wealth safely.</p>
                 </div>
                 <div class="service-card">
-                    <i class="fas fa-credit-card"></i>
-                    <h3>Credit Cards</h3>
-                    <p>Flexible credit card options with cashback rewards, travel benefits, and low fees.</p>
-                </div>
-                <div class="service-card">
                     <i class="fas fa-home"></i>
                     <h3>Home Loans</h3>
                     <p>Affordable mortgage solutions tailored to help you buy your dream home with ease.</p>
@@ -326,11 +399,6 @@ if (isLoggedIn()) {
                     <i class="fas fa-chart-line"></i>
                     <h3>Investment Planning</h3>
                     <p>Personalized investment advice and plans to help you maximize returns and grow your portfolio.</p>
-                </div>
-                <div class="service-card">
-                    <i class="fas fa-shield-alt"></i>
-                    <h3>Insurance</h3>
-                    <p>Comprehensive insurance policies designed to protect your family, assets, and future.</p>
                 </div>
                 <div class="service-card">
                     <i class="fas fa-mobile-alt"></i>

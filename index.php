@@ -300,6 +300,59 @@ if (isLoggedIn()) {
                 font-size: 36px;
             }
         }
+        .hamburger {
+            display: none;
+            cursor: pointer;
+            width: 30px;
+            height: 25px;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .hamburger .bar {
+            height: 4px;
+            width: 100%;
+            background-color: var(--dark);
+            border-radius: 2px;
+        }
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+                background-color: white;
+                position: absolute;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                padding: 20px 0;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 1001;
+            }
+            .nav-links.active {
+                display: flex;
+            }
+            .auth-buttons {
+                display: none;
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+                background-color: white;
+                position: absolute;
+                top: calc(70px + 100%);
+                left: 0;
+                width: 100%;
+                padding: 20px 0;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 1001;
+            }
+            .auth-buttons.active {
+                display: flex;
+            }
+            .hamburger {
+                display: flex;
+            }
+        }
     </style>
 </head>
 <body>
@@ -309,18 +362,20 @@ if (isLoggedIn()) {
             <nav>
                 <a href="index.php" class="logo">
                    <img src="assets/images/Logo-color-1.png" alt="Nexus Bank Logo" />
-
-                 
                 </a>
-                <div class="nav-links">
+                <div class="hamburger" id="hamburger" aria-label="Toggle menu" role="button" tabindex="0">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </div>
+                <div class="nav-links" id="nav-links">
                     <a href="index.php">Home</a>
                     <a href="about-us.php">About Us</a>
                     <a href="services.php">Services</a>
                     <a href="contact.php">Contact</a>
-                    <a href="blog.php">Blog</a>
                     
                 </div>
-                <div class="auth-buttons">
+                <div class="auth-buttons" id="auth-buttons">
                     <a href="login.php">Login</a>
                     <a href="register.php">Sign Up</a>
                 </div>
@@ -328,14 +383,25 @@ if (isLoggedIn()) {
         </div>
     </header>
 
+    <script>
+        const hamburger = document.getElementById('hamburger');
+        const navLinks = document.getElementById('nav-links');
+        const authButtons = document.getElementById('auth-buttons');
+
+        hamburger.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            authButtons.classList.toggle('active');
+        });
+    </script>
+
     <!-- Hero Section -->
-    <section class="hero">
-        <div class="container">
-            <h1>Where Money Meets Trust</h1>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-            <a href="register.php" class="cta-button">Open Savings Account</a>
-        </div>
-    </section>
+            <section class="hero">
+                <div class="container">
+                    <h1 style="color: white;">Where Money Meets Trust</h1>
+                    <p>Experience secure, reliable banking tailored to your financial goals. Open your savings account today and start building your future with confidence.</p>
+                    <a href="register.php" class="cta-button">Open Savings Account</a>
+                </div>
+            </section>
 
     <!-- Features Section -->
     <section class="features">
@@ -349,11 +415,6 @@ if (isLoggedIn()) {
                     <i class="fas fa-piggy-bank"></i>
                     <h3>Savings Accounts</h3>
                     <p>High-yield savings accounts with competitive interest rates to grow your money faster.</p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-credit-card"></i>
-                    <h3>Credit Cards</h3>
-                    <p>Rewards cards with cash back, travel points, and low interest rates.</p>
                 </div>
                 <div class="feature-card">
                     <i class="fas fa-home"></i>

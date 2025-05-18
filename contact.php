@@ -37,7 +37,17 @@ if (isLoggedIn()) {
     body {
       color: var(--dark);
       line-height: 1.6;
-      background-color: var(--light);
+      background:
+        linear-gradient(
+          rgba(0, 30, 60, 0.6), 
+          rgba(0, 30, 60, 0.6)
+        ),
+        url('assets/images/background.jpg') no-repeat center center/cover;
+      background-attachment: fixed;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      color: var(--white);
     }
     .container {
       width: 100%;
@@ -104,11 +114,14 @@ if (isLoggedIn()) {
       background-color: var(--primary-dark);
     }
     /* Hero Section (blue gradient) */
-    .hero {
+  .hero {
       padding: 180px 0 100px;
-      background:
-        linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%),
-        repeating-radial-gradient(circle at center, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 1px, transparent 2px, transparent 10px);
+      background: 
+        linear-gradient(
+          rgba(0, 30, 60, 0.6), 
+          rgba(0, 30, 60, 0.6)
+        ),
+        url('assets/images/background.jpg') no-repeat center center/cover;
       text-align: center;
       color: var(--white);
     }
@@ -298,20 +311,36 @@ if (isLoggedIn()) {
           <img src="assets/images/Logo-color-1.png" alt="Nexus Bank Logo" />
           
         </a>
-        <div class="nav-links">
+        <div class="hamburger" id="hamburger" aria-label="Toggle menu" role="button" tabindex="0">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+        <div class="nav-links" id="nav-links">
           <a href="index.php">Home</a>
           <a href="about-us.php">About Us</a>
           <a href="services.php">Services</a>
           <a href="contact.php" style="color: var(--primary); font-weight: 700;">Contact</a>
           
         </div>
-        <div class="auth-buttons">
+        <div class="auth-buttons" id="auth-buttons">
           <a href="login.php">Login</a>
           <a href="register.php">Sign Up</a>
         </div>
       </nav>
     </div>
   </header>
+
+  <script>
+    const hamburger = document.getElementById('hamburger');
+    const navLinks = document.getElementById('nav-links');
+    const authButtons = document.getElementById('auth-buttons');
+
+    hamburger.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+      authButtons.classList.toggle('active');
+    });
+  </script>
 
   <!-- Hero Section -->
   <section class="hero">

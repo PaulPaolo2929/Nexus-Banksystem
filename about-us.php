@@ -132,7 +132,7 @@ if (isLoggedIn()) {
                 rgba(0, 30, 60, 0.6), 
                 rgba(0, 30, 60, 0.6)
               ),
-              url('assets/images/about-bg.jpg') no-repeat center center/cover;
+              url('assets/images/background.jpg') no-repeat center center/cover;
             color: white;
         }
 
@@ -257,6 +257,51 @@ if (isLoggedIn()) {
                 padding: 30px 20px;
             }
         }
+        .hamburger {
+            display: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--dark);
+        }
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+                background-color: white;
+                position: absolute;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                padding: 20px 0;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 1001;
+            }
+            .nav-links.active {
+                display: flex;
+            }
+            .auth-buttons {
+                display: none;
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+                background-color: white;
+                position: absolute;
+                top: calc(70px + 100%);
+                left: 0;
+                width: 100%;
+                padding: 20px 0;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 1001;
+            }
+            .auth-buttons.active {
+                display: flex;
+            }
+            .hamburger {
+                display: block;
+            }
+        }
     </style>
 </head>
 <body>
@@ -266,22 +311,34 @@ if (isLoggedIn()) {
             <nav>
                 <a href="index.php" class="logo">
                     <img src="assets/images/Logo-color-1.png" alt="Nexus Bank Logo" />
-                   
                 </a>
-                <div class="nav-links">
+                <div class="hamburger" id="hamburger">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <div class="nav-links" id="nav-links">
                     <a href="index.php">Home</a>
                     <a href="about-us.php" class="active">About Us</a>
                     <a href="services.php">Services</a>
                     <a href="contact.php">Contact</a>
-                    
                 </div>
-                <div class="auth-buttons">
+                <div class="auth-buttons" id="auth-buttons">
                     <a href="login.php">Login</a>
                     <a href="register.php">Sign Up</a>
                 </div>
             </nav>
         </div>
     </header>
+
+    <script>
+        const hamburger = document.getElementById('hamburger');
+        const navLinks = document.getElementById('nav-links');
+        const authButtons = document.getElementById('auth-buttons');
+
+        hamburger.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            authButtons.classList.toggle('active');
+        });
+    </script>
 
     <!-- Page Title Section -->
     <section class="page-title">
