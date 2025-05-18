@@ -56,6 +56,8 @@ $conn->close();
     <title>Recent Transactions</title>
     <link rel="stylesheet" href="../assets/css/admin-main.css">
     <link rel="stylesheet" href="../assets/css/admin-recent-transactions.css">
+
+       <script src="../assets/js/sidebar.js"></script>
 </head>
 <body>
 

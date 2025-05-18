@@ -34,6 +34,8 @@ $recentUsers = $pdo->query("SELECT * FROM users ORDER BY created_at DESC LIMIT 5
     <title>SecureBank - Admin Dashboard</title>
     <link rel="stylesheet" href="../assets/css/admin-main.css">
     <link rel="stylesheet" href="../assets/css/admin-dashboard.css">
+
+       <script src="../assets/js/sidebar.js"></script>
 </head>
 <body>
 

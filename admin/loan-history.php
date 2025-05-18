@@ -24,6 +24,8 @@ $loanHistory = $stmt->fetchAll();
     <title>Loan History - SecureBank Admin</title>
     <link rel="stylesheet" href="../assets/css/admin-main.css">
     <link rel="stylesheet" href="../assets/css/admin-loan-history.css">
+
+       <script src="../assets/js/sidebar.js"></script>
 </head>
 <body>
 

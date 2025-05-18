@@ -40,6 +40,8 @@ $conn->close();
 <title>All Transactions</title>
 <link rel="stylesheet" href="../assets/css/admin-main.css">
 <link rel="stylesheet" href="../assets/css/admin-all-transactions.css">
+
+   <script src="../assets/js/sidebar.js"></script>
 </head>
 
 <body>
