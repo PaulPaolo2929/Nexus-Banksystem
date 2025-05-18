@@ -194,6 +194,18 @@ $weeklyDeposits = $stmt->fetchColumn() ?: 0;
                 <img src="../assets/images/inactive-loans.png" alt="loans-logo" class="nav-icon" data-default="../assets/images/inactive-loans.png" data-hover="../assets/images/hover-loans.png"> 
                 Loans
             </a>
+
+            <a href="profile.php" class="btn">
+                <img 
+                src="../assets/images/inactive-profile.png" 
+                alt="loans-logo" 
+                class="nav-icon"
+                data-default="../assets/images/inactive-profile.png"
+                data-hover="../assets/images/inactive-profile"
+                > 
+                Settings
+            </a>
+
         </nav>       
 <hr>
         <div class="logout-cont">

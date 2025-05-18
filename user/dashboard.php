@@ -214,7 +214,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                         data-default="../assets/images/inactive-profile.png"
                         data-hover="../assets/images/inactive-profile"
                         > 
-                        Profile
+                        Settings
                     </a>
 
                     

@@ -131,6 +131,8 @@ $stmt = $pdo->prepare("SELECT profile_picture FROM users WHERE user_id = ?");
 $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'] : '../assets/images/default-avatar.png';
 // Fetch user's profile information
 
+
+
 ?>
 
 <!DOCTYPE html>
@@ -140,7 +142,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SecureBank - Loans</title>
     <link rel="stylesheet" href="../assets/css/main.css">
-    <link rel="stylesheet" href="../assets/css/loans.css">
+    <link rel="stylesheet" href="../assets/css/profile.css">
 
     <!-- NAVIGATION EFFECTS -->
     <script src="../assets/js/navhover.js"></script>
@@ -313,16 +315,28 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                         Investment
                     </a>
 
-                    <a href="loan.php" class="btn dash-text">
+                    <a href="loan.php" class="btn ">
                         <img 
-                        src="../assets/images/hover-loans.png" 
+                        src="../assets/images/inactive-loans.png" 
                         alt="loans-logo" 
                         class="nav-icon"
-                        data-default="../assets/images/hover-loans.png"
-                        data-hover="../assets/images/hover-loans.png"
+                        data-default="../assets/images/inactive-loans.png"
+                        data-hover="../assets/images/inactive-loans.png"
                         > 
                         Loans
                     </a>
+
+                    <a href="profile.php" class="btn dash-text">
+                        <img 
+                        src="../assets/images/hover-profile.png" 
+                        alt="loans-logo" 
+                        class="nav-icon"
+                        data-default="../assets/images/hover-profile.png"
+                        data-hover="../assets/images/hover-profile"
+                        > 
+                        Settings
+                    </a>
+
                 </nav>       
 <hr>
             <div class="logout-cont">
@@ -336,74 +350,82 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                     <button class="hamburger">&#9776;</button> <!-- Hamburger icon -->
                 </header>
 
-                <main class="content">
-                    <!-- Error / Success -->
-                    <?php if ($error):   ?><p style="color:red;"><?= $error   ?></p><?php endif; ?>
-                    <?php if ($success): ?><p style="color:green;"><?= $success ?></p><?php endif; ?>
+              <div class="content">
+                        <!-- Heading and Instructions -->
+                        <h2>Edit Profile</h2>
+                        <p class="description">
+                            You can update your personal information, upload a profile picture, and review your account details here.
+                            Please make sure to click "Save Changes" after editing.
+                        </p>
 
-                    <!-- Upload picture (unchanged) -->
-                    <form action="upload_profile.php" method="POST" enctype="multipart/form-data">
-                    <label>Upload Profile Picture:</label>
-                    <input type="file" name="profile_picture" accept="image/*" required>
-                    <button type="submit">Upload</button>
-                    </form>
+                        <!-- Success/Error Messages -->
+                        <?php if ($error): ?>
+                            <p class="alert alert-danger"><?= $error ?></p>
+                        <?php endif; ?>
+                        <?php if ($success): ?>
+                            <p class="alert alert-success"><?= $success ?></p>
+                        <?php endif; ?>
 
-                    <img src="<?= $profilePic ?>" alt="Profile Picture" class="profile-picture" data-toggle="modal">
-
-                    <!-- Image modal (unchanged) -->
-                    <div id="imageModal" class="modal">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                        <div class="modal-header">
-                            <span class="close">&times;</span>
-                            <button id="backButton">Back</button>
+                        <!-- Navigation Tabs -->
+                        <div class="tabs">
+                            <span class="tab active">Edit Profile</span>
+                            <span class="tab">Preferences</span>
+                            <span class="tab">Security</span>
                         </div>
-                        <div class="modal-body">
-                            <img src="<?= $profilePic ?>" alt="Profile Picture" class="img-fluid">
+
+                        <!-- Profile Picture Section -->
+                        <div class="profile-picture-section">
+                            <img src="<?= $profilePic ?>" alt="Profile Picture" class="profile-picture" data-toggle="modal">
+                            <form action="upload_picture.php" method="POST" enctype="multipart/form-data">
+                                <label>Upload Profile Picture:</label>
+                                <input type="file" name="profile_picture" accept="image/*" required>
+                                <button type="submit" class="upload-btn">Upload</button>
+                            </form>
                         </div>
+
+                        <!-- Image Modal -->
+                        <div id="imageModal" class="modal">
+                            <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <span class="close">&times;</span>
+                                <button id="backButton">Back</button>
+                                </div>
+                                <div class="modal-body">
+                                <img src="<?= $profilePic ?>" alt="Profile Picture" class="img-fluid">
+                                </div>
+                            </div>
+                            </div>
                         </div>
-                    </div>
-                    </div>
 
-                    <!-- ── Editable Profile Form ── -->
-                    <button id="editProfileBtn">Edit Profile</button>
-                        
-                    <label>Account Number</label>
-                    <input type="text" value="<?= htmlspecialchars($user['account_number']) ?>" disabled>
+                        <!-- Profile Form -->
+                        <form id="profileForm" method="POST">
+                            <input type="hidden" name="action" value="update_profile">
+                            <div class="profile-grid">
+                            <!-- Read-Only -->
+                            <div><label>Account Number</label><input type="text" value="<?= htmlspecialchars($user['account_number']) ?>" disabled></div>
+                            <div><label>Password</label><input type="password" value="********" disabled></div>
 
-                    <label>Password</label>                  
-                    <input type="password" value="********" disabled>
-                        
-                    <form id="profileForm" method="POST">
-                    <input type="hidden" name="action" value="update_profile">
+                            <!-- Editable -->
+                            <div><label>Full Name</label><input type="text" name="full_name" value="<?= htmlspecialchars($user['full_name']) ?>" disabled></div>
+                            <div><label>Email</label><input type="email" name="email" value="<?= htmlspecialchars($user['email']) ?>" disabled></div>
+                            <div><label>Age</label><input type="number" name="age" value="<?= htmlspecialchars($user['age']) ?>" disabled></div>
+                            <div><label>Birth Year</label><input type="number" name="birth_year" value="<?= htmlspecialchars($user['birth_year']) ?>" disabled></div>
+                            <div><label>Phone</label><input type="text" name="phone" value="<?= htmlspecialchars($user['phone']) ?>" disabled></div>
+                            <div><label>Occupation</label><input type="text" name="occupation" value="<?= htmlspecialchars($user['occupation']) ?>" disabled></div>
+                            <div><label>Account Status</label><input type="text" value="<?= htmlspecialchars($user['status']) ?>" disabled></div>
+                            <div class="full-width"><label>Address</label><textarea name="address" disabled><?= htmlspecialchars($user['address']) ?></textarea></div>
+                            </div>
 
-                    <label>Full Name</label>
-                    <input type="text"   name="full_name"  value="<?= htmlspecialchars($user['full_name']) ?>"  disabled>
+                            <!-- Action Buttons -->
+                            <div class="form-actions">
+                            <button type="button" id="editProfileBtn">Edit Profile</button>
+                            <button type="submit" id="saveProfileBtn" disabled>Save Changes</button>
+                            </div>
+                        </form>
+                        </div>
 
-                    <label>Email</label>
-                    <input type="email"  name="email"      value="<?= htmlspecialchars($user['email']) ?>"      disabled>
-
-                    <label>Age</label>
-                    <input type="number" name="age"        value="<?= htmlspecialchars($user['age']) ?>"        disabled>
-
-                    <label>Birth Year</label>
-                    <input type="number" name="birth_year" value="<?= htmlspecialchars($user['birth_year']) ?>" disabled>
-
-                    <label>Address</label>
-                    <textarea name="address" disabled><?= htmlspecialchars($user['address']) ?></textarea>
-
-                    <label>Occupation</label>
-                    <input type="text"   name="occupation" value="<?= htmlspecialchars($user['occupation']) ?>" disabled>
-
-                    <label>Phone</label>
-                    <input type="text"   name="phone"      value="<?= htmlspecialchars($user['phone']) ?>"      disabled>
-
-                    <button type="submit" id="saveProfileBtn" disabled>Save Changes</button>
-                    </form>
-
-
-
-        </main>
+         </main>
     </div>
 
     <script>
