@@ -251,6 +251,8 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                 <a href="transfer.php" class="btn1">Transfer Funds</a>
                                 <a href="loan.php" class="btn1">Apply for Loan</a>
                                 <a href="loan-payment.php" class="btn1">Pay Loan</a>
+                                <a href="profile.php" class="btn1">Profile</a>
+                                <a href="login-records.php" class="btn1">Login Records</a>
                             </div>
                         </div>
                         

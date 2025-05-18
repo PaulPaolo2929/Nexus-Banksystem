@@ -64,4 +64,21 @@ function redirect($url) {
     header("Location: $url");
     exit();
 }
+
+function getRecentLoginRecords($pdo, $limit = 10) {
+    $stmt = $pdo->prepare("
+        SELECT 
+            lr.login_time,
+            lr.status,
+            u.full_name,
+            u.email
+        FROM login_records lr
+        JOIN users u ON u.user_id = lr.user_id
+        ORDER BY lr.login_time DESC
+        LIMIT ?
+    ");
+    $stmt->bindValue(1, (int)$limit, PDO::PARAM_INT);
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 ?>

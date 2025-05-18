@@ -34,6 +34,7 @@ $recentUsers = $pdo->query("SELECT * FROM users ORDER BY created_at DESC LIMIT 5
     <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 <body>
+    
     <div class="container">
         <header>
             <h1>Admin Dashboard</h1>
@@ -47,7 +48,8 @@ $recentUsers = $pdo->query("SELECT * FROM users ORDER BY created_at DESC LIMIT 5
             <a href="manage-investments.php">Manage Investments</a>
             <a href="track-investments.php">Users Investments</a>
             <a href="role.php">Roles</a>
-        <a href="recent_transactions.php">Transactions</a>
+            <a href="recent_transactions.php">Transactions</a>
+             <a href="login-records.php">Login Records</a>
         </nav>
         
         <div class="content">

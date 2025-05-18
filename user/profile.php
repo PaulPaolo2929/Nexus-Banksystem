@@ -342,7 +342,9 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                     <?php if ($success): ?><p style="color:green;"><?= $success ?></p><?php endif; ?>
 
                     <!-- Upload picture (unchanged) -->
-                    <form action="upload_profile.php" method="POST" enctype="multipart/form-data">
+                    <form action="upload_picture.php" method="POST" enctype="multipart/form-data">
+
+
                     <label>Upload Profile Picture:</label>
                     <input type="file" name="profile_picture" accept="image/*" required>
                     <button type="submit">Upload</button>

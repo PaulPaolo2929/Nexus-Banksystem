@@ -1,4 +1,4 @@
-<?php
+<?php 
 // Enable error reporting
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
@@ -38,12 +38,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute([strtolower($email)]);
         $user = $stmt->fetch();
 
+        // Get IP address and user agent
+        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+
         if ($user) {
             if ($user['status'] !== 'approved') {
                 $error = "Your account is still pending approval.";
+                // Log failed login
+                $stmtLog = $pdo->prepare("INSERT INTO login_records (user_id, ip_address, user_agent, status) VALUES (?, ?, ?, ?)");
+                $stmtLog->execute([$user['user_id'], $ipAddress, $userAgent, 'failed']);
             } elseif ($user['is_active'] == 0) {
                 $error = "Your account is deactivated. Please contact the admin.";
+                // Log failed login
+                $stmtLog = $pdo->prepare("INSERT INTO login_records (user_id, ip_address, user_agent, status) VALUES (?, ?, ?, ?)");
+                $stmtLog->execute([$user['user_id'], $ipAddress, $userAgent, 'failed']);
             } elseif (password_verify($password, $user['password_hash'])) {
+                // Log successful login
+                $stmtLog = $pdo->prepare("INSERT INTO login_records (user_id, ip_address, user_agent, status) VALUES (?, ?, ?, ?)");
+                $stmtLog->execute([$user['user_id'], $ipAddress, $userAgent, 'success']);
+
                 // Store temporary session data
                 $_SESSION['temp_user_id'] = $user['user_id'];
                 $_SESSION['temp_is_admin'] = $user['is_admin'];
@@ -57,6 +71,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             } else {
                 $error = "Invalid email or password.";
+                // Log failed login
+                $stmtLog = $pdo->prepare("INSERT INTO login_records (user_id, ip_address, user_agent, status) VALUES (?, ?, ?, ?)");
+                $stmtLog->execute([$user['user_id'], $ipAddress, $userAgent, 'failed']);
             }
         } else {
             $error = "User account not found. Please double-check your email.";
