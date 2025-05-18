@@ -1,4 +1,4 @@
-<?php
+<?php 
 session_start();
 require_once __DIR__ . '/includes/db.php';
 require_once __DIR__ . '/includes/functions.php';
@@ -13,7 +13,7 @@ if (isLoggedIn()) {
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>TrustBank | Where Money Meets Trust</title>
+    <title>TrustBank | About Us</title>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -28,26 +28,27 @@ if (isLoggedIn()) {
             --gray: #6c757d;
             --light-gray: #e9ecef;
         }
-        
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
-        
+
         body {
             color: var(--dark);
             line-height: 1.6;
+            background-color: var(--light);
         }
-        
+
         .container {
             width: 100%;
             max-width: 1200px;
             margin: 0 auto;
             padding: 0 20px;
         }
-        
+
         /* Header */
         header {
             background-color: white;
@@ -56,14 +57,14 @@ if (isLoggedIn()) {
             width: 100%;
             z-index: 1000;
         }
-        
+
         nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 20px 0;
         }
-        
+
         .logo {
             font-size: 24px;
             font-weight: 700;
@@ -73,38 +74,43 @@ if (isLoggedIn()) {
             align-items: center;
             gap: 10px;
         }
-        
+
         .logo img {
             height: 40px;
             display: block;
         }
-        
+
         .nav-links {
             display: flex;
             gap: 30px;
         }
-        
+
         .nav-links a {
             color: var(--dark);
             text-decoration: none;
             font-weight: 500;
             transition: color 0.3s;
         }
-        
+
         .nav-links a:hover {
             color: var(--primary);
         }
-        
+
+        .nav-links a.active {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
         .auth-buttons a {
             margin-left: 15px;
             text-decoration: none;
             font-weight: 500;
         }
-        
+
         .auth-buttons a:first-child {
             color: var(--gray);
         }
-        
+
         .auth-buttons a:last-child {
             color: white;
             background-color: var(--primary);
@@ -112,161 +118,111 @@ if (isLoggedIn()) {
             border-radius: 5px;
             transition: background-color 0.3s;
         }
-        
+
         .auth-buttons a:last-child:hover {
             background-color: var(--primary-dark);
         }
-        
-        /* Hero Section */
-        .hero {
-            padding: 180px 0 100px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ed 100%);
+
+        /* Page Title Section */
+        .page-title {
+            padding: 140px 0 60px;
             text-align: center;
+            background: 
+              linear-gradient(
+                rgba(0, 30, 60, 0.6), 
+                rgba(0, 30, 60, 0.6)
+              ),
+              url('assets/images/about-bg.jpg') no-repeat center center/cover;
+            color: white;
         }
-        
-        .hero h1 {
+
+        .page-title h1 {
             font-size: 48px;
             font-weight: 700;
-            margin-bottom: 20px;
-            color: var(--dark);
+            margin-bottom: 10px;
         }
-        
-    .hero {
-    padding: 180px 0 100px;
-    background: 
-      linear-gradient(
-        rgba(0, 30, 60, 0.6), 
-        rgba(0, 30, 60, 0.6)
-      ),
-      url('assets/images/background.jpg') no-repeat center center/cover;
-    text-align: center;
-    color: white;
-}
 
-
-        
-        .cta-button {
-            display: inline-block;
-            background-color: var(--secondary);
-            color: white;
-            padding: 12px 30px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 16px;
-            transition: background-color 0.3s;
-        }
-        
-        .cta-button:hover {
-            background-color: #218838;
-        }
-        
-        /* Features */
-        .features {
-            padding: 80px 0;
-            background-color: white;
-        }
-        
-        .section-title {
-            text-align: center;
-            margin-bottom: 50px;
-        }
-        
-        .section-title h2 {
-            font-size: 32px;
-            color: var(--dark);
-            margin-bottom: 15px;
-        }
-        
-        .section-title p {
-            color: var(--gray);
+        .page-title p {
+            font-size: 18px;
             max-width: 700px;
             margin: 0 auto;
+            color: #ddd;
         }
-        
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-        }
-        
-        .feature-card {
-            background-color: var(--light);
+
+        /* About Content Section */
+        .about-content {
+            max-width: 900px;
+            margin: 40px auto 80px;
+            background-color: white;
+            padding: 40px 30px;
             border-radius: 8px;
-            padding: 30px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .feature-card i {
-            font-size: 40px;
-            color: var(--primary);
-            margin-bottom: 20px;
-        }
-        
-        .feature-card h3 {
-            font-size: 20px;
-            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            line-height: 1.8;
             color: var(--dark);
         }
-        
-        .feature-card p {
+
+        .about-content h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-weight: 700;
+            font-size: 32px;
+            text-align: center;
+        }
+
+        .about-content p {
+            font-size: 18px;
             color: var(--gray);
         }
-        
+
         /* Footer */
         footer {
             background-color: var(--dark);
             color: white;
-            padding: 10px  10px;
+            padding: 60px 0 20px;
         }
-        
+
         .footer-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 40px;
             margin-bottom: 40px;
         }
-        
+
         .footer-col h3 {
             font-size: 18px;
             margin-bottom: 20px;
             color: var(--light-gray);
         }
-        
+
         .footer-links {
             list-style: none;
         }
-        
+
         .footer-links li {
             margin-bottom: 10px;
         }
-        
+
         .footer-links a {
             color: var(--gray);
             text-decoration: none;
             transition: color 0.3s;
         }
-        
+
         .footer-links a:hover {
             color: white;
         }
-        
+
         .social-links {
             display: flex;
             gap: 15px;
             margin-top: 20px;
         }
-        
+
         .social-links a {
             color: white;
             font-size: 18px;
         }
-        
+
         .copyright {
             text-align: center;
             padding-top: 20px;
@@ -274,30 +230,31 @@ if (isLoggedIn()) {
             color: var(--gray);
             font-size: 14px;
         }
-        
+
         /* Responsive */
         @media (max-width: 768px) {
             nav {
                 flex-direction: column;
                 gap: 20px;
             }
-            
+
             .nav-links {
                 flex-direction: column;
                 gap: 15px;
                 text-align: center;
             }
-            
+
             .auth-buttons {
                 margin-top: 15px;
             }
-            
-            .hero {
-                padding: 150px 0 80px;
-            }
-            
-            .hero h1 {
+
+            .page-title h1 {
                 font-size: 36px;
+            }
+
+            .about-content {
+                margin: 20px 15px 60px;
+                padding: 30px 20px;
             }
         }
     </style>
@@ -308,16 +265,14 @@ if (isLoggedIn()) {
         <div class="container">
             <nav>
                 <a href="index.php" class="logo">
-                   <img src="assets/images/Logo-color-1.png" alt="Nexus Bank Logo" />
-
-                 
+                    <img src="assets/images/Logo-color-1.png" alt="Nexus Bank Logo" />
+                   
                 </a>
                 <div class="nav-links">
                     <a href="index.php">Home</a>
-                    <a href="about-us.php">About Us</a>
+                    <a href="about-us.php" class="active">About Us</a>
                     <a href="services.php">Services</a>
                     <a href="contact.php">Contact</a>
-                    <a href="blog.php">Blog</a>
                     
                 </div>
                 <div class="auth-buttons">
@@ -328,46 +283,42 @@ if (isLoggedIn()) {
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section class="hero">
+    <!-- Page Title Section -->
+    <section class="page-title">
         <div class="container">
-            <h1>Where Money Meets Trust</h1>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-            <a href="register.php" class="cta-button">Open Savings Account</a>
+            <h1>About Us</h1>
+            <p>Learn more about Nexus Bank — our mission, vision, and commitment to serving you.</p>
         </div>
     </section>
 
-    <!-- Features Section -->
-    <section class="features">
+    <!-- About Content Section -->
+    <section class="about-content">
         <div class="container">
-            <div class="section-title">
-                <h2>Our Banking Services</h2>
-                <p>Discover financial products designed to help you grow and protect your money</p>
-            </div>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <i class="fas fa-piggy-bank"></i>
-                    <h3>Savings Accounts</h3>
-                    <p>High-yield savings accounts with competitive interest rates to grow your money faster.</p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-credit-card"></i>
-                    <h3>Credit Cards</h3>
-                    <p>Rewards cards with cash back, travel points, and low interest rates.</p>
-                </div>
-                <div class="feature-card">
-                    <i class="fas fa-home"></i>
-                    <h3>Home Loans</h3>
-                    <p>Competitive mortgage rates with flexible payment options for your dream home.</p>
-                </div>
-            </div>
+            <h2>Our Story</h2>
+            <p>
+                Since 1995, Nexus Bank has been committed to providing trustworthy and innovative financial services. 
+                Our mission is to empower individuals and businesses to achieve their financial goals through personalized solutions, 
+                cutting-edge technology, and a dedicated team of experts.
+            </p>
+            <p>
+                We believe in building lasting relationships with our clients based on transparency, integrity, and mutual success. 
+                Whether you're saving for the future, investing, or managing daily finances, Nexus Bank is here to guide you every step of the way.
+            </p>
+            <h2>Our Vision</h2>
+            <p>
+                To be the most trusted and customer-centric bank recognized for excellence in financial services and community support.
+            </p>
+            <h2>Our Values</h2>
+            <ul>
+                <li>Customer Focus — Putting your needs first</li>
+                <li>Innovation — Embracing technology to serve you better</li>
+                <li>Integrity — Acting with honesty and transparency</li>
+                <li>Excellence — Striving for the highest standards</li>
+                <li>Community — Supporting the growth and wellbeing of our society</li>
+            </ul>
         </div>
     </section>
 
-    
-    
-
-    <!-- Footer -->
     <!-- Footer -->
 <footer>
     <div class="container">
@@ -418,9 +369,5 @@ if (isLoggedIn()) {
         color: white;
     }
 </style>
-</footer>
-    </div>
-</footer>
-    </boody>
-    
-    </html>
+</body>
+</html>
