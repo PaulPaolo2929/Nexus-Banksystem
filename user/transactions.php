@@ -23,18 +23,64 @@ if (!$account) {
 
 $accountId = $account['account_id'];
 
-// Get transactions
+// Build the query based on filters
+$where = ["t.account_id = ?"];
+$params = [$accountId];
+
+// Apply search filter
+if (isset($_GET['search']) && !empty($_GET['search'])) {
+    $where[] = "(t.description LIKE ? OR t.transaction_id LIKE ?)";
+    $params[] = "%{$_GET['search']}%";
+    $params[] = "%{$_GET['search']}%";
+}
+
+// Apply type filter
+if (isset($_GET['type']) && !empty($_GET['type'])) {
+    $where[] = "t.type = ?";
+    $params[] = $_GET['type'];
+}
+
+// Apply date filter
+if (isset($_GET['date_from']) && !empty($_GET['date_from'])) {
+    $where[] = "DATE(t.created_at) >= ?";
+    $params[] = $_GET['date_from'];
+}
+
+if (isset($_GET['date_to']) && !empty($_GET['date_to'])) {
+    $where[] = "DATE(t.created_at) <= ?";
+    $params[] = $_GET['date_to'];
+}
+
+// Get total number of transactions for pagination
+$stmt = $pdo->prepare("
+    SELECT COUNT(*) 
+    FROM transactions t
+    LEFT JOIN accounts a ON t.related_account_id = a.account_id
+    WHERE " . implode(" AND ", $where)
+);
+$stmt->execute($params);
+$totalTransactions = $stmt->fetchColumn();
+
+// Calculate pagination
+$transactionsPerPage = 10;
+$totalPages = ceil($totalTransactions / $transactionsPerPage);
+$currentPage = isset($_GET['page']) ? max(1, min($totalPages, intval($_GET['page']))) : 1;
+$offset = ($currentPage - 1) * $transactionsPerPage;
+
+// Get transactions with pagination and filters
 $stmt = $pdo->prepare("
     SELECT t.*, a.account_number as related_account_number
     FROM transactions t
     LEFT JOIN accounts a ON t.related_account_id = a.account_id
-    WHERE t.account_id = ?
+    WHERE " . implode(" AND ", $where) . "
     ORDER BY t.created_at DESC
+    LIMIT ? OFFSET ?
 ");
 
-$stmt->execute([$accountId]);
+$params[] = $transactionsPerPage;
+$params[] = $offset;
+$stmt->execute($params);
 $transactions = $stmt->fetchAll();
-
 
 // Get user account information
 $userId = $_SESSION['user_id'];
@@ -81,7 +127,177 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
       padding: 1rem;
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.05);
-      }
+    }
+
+    /* Search and Filter Styles */
+    .search-filter-container {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .search-filter-form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .search-box {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .filter-box {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .filter-box select,
+    .filter-box input[type="date"] {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        min-width: 150px;
+    }
+
+    .filter-button {
+        padding: 10px 20px;
+        background-color: #706EFF;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .filter-button:hover {
+        background-color: #5856cc;
+    }
+
+    .reset-button {
+        padding: 10px 20px;
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        text-decoration: none;
+        transition: background-color 0.3s;
+    }
+
+    .reset-button:hover {
+        background-color: #5a6268;
+    }
+
+    .btn-download {
+        display: inline-block;
+        padding: 6px 12px;
+        background: white;
+        color: #706EFF;
+        border: 1px solid #706EFF;
+        border-radius: 20px;
+        text-decoration: none;
+        font-size: 14px;
+        transition: all 0.3s;
+    }
+
+    .btn-download:hover {
+        background-color: #706EFF;
+        color: white;
+    }
+
+    /* Existing Pagination Styles */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 20px 0;
+        gap: 10px;
+    }
+
+    .page-link {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        color: #706EFF;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .page-link:hover {
+        background-color: #706EFF;
+        color: white;
+        border-color: #706EFF;
+    }
+
+    .page-current {
+        padding: 8px 12px;
+        background-color: #706EFF;
+        color: white;
+        border-radius: 4px;
+        border: 1px solid #706EFF;
+    }
+
+    .page-ellipsis {
+        color: #666;
+        padding: 8px 12px;
+    }
+
+    .date-range-inputs {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .date-input-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .date-input-group label {
+        font-size: 14px;
+        color: #666;
+        white-space: nowrap;
+    }
+
+    .filter-box select,
+    .filter-box input[type="date"] {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        min-width: 150px;
+        background-color: white;
+    }
+
+    .filter-box input[type="date"] {
+        min-width: 130px;
+        cursor: pointer;
+    }
+
+    .filter-box input[type="date"]::-webkit-calendar-picker-indicator {
+        cursor: pointer;
+    }
+
+    /* Add a subtle separator between filter elements */
+    .filter-box select {
+        border-right: 2px solid #eee;
+        padding-right: 15px;
+        margin-right: 15px;
+    }
  </style>
  
 
@@ -213,13 +429,51 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
 
                     <h2>All Transactions</h2>
                     <div class="transactions-container">
-                            
-                    <div class="transactions-tabs">
-                          <button class="tab active">All Transactions</button>
-                          <button class="tab">Deposit</button>
-                          <button class="tab">Withdraw</button>
-                          <button class="tab">Transfer</button>
-                    </div>
+                        <!-- Search and Filter Form -->
+                        <div class="search-filter-container">
+                            <form method="GET" class="search-filter-form">
+                                <div class="search-box">
+                                    <input type="text" name="search" 
+                                           placeholder="Search by description or transaction ID"
+                                           value="<?= htmlspecialchars($_GET['search'] ?? '') ?>">
+                                </div>
+                                
+                                <div class="filter-box">
+                                    <select name="type">
+                                        <option value="">All Types</option>
+                                        <option value="deposit" <?= ($_GET['type'] ?? '') === 'deposit' ? 'selected' : '' ?>>Deposit</option>
+                                        <option value="withdrawal" <?= ($_GET['type'] ?? '') === 'withdrawal' ? 'selected' : '' ?>>Withdraw</option>
+                                        <option value="transfer_in" <?= ($_GET['type'] ?? '') === 'transfer_in' ? 'selected' : '' ?>>Transfer In</option>
+                                        <option value="transfer_out" <?= ($_GET['type'] ?? '') === 'transfer_out' ? 'selected' : '' ?>>Transfer Out</option>
+                                    </select>
+
+                                    <div class="date-range-inputs">
+                                        <div class="date-input-group">
+                                            <label for="date_from">From:</label>
+                                            <input type="date" 
+                                                   id="date_from"
+                                                   name="date_from" 
+                                                   value="<?= htmlspecialchars($_GET['date_from'] ?? '') ?>"
+                                                   aria-label="Start date">
+                                        </div>
+                                        
+                                        <div class="date-input-group">
+                                            <label for="date_to">To:</label>
+                                            <input type="date" 
+                                                   id="date_to"
+                                                   name="date_to" 
+                                                   value="<?= htmlspecialchars($_GET['date_to'] ?? '') ?>"
+                                                   aria-label="End date">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="filter-button">Apply Filters</button>
+                                <?php if (!empty($_GET)): ?>
+                                    <a href="transactions.php" class="reset-button">Reset Filters</a>
+                                <?php endif; ?>
+                            </form>
+                        </div>
 
                         <div class="transactions-table-wrapper">
                             <table class="transactions-table">
@@ -255,12 +509,48 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                 </td>
                                 <td><?= $txn['related_account_number'] ?: 'N/A' ?></td>
                                 <td>
-                                    <button class="btn-download">Download</button>
+                                    <a href="generate_receipt.php?transaction_id=<?= htmlspecialchars($txn['transaction_id']) ?>" 
+                                       class="btn-download">Download Receipt</a>
                                 </td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
                             </table> 
+
+                            <!-- Pagination Controls -->
+                            <?php if ($totalPages > 1): ?>
+                            <div class="pagination">
+                                <?php if ($currentPage > 1): ?>
+                                    <a href="?page=<?= $currentPage - 1 ?>" class="page-link">&laquo; Previous</a>
+                                <?php endif; ?>
+
+                                <?php
+                                // Show up to 5 page numbers, centered around current page
+                                $startPage = max(1, min($currentPage - 2, $totalPages - 4));
+                                $endPage = min($totalPages, max($currentPage + 2, 5));
+                                
+                                if ($startPage > 1) {
+                                    echo '<span class="page-ellipsis">...</span>';
+                                }
+                                
+                                for ($i = $startPage; $i <= $endPage; $i++) {
+                                    if ($i == $currentPage) {
+                                        echo "<span class=\"page-current\">$i</span>";
+                                    } else {
+                                        echo "<a href=\"?page=$i\" class=\"page-link\">$i</a>";
+                                    }
+                                }
+                                
+                                if ($endPage < $totalPages) {
+                                    echo '<span class="page-ellipsis">...</span>';
+                                }
+                                ?>
+
+                                <?php if ($currentPage < $totalPages): ?>
+                                    <a href="?page=<?= $currentPage + 1 ?>" class="page-link">Next &raquo;</a>
+                                <?php endif; ?>
+                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
