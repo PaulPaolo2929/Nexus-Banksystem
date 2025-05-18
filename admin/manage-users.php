@@ -172,6 +172,8 @@ $users = $pdo->query("
     <title>SecureBank - Manage Users</title>
     <link rel="stylesheet" href="../assets/css/admin-main.css">
     <link rel="stylesheet" href="../assets/css/admin-users.css">
+
+       <script src="../assets/js/sidebar.js"></script>
 </head>
 <body>
     <div class="wrapper">

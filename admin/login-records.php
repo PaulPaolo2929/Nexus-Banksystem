@@ -31,6 +31,8 @@ $loginRecords = $stmt->fetchAll();
     <title>All Login Records - Admin</title>
     <link rel="stylesheet" href="../assets/css/admin-main.css">
     <link rel="stylesheet" href="../assets/css/admin-login-records.css">
+
+       <script src="../assets/js/sidebar.js"></script>
 </head>
 <body>
 

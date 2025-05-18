@@ -57,6 +57,8 @@ $investmentPlans = $pdo->query("SELECT * FROM investment_plans")->fetchAll();
     <title>Manage Investments - SecureBank Admin</title>
     <link rel="stylesheet" href="../assets/css/admin-main.css">
     <link rel="stylesheet" href="../assets/css/admin-investment.css">
+
+       <script src="../assets/js/sidebar.js"></script>
 </head>
 <body>
      <div class="wrapper">

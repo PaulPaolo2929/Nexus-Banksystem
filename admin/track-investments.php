@@ -22,6 +22,8 @@ $userInvestments = $stmt->fetchAll();
     <title>User Investments Tracking - SecureBank Admin</title>
     <link rel="stylesheet" href="../assets/css/admin-main.css">
     <link rel="stylesheet" href="../assets/css/admin-track-investment.css">
+
+       <script src="../assets/js/sidebar.js"></script>
 </head>
 <body>
      <div class="wrapper">

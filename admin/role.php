@@ -19,6 +19,8 @@ $result = $conn->query($sql);
     <link rel="stylesheet" href="../assets/css/admin-main.css">
     <link rel="stylesheet" href="../assets/css/admin-role.css">
 
+       <script src="../assets/js/sidebar.js"></script>
+
 </head>
 <body>
 
