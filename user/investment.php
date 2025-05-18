@@ -35,9 +35,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['plan_id'], $_POST['am
         $error = "Invalid investment plan.";
     } elseif ($amount < $plan['min_amount']) {
         $error = "Amount must be at least $" . number_format($plan['min_amount'], 2);
-    }  elseif ($amount > $plan['max_amount']) {
+    } elseif ($amount > $plan['max_amount']) {
         $error = "Amount cannot exceed $" . number_format($plan['max_amount'], 2);
-    }elseif ($amount > $balance) {
+    } elseif ($amount > $balance) {
+
         $error = "Insufficient balance.";
     } else {
         try {
