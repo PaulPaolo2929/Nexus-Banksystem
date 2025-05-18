@@ -33,6 +33,7 @@ $recentUsers = $pdo->query("SELECT * FROM users ORDER BY created_at DESC LIMIT 5
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SecureBank - Admin Dashboard</title>
     <link rel="stylesheet" href="../assets/css/admin-main.css">
+    <link rel="stylesheet" href="../assets/css/admin-dashboard.css">
 </head>
 <body>
 
@@ -51,8 +52,8 @@ $recentUsers = $pdo->query("SELECT * FROM users ORDER BY created_at DESC LIMIT 5
                     <a href="track-investments.php" class="btn">Users Investments</a>
                     <a href="role.php" class="btn">Roles</a>
                     <a href="recent_transactions.php" class="btn">Transactions</a>
-                    <a href="recent_transactions.php" class="btn">Loan History</a>
-               
+                    <a href="loan-history.php" class="btn">Loan History</a>
+                    <a href="login-records.php" class="btn">Login Records</a>
                 </nav>
 
                     <div class="logout-cont">
@@ -64,7 +65,7 @@ $recentUsers = $pdo->query("SELECT * FROM users ORDER BY created_at DESC LIMIT 5
     <main class="container">
         <header>
             <h1>Admin Dashboard</h1>
-           <button class="hamburger">&#9776;</button> <!-- Hamburger icon -->/a>
+           <button class="hamburger">&#9776;</button> <!-- Hamburger icon -->
         </header>     
         
         <div class="content">
@@ -94,7 +95,7 @@ $recentUsers = $pdo->query("SELECT * FROM users ORDER BY created_at DESC LIMIT 5
             </div>
             
             <h2>Recent Users</h2>
-            
+            <div class="table-cont">
             <?php if (empty($recentUsers)): ?>
                 <p>No users found.</p>
             <?php else: ?>
@@ -118,6 +119,7 @@ $recentUsers = $pdo->query("SELECT * FROM users ORDER BY created_at DESC LIMIT 5
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+                </div>
             <?php endif; ?>
         </div>
     </main>

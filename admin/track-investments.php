@@ -21,6 +21,7 @@ $userInvestments = $stmt->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Investments Tracking - SecureBank Admin</title>
     <link rel="stylesheet" href="../assets/css/admin-main.css">
+    <link rel="stylesheet" href="../assets/css/admin-track-investment.css">
 </head>
 <body>
      <div class="wrapper">
@@ -39,6 +40,7 @@ $userInvestments = $stmt->fetchAll();
                                 <a href="role.php" class="btn">Roles</a>
                                 <a href="recent_transactions.php" class="btn">Transactions</a>
                                 <a href="recent_transactions.php" class="btn">Loan History</a>
+                                <a href="login-records.php" class="btn">Login Records</a>
                             </nav>
 
                              <div class="logout-cont">
@@ -53,21 +55,11 @@ $userInvestments = $stmt->fetchAll();
             <button class="hamburger">&#9776;</button> <!-- Hamburger icon -->
         </header>
 
-        <nav class="dashboard-nav">
-            <a href="dashboard.php">Admin Dashboard</a>
-        <a href="manage-users.php">Manage Users</a>
-            <a href="manage-loans.php">Manage Loans</a>
-            <a href="manage-investments.php">Manage Investments</a>
-            <a href="track-investments.php">Users Investments</a>
-            <a href="role.php">Roles</a>
-            <a href="recent_transactions.php">Transactions</a>
-            <a href="login-records.php">Login Records</a>
-        </nav>
-
         <div class="content">
             <h2>User Investment Overview</h2>
             <?php if (empty($userInvestments)): ?>
                 <p>No investments found.</p>
+                <div class="table-cont">
             <?php else: ?>
                 <table class="user-investments-table">
                     <thead>
@@ -85,19 +77,20 @@ $userInvestments = $stmt->fetchAll();
                     <tbody>
                         <?php foreach ($userInvestments as $investment): ?>
                             <tr>
-                                <td><?= htmlspecialchars($investment['full_name']) ?></td>
-                                <td><?= htmlspecialchars($investment['email']) ?></td>
-                                <td><?= htmlspecialchars($investment['plan_name']) ?></td>
-                                <td>$<?= number_format($investment['amount'], 2) ?></td>
-                                <td><?= number_format($investment['interest_rate'], 2) ?>%</td>
-                                <td><?= htmlspecialchars($investment['status']) ?></td>
-                                <td><?= !empty($investment['created_at']) ? date('M j, Y', strtotime($investment['created_at'])) : 'N/A' ?></td>
-                                <td><?= !empty($investment['matured_at']) ? date('M j, Y', strtotime($investment['matured_at'])) : 'N/A' ?></td>
+                                <td data-label="User"><?= htmlspecialchars($investment['full_name']) ?></td>
+                                <td data-label="Email"><?= htmlspecialchars($investment['email']) ?></td>
+                                <td data-label="Investment Plan"><?= htmlspecialchars($investment['plan_name']) ?></td>
+                                <td data-label="Amount Invested">$<?= number_format($investment['amount'], 2) ?></td>
+                                <td data-label="Interest Rate"><?= number_format($investment['interest_rate'], 2) ?>%</td>
+                                <td data-label="Status"><?= htmlspecialchars($investment['status']) ?></td>
+                                <td data-label="Invested Date"><?= !empty($investment['created_at']) ? date('M j, Y', strtotime($investment['created_at'])) : 'N/A' ?></td>
+                                <td data-label="Matured Date"><?= !empty($investment['matured_at']) ? date('M j, Y', strtotime($investment['matured_at'])) : 'N/A' ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             <?php endif; ?>
+            </div>
         </div>
     </main>
     </div>

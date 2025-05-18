@@ -22,57 +22,44 @@ $loanHistory = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <title>Loan History - SecureBank Admin</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 0.75rem;
-            text-align: left;
-        }
-        th {
-            background-color: #f5f5f5;
-        }
-        .back-link {
-            margin-top: 2rem;
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            background-color: #007bff;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-        }
-        .logout {
-            float: right;
-            color: red;
-            font-weight: bold;
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/admin-main.css">
+    <link rel="stylesheet" href="../assets/css/admin-loan-history.css">
 </head>
 <body>
-<div class="container">
+
+ <div class="wrapper">
+            <aside class="sidebar">
+                        
+                            <div class="Logos-cont">
+                                <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
+                            </div>
+
+                            <nav class="dashboard-nav">
+                                <a href="dashboard.php" class="active btn ">Dashboard</a>
+                                <a href="manage-users.php" class="btn ">Manage Users</a>
+                                <a href="manage-loans.php" class="btn">Manage Loans</a>
+                                <a href="manage-investments.php" class="btn">Manage Investments</a>
+                                <a href="track-investments.php" class="btn">Users Investments</a>
+                                <a href="role.php" class="btn">Roles</a>
+                                <a href="recent_transactions.php" class="btn">Transactions</a>
+                                <a href="loan-history.php" class="btn dash-text">Loan History</a>
+                                 <a href="login-records.php" class="btn">Login Records</a>
+
+                            </nav>
+
+                             <div class="logout-cont">
+                                <a href="../logout.php" class="logout">Logout</a>
+                            </div>
+                </aside>
+
+<main class="container">
     <header>
         <h1>Loan History</h1>
-        <a href="../logout.php" class="logout">Logout</a>
+        <button class="hamburger">&#9776;</button> <!-- Hamburger icon -->
     </header>
 
-    <nav class="dashboard-nav">
-    <a href="dashboard.php" class="active">Dashboard</a>
-            <a href="manage-users.php">Manage Users</a>
-            <a href="manage-loans.php">Manage Loans</a>
-            <a href="manage-investments.php">Manage Investments</a>
-            <a href="track-investments.php">Users Investments</a>
-            <a href="role.php">Roles</a>
-            <a href="recent_transactions.php">Transactions</a>
-            <a href="login-records.php">Login Records</a>
-    </nav>
-
     <div class="content">
-
+        <h1>Loan History</h1>
         <?php if (empty($loanHistory)): ?>
             <p>No loan history found.</p>
         <?php else: ?>
@@ -92,22 +79,23 @@ $loanHistory = $stmt->fetchAll();
                 <tbody>
                     <?php foreach ($loanHistory as $entry): ?>
                         <tr>
-                            <td><?= $entry['loan_id'] ?></td>
-                            <td><?= htmlspecialchars($entry['full_name']) ?></td>
-                            <td><?= htmlspecialchars($entry['email']) ?></td>
-                            <td>$<?= number_format($entry['amount'], 2) ?></td>
-                            <td><?= $entry['interest_rate'] ?>%</td>
-                            <td><?= htmlspecialchars($entry['purpose']) ?></td>
-                            <td><?= ucfirst($entry['status']) ?></td>
-                            <td><?= date('M d, Y - h:i A', strtotime($entry['changed_at'])) ?></td>
+                            <td data-label="Loan ID"><?= $entry['loan_id'] ?></td>
+                            <td data-label="User"><?= htmlspecialchars($entry['full_name']) ?></td>
+                            <td data-label="Email"><?= htmlspecialchars($entry['email']) ?></td>
+                            <td data-label="Amount">$<?= number_format($entry['amount'], 2) ?></td>
+                            <td data-label="Interest"><?= $entry['interest_rate'] ?>%</td>
+                            <td data-label="Purpose"><?= htmlspecialchars($entry['purpose']) ?></td>
+                            <td data-label="Status"><?= ucfirst($entry['status']) ?></td>
+                            <td data-label="Changed At"><?= date('M d, Y - h:i A', strtotime($entry['changed_at'])) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
         <?php endif; ?>
 
-        <a href="manage-loans.php" class="back-link">← Back to Manage Loans</a>
+        
     </div>
+</main>
 </div>
 </body>
 </html>

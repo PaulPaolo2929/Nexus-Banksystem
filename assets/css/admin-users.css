@@ -1,0 +1,97 @@
+:root {
+    --main-color: #FFFFFF;
+    --bg-color: #F5F7FA;
+    --bg-sidecolor-2: #6359e9;
+    --font-color: #343C6A;
+    --thin-font-color: #718EBF;
+    --inactive-font-color: #B1B1B1;
+  }
+ 
+  h2 {
+    margin-bottom: 16px;
+    font-size: 24px;
+    font-weight: 600;
+  }
+  .users-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: var(--main-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .users-table thead th {
+    background-color: var(--bg-sidecolor-2);
+    color: var(--main-color);
+    text-align: left;
+    padding: 12px 16px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .users-table tbody tr:nth-child(even) {
+    background-color: #f9fbfd;
+  }
+  .users-table tbody tr:hover {
+    background-color: rgba(99,89,233,0.05);
+  }
+  .users-table td {
+    padding: 12px 16px;
+    font-size: 14px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  .users-table td.status {
+    font-weight: 500;
+  }
+  .users-table td.status span.pending {
+    color: var(--thin-font-color);
+  }
+  .users-table td.status span.approved {
+    color: var(--bg-sidecolor-2);
+  }
+  .users-table td.active {
+    font-weight: 500;
+  }
+  .users-table td.active span.inactive {
+    color: var(--inactive-font-color);
+  }
+  .users-table td.active span.active {
+    color: #28a745;
+  }
+  .btn {
+    display: inline-block;
+    font-size: 13px;
+    padding: 6px 10px;
+    margin-right: 4px;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  .btn-sm {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+  .btn-success {
+    background-color: #28a745;
+    color: #fff;
+  }
+  .btn-success:hover {
+    background-color: #218838;
+  }
+  .btn-danger {
+    background-color: #dc3545;
+    color: #fff;
+  }
+  .btn-danger:hover {
+    background-color: #c82333;
+  }
+  .btn-warning {
+    background-color: #ffc107;
+    color: #212529;
+  }
+  .btn-warning:hover {
+    background-color: #e0a800;
+  }
+  

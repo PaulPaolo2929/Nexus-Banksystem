@@ -1,0 +1,111 @@
+:root {
+  /* Colors */
+  --main-color: #FFFFFF;
+  --bg-color: #F5F7FA;
+  --bg-sidecolor-2: #6359e9;
+  --font-color: #343C6A;
+  --thin-font-color: #718EBF;
+  --inactive-font-color: #a3a3a3;
+  --hover-effects: #efeeff;
+
+  /* Font Sizes */
+  --big-font-size: clamp(4rem, 6vw, 6.6rem);
+  --semi-big-font-size: clamp(1.5rem, 3vw, 1.6rem);
+  --paragraph-font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+
+  /* Spacing */
+  --spacing-small: 0.75rem;
+  --spacing-medium: 1rem;
+  --spacing-large: 2rem;
+
+  /* Radius & Shadows */
+  --radius-base: 8px;
+  --radius-lg: 16px;
+  --shadow-base: 0 4px 12px rgba(99, 89, 233, 0.2);
+  --shadow-lg: 0 8px 24px rgba(52, 60, 106, 0.08);
+}
+
+
+
+/* Headings inside content */
+.content h1 {
+    margin-bottom: var(--spacing-medium);
+    color: var(--font-color);
+    border-bottom: 2px solid var(--bg-sidecolor-2);
+    padding-bottom: var(--spacing-small);
+    font-size: var(--semi-big-font-size);
+}
+
+/* Table styles */
+.content table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin-bottom: var(--spacing-large);
+}
+
+.content table thead {
+    background-color: var(--bg-sidecolor-2);
+    color: var(--main-color);
+}
+
+.content table th,
+.content table td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.content table tbody tr:nth-child(even) {
+    background-color: var(--hover-effects);
+}
+
+.content table tbody tr:hover {
+    background-color: #d6e9f8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1084px) {
+   
+
+    .content table,
+    .content table thead,
+    .content table tbody,
+    .content table th,
+    .content table td,
+    .content table tr {
+        display: block;
+        width: 100%;
+    }
+
+    .content table thead tr {
+        display: none;
+    }
+
+    .content table tbody tr {
+        margin-bottom: var(--spacing-medium);
+        border: 1px solid #ddd;
+        border-radius: var(--radius-base);
+        padding: var(--spacing-small);
+        background-color: var(--main-color);
+        box-shadow: var(--shadow-base);
+    }
+
+    .content table tbody tr td {
+        padding-left: 50%;
+        position: relative;
+        text-align: left;
+        border: none;
+        border-bottom: 1px solid #eee;
+    }
+
+    .content table tbody tr td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 15px;
+        top: 12px;
+        font-weight: 600;
+        color: var(--thin-font-color);
+        white-space: nowrap;
+    }
+}

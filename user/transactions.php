@@ -509,8 +509,8 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                 </td>
                                 <td><?= $txn['related_account_number'] ?: 'N/A' ?></td>
                                 <td>
-                                    <a href="generate_receipt.php?transaction_id=<?= htmlspecialchars($txn['transaction_id']) ?>" 
-                                       class="btn-download">Download Receipt</a>
+                                    <form method="GET" action="generate_receipt.php" style="display:inline-block;">
+                                        <input type="hidden" name="transaction_id" value="<?= htmlspecialchars($txn['transaction_id']) ?>">
                                 </td>
                                 </tr>
                                 <?php endforeach; ?>

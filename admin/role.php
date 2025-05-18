@@ -16,67 +16,67 @@ $result = $conn->query($sql);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roles</title>
-    <style>
-        table {
-            border-collapse: collapse;
-            width: 90%;
-            margin: 20px auto;
-        }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 10px;
-        }
-        h1 {
-            text-align: center;
-        }
-        .dashboard-nav {
-            text-align: center;
-            margin: 20px;
-        }
-        .dashboard-nav a {
-            margin: 0 10px;
-            text-decoration: none;
-            color: blue;
-        }
-        .dashboard-nav a.active {
-            font-weight: bold;
-            color: darkblue;
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/admin-main.css">
+    <link rel="stylesheet" href="../assets/css/admin-role.css">
+
 </head>
 <body>
 
-<!-- Navigation Menu -->
-<nav class="dashboard-nav">
-     <a href="dashboard.php">Admin Dashboard</a>
-            <a href="manage-users.php">Manage Users</a>
-            <a href="manage-loans.php">Manage Loans</a>
-            <a href="manage-investments.php">Manage Investments</a>
-            <a href="track-investments.php">Users Investments</a>
-            <a href="role.php">Roles</a>
-            <a href="recent_transactions.php">Transactions</a>
-            <a href="login-records.php">Login Records</a>
-</nav>
+ <div class="wrapper">
+            <aside class="sidebar">
+                        
+                            <div class="Logos-cont">
+                                <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
+                            </div>
 
-<h1>User Roles</h1>
+                            <nav class="dashboard-nav">
+                                <a href="dashboard.php" class="active btn ">Dashboard</a>
+                                <a href="manage-users.php" class="btn ">Manage Users</a>
+                                <a href="manage-loans.php" class="btn">Manage Loans</a>
+                                <a href="manage-investments.php" class="btn">Manage Investments</a>
+                                <a href="track-investments.php" class="btn">Users Investments</a>
+                                <a href="role.php" class="btn dash-text">Roles</a>
+                                <a href="recent_transactions.php" class="btn">Transactions</a>
+                                <a href="loan-history.php" class="btn">Loan History</a>
+                                <a href="login-records.php" class="btn">Login Records</a>
+                            </nav>
 
-<!-- Table to display users and their roles -->
-<table>
-    <tr>
-        <th>User ID</th>
-        <th>Full Name</th>
-        <th>Email</th>
-        <th>Role</th>
-    </tr>
-    <?php while ($row = $result->fetch_assoc()): ?>
-    <tr>
-        <td><?= htmlspecialchars($row['user_id']) ?></td>
-        <td><?= htmlspecialchars($row['full_name']) ?></td>
-        <td><?= htmlspecialchars($row['email']) ?></td>
-        <td><?= $row['is_admin'] == 1 ? 'Admin' : 'User' ?></td> <!-- Display "Admin" or "User" based on is_admin value -->
-    </tr>
-    <?php endwhile; ?>
-</table>
+                             <div class="logout-cont">
+                                <a href="../logout.php" class="logout">Logout</a>
+                            </div>
+                </aside>
+ <main class="container">
+        <header>
+            <h1>Manage Investments</h1>
+            <button class="hamburger">&#9776;</button> <!-- Hamburger icon -->
+        </header>
+
+
+        <div class="content">
+                            
+                <h2>User Roles</h2>
+
+                <!-- Table to display users and their roles -->
+                <table>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                    </tr>
+                    <?php while ($row = $result->fetch_assoc()): ?>
+                    <tr>
+                        <td data-label="User ID"><?= htmlspecialchars($row['user_id']) ?></td>
+                        <td data-label="Full Name"><?= htmlspecialchars($row['full_name']) ?></td>
+                        <td data-label="Email"><?= htmlspecialchars($row['email']) ?></td>
+                        <td data-label="Role"><?= $row['is_admin'] == 1 ? 'Admin' : 'User' ?></td> <!-- Display "Admin" or "User" based on is_admin value -->
+                    </tr>
+                    <?php endwhile; ?>
+                </table>
+        </div>
+        
+</main>
+</div>
 
 </body>
 </html>
