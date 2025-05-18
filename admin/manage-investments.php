@@ -56,6 +56,7 @@ $investmentPlans = $pdo->query("SELECT * FROM investment_plans")->fetchAll();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Investments - SecureBank Admin</title>
     <link rel="stylesheet" href="../assets/css/admin-main.css">
+    <link rel="stylesheet" href="../assets/css/admin-investment.css">
 </head>
 <body>
      <div class="wrapper">
@@ -74,6 +75,7 @@ $investmentPlans = $pdo->query("SELECT * FROM investment_plans")->fetchAll();
                                 <a href="role.php" class="btn">Roles</a>
                                 <a href="recent_transactions.php" class="btn">Transactions</a>
                                 <a href="recent_transactions.php" class="btn">Loan History</a>
+                                <a href="login-records.php" class="btn">Login Records</a>
                             </nav>
 
                              <div class="logout-cont">
@@ -87,17 +89,6 @@ $investmentPlans = $pdo->query("SELECT * FROM investment_plans")->fetchAll();
             <h1>Manage Investments</h1>
             <button class="hamburger">&#9776;</button> <!-- Hamburger icon -->
         </header>
-
-        <nav class="dashboard-nav">
-            <a href="dashboard.php">Admin Dashboard</a>
-        <a href="manage-users.php">Manage Users</a>
-            <a href="manage-loans.php">Manage Loans</a>
-            <a href="manage-investments.php">Manage Investments</a>
-            <a href="track-investments.php">Users Investments</a>
-            <a href="role.php">Roles</a>
-            <a href="recent_transactions.php">Transactions</a>
-            <a href="login-records.php">Login Records</a>
-        </nav>
 
         <div class="content">
             <!-- Add New Investment Plan Form -->
@@ -145,11 +136,11 @@ $investmentPlans = $pdo->query("SELECT * FROM investment_plans")->fetchAll();
                     <tbody>
                         <?php foreach ($investmentPlans as $plan): ?>
                             <tr>
-                                <td><?= htmlspecialchars($plan['plan_name']) ?></td>
-                                <td><?= htmlspecialchars($plan['interest_rate']) ?>%</td>
-                                <td>$<?= number_format($plan['min_amount'] ?? 0, 2) ?></td>
-                                <td>$<?= number_format($plan['max_amount'] ?? 0, 2) ?></td>
-                                <td>
+                                <td data-label="Plan Name"><?= htmlspecialchars($plan['plan_name']) ?></td>
+                                <td data-label="Interest Rate"><?= htmlspecialchars($plan['interest_rate']) ?>%</td>
+                                <td data-label="Min Investment">$<?= number_format($plan['min_amount'] ?? 0, 2) ?></td>
+                                <td data-label="Max Investment">$<?= number_format($plan['max_amount'] ?? 0, 2) ?></td>
+                                <td data-label="Action">
                                     <!-- Edit button for each plan -->
                                     <button onclick="openEditForm(<?= $plan['plan_id'] ?>, '<?= htmlspecialchars($plan['plan_name']) ?>', <?= $plan['interest_rate'] ?>, <?= $plan['min_amount'] ?>, <?= $plan['max_amount'] ?>, <?= $plan['duration_months'] ?>, '<?= htmlspecialchars($plan['risk_level']) ?>')">Edit</button>
                                 </td>

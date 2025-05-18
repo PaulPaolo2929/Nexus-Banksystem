@@ -73,15 +73,43 @@ $pdf->Cell(0, 5, '', 0, 1); // Reduced space
 
 $pdf->SetFont('helvetica', '', 11); // Slightly smaller font
 
-// Transaction details
+// Common details
 $pdf->Cell(0, 8, 'Transaction ID: ' . $transaction['transaction_id'], 0, 1);
 $pdf->Cell(0, 8, 'Date: ' . date('F j, Y, g:i a', strtotime($transaction['created_at'])), 0, 1);
-$pdf->Cell(0, 8, 'Type: ' . ucfirst($transaction['type']), 0, 1);
 $pdf->Cell(0, 8, 'Amount: $' . number_format($transaction['amount'], 2), 0, 1);
-$pdf->Cell(0, 8, 'From Account: ' . $transaction['from_account'], 0, 1);
 
-if ($transaction['to_account']) {
-    $pdf->Cell(0, 8, 'To Account: ' . $transaction['to_account'], 0, 1);
+// Dynamic content based on transaction type
+switch ($transaction['type']) {
+    case 'deposit':
+        $pdf->Cell(0, 8, 'Transaction Type: Deposit', 0, 1);
+        $pdf->Cell(0, 8, 'Recipient: ' . $transaction['full_name'], 0, 1);
+        $pdf->Cell(0, 8, 'Account Number: ' . $transaction['from_account'], 0, 1);
+        break;
+
+    case 'withdrawal':
+        $pdf->Cell(0, 8, 'Transaction Type: Withdrawal', 0, 1);
+        $pdf->Cell(0, 8, 'Sender: ' . $transaction['full_name'], 0, 1);
+        $pdf->Cell(0, 8, 'Account Number: ' . $transaction['from_account'], 0, 1);
+        break;
+
+    case 'transfer_in':
+        $pdf->Cell(0, 8, 'Transaction Type: Transfer In', 0, 1);
+        $pdf->Cell(0, 8, 'Recipient: ' . $transaction['full_name'], 0, 1);
+        $pdf->Cell(0, 8, 'From Account: ' . ($transaction['to_account'] ?: 'N/A'), 0, 1);
+        $pdf->Cell(0, 8, 'To Account: ' . $transaction['from_account'], 0, 1);
+        break;
+
+    case 'transfer_out':
+        $pdf->Cell(0, 8, 'Transaction Type: Transfer Out', 0, 1);
+        $pdf->Cell(0, 8, 'Sender: ' . $transaction['full_name'], 0, 1);
+        $pdf->Cell(0, 8, 'From Account: ' . $transaction['from_account'], 0, 1);
+        $pdf->Cell(0, 8, 'To Account: ' . ($transaction['to_account'] ?: 'N/A'), 0, 1);
+        break;
+
+    default:
+        $pdf->Cell(0, 8, 'Transaction Type: ' . ucfirst($transaction['type']), 0, 1);
+        $pdf->Cell(0, 8, 'Account Number: ' . $transaction['from_account'], 0, 1);
+        break;
 }
 
 if ($transaction['description']) {
@@ -96,7 +124,9 @@ $pdf->Cell(0, 8, 'This is an official receipt from Nexus Bank.', 0, 1, 'C');
 $pdf->Cell(0, 8, 'For any queries, please contact our support.', 0, 1, 'C');
 
 // Clean up any output that might have been sent
-ob_end_clean();
+if (ob_get_length()) {
+    ob_end_clean();
+}
 
 // Output PDF with compression
-$pdf->Output('Transaction_Receipt_' . $transactionId . '.pdf', 'D', true); 
+$pdf->Output('Transaction_Receipt_' . $transactionId . '.pdf', 'D', true);

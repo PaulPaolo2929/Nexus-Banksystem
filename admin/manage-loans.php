@@ -126,7 +126,7 @@ $approvedLoans = $approvedLoansStmt->fetchAll();
     <meta charset="UTF-8">
     <title>Manage Loans - SecureBank Admin</title>
     <link rel="stylesheet" href="../assets/css/admin-main.css">
-    
+    <link rel="stylesheet" href="../assets/css/admin-loans.css">
              
 </head>
 <body>
@@ -146,7 +146,8 @@ $approvedLoans = $approvedLoansStmt->fetchAll();
                                 <a href="track-investments.php" class="btn">Users Investments</a>
                                 <a href="role.php" class="btn">Roles</a>
                                 <a href="recent_transactions.php" class="btn">Transactions</a>
-                                <a href="recent_transactions.php" class="btn">Loan History</a>
+                                <a href="loan-history.php" class="btn">Loan History</a>
+                                <a href="login-records.php" class="btn">Login Records</a>
                             </nav>
 
                              <div class="logout-cont">
@@ -184,18 +185,18 @@ $approvedLoans = $approvedLoansStmt->fetchAll();
                             <tbody>
                                 <?php foreach ($pendingLoans as $loan): ?>
                                     <tr>
-                                        <td><?= $loan['loan_id'] ?></td>
-                                        <td><?= htmlspecialchars($loan['full_name']) ?></td>
-                                        <td><?= htmlspecialchars($loan['email']) ?></td>
-                                        <td>$<?= number_format($loan['amount'], 2) ?></td>
-                                        <td><?= $loan['interest_rate'] ?>%</td>
-                                        <td><?= $loan['term_months'] ?> months</td>
-                                        <td><?= htmlspecialchars($loan['purpose']) ?></td>
-                                        <td><?= date('M d, Y', strtotime($loan['created_at'])) ?></td>
-                                        <td>
-                                            <a href="manage-loans.php?id=<?= $loan['loan_id'] ?>&action=approve" class="btn btn-approve" onclick="return confirm('Approve this loan?')">Approve</a>
-                                            <a href="manage-loans.php?id=<?= $loan['loan_id'] ?>&action=reject" class="btn btn-reject" onclick="return confirm('Reject this loan?')">Reject</a>
-                                            <a href="manage-loans.php?id=<?= $loan['loan_id'] ?>&action=delete" class="btn btn-delete" onclick="return confirm('Are you sure you want to delete this loan?')">Delete</a>
+                                        <td data-label="Loan ID"><?= $loan['loan_id'] ?></td>
+                                        <td data-label="User"><?= htmlspecialchars($loan['full_name']) ?></td>
+                                        <td data-label="Email"><?= htmlspecialchars($loan['email']) ?></td>
+                                        <td data-label="Amount">$<?= number_format($loan['amount'], 2) ?></td>
+                                        <td data-label="Interest"><?= $loan['interest_rate'] ?>%</td>
+                                        <td data-label="Term"><?= $loan['term_months'] ?> months</td>
+                                        <td data-label="Purpose"><?= htmlspecialchars($loan['purpose']) ?></td>
+                                        <td data-label="Requested"><?= date('M d, Y', strtotime($loan['created_at'])) ?></td>
+                                        <td data-label="Actions">
+                                            <a href="manage-loans.php?id=<?= $loan['loan_id'] ?>&action=approve" class="btn3 btn-approve" onclick="return confirm('Approve this loan?')">Approve</a>
+                                            <a href="manage-loans.php?id=<?= $loan['loan_id'] ?>&action=reject" class="btn3 btn-reject" onclick="return confirm('Reject this loan?')">Reject</a>
+                                            <a href="manage-loans.php?id=<?= $loan['loan_id'] ?>&action=delete" class="btn3 btn-delete" onclick="return confirm('Are you sure you want to delete this loan?')">Delete</a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -227,15 +228,15 @@ $approvedLoans = $approvedLoansStmt->fetchAll();
                             <tbody>
                                 <?php foreach ($approvedLoans as $loan): ?>
                                     <tr>
-                                        <td><?= $loan['loan_id'] ?></td>
-                                        <td><?= htmlspecialchars($loan['full_name']) ?></td>
-                                        <td><?= htmlspecialchars($loan['email']) ?></td>
-                                        <td>$<?= number_format($loan['amount'], 2) ?></td>
-                                        <td><?= $loan['interest_rate'] ?>%</td>
-                                        <td><?= $loan['term_months'] ?> months</td>
-                                        <td>$<?= number_format($loan['total_due'], 2) ?></td>
-                                        <td><?= htmlspecialchars($loan['purpose']) ?></td>
-                                        <td><?= date('M d, Y', strtotime($loan['approved_at'])) ?></td>
+                                        <td data-label="Loan ID"><?= $loan['loan_id'] ?></td>
+                                        <td data-label="User"><?= htmlspecialchars($loan['full_name']) ?></td>
+                                        <td data-label="Email"><?= htmlspecialchars($loan['email']) ?></td>
+                                        <td data-label="Amount">$<?= number_format($loan['amount'], 2) ?></td>
+                                        <td data-label="Interest"><?= $loan['interest_rate'] ?>%</td>
+                                        <td data-label="Term"><?= $loan['term_months'] ?> months</td>
+                                        <td data-label="Total Due">$<?= number_format($loan['total_due'], 2) ?></td>
+                                        <td data-label="Purpose"><?= htmlspecialchars($loan['purpose']) ?></td>
+                                        <td data-label="Approved On"><?= date('M d, Y', strtotime($loan['approved_at'])) ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -245,6 +246,5 @@ $approvedLoans = $approvedLoansStmt->fetchAll();
                     </div>
         </main>
 </div>
-<a href="loan-history.php" class="btn">📜 View Full Loan History</a>
 </body>
 </html>

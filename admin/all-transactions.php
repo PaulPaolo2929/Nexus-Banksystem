@@ -38,132 +38,46 @@ $conn->close();
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>All Transactions</title>
-<style>
-  /* Reset and base */
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f8f9fa;
-    margin: 0;
-    padding: 40px 20px;
-    color: #212529;
-  }
-  nav.dashboard-nav {
-    max-width: 1000px;
-    margin: 0 auto 30px;
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
-  }
-  nav.dashboard-nav a {
-    padding: 10px 15px;
-    background-color: #007bff;
-    color: white;
-    text-decoration: none;
-    border-radius: 5px;
-    font-weight: 600;
-    transition: background-color 0.3s ease;
-  }
-  nav.dashboard-nav a:hover {
-    background-color: #0056b3;
-  }
-  .container {
-    max-width: 1000px;
-    margin: 0 auto;
-    background: white;
-    border-radius: 10px;
-    padding: 30px 40px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  }
-  h1 {
-    margin-bottom: 25px;
-    color: #343a40;
-    text-align: center;
-    font-weight: 700;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.95rem;
-  }
-  thead tr {
-    background-color: #007bff;
-    color: white;
-  }
-  th, td {
-    padding: 12px 15px;
-    border: 1px solid #dee2e6;
-    text-align: left;
-  }
-  tbody tr:nth-child(odd) {
-    background-color: #f1f3f5;
-  }
-  tbody tr:hover {
-    background-color: #e9ecef;
-  }
-  a.btn-back {
-    display: inline-block;
-    margin-top: 25px;
-    padding: 12px 20px;
-    background-color: #6c757d;
-    color: white;
-    text-decoration: none;
-    border-radius: 6px;
-    font-weight: 600;
-    transition: background-color 0.3s ease;
-  }
-  a.btn-back:hover {
-    background-color: #495057;
-  }
-  @media (max-width: 768px) {
-    table, thead, tbody, th, td, tr {
-      display: block;
-    }
-    thead tr {
-      display: none;
-    }
-    tbody tr {
-      margin-bottom: 20px;
-      border: 1px solid #dee2e6;
-      border-radius: 10px;
-      padding: 15px;
-      background: white;
-    }
-    tbody td {
-      border: none;
-      padding-left: 50%;
-      position: relative;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    tbody td::before {
-      content: attr(data-label);
-      position: absolute;
-      left: 15px;
-      top: 12px;
-      font-weight: 700;
-      color: #495057;
-    }
-  }
-</style>
+<link rel="stylesheet" href="../assets/css/admin-main.css">
+<link rel="stylesheet" href="../assets/css/admin-all-transactions.css">
 </head>
+
 <body>
-     <a href="dashboard.php" class="btn-back">Back to Dashboard</a>
-     <a href="recent_transactions.php" class="btn-back">Back to Recent Transactions</a>
+    
+ <div class="wrapper">
+            <aside class="sidebar">
+                        
+                            <div class="Logos-cont">
+                                <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
+                            </div>
 
+                            <nav class="dashboard-nav">
+                                <a href="dashboard.php" class="active btn ">Dashboard</a>
+                                <a href="manage-users.php" class="btn ">Manage Users</a>
+                                <a href="manage-loans.php" class="btn">Manage Loans</a>
+                                <a href="manage-investments.php" class="btn">Manage Investments</a>
+                                <a href="track-investments.php" class="btn">Users Investments</a>
+                                <a href="role.php" class="btn">Roles</a>
+                                <a href="recent_transactions.php" class="btn dash-text">Transactions</a>
+                                <a href="loan-history.php" class="btn">Loan History</a>
+                                <a href="login-records.php" class="btn">Login Records</a>
+                            </nav>
 
-<nav class="dashboard-nav">
-    <a href="manage-users.php">Manage Users</a>
-    <a href="manage-loans.php">Manage Loans</a>
-    <a href="manage-investments.php">Manage Investments</a>
-    <a href="track-investments.php">Users Investments</a>
-    <a href="role.php">Roles</a>
-    <a href="recent_transactions.php">Transactions</a>
-    <a href="login-records.php">Login Records</a>
-</nav>
+                             <div class="logout-cont">
+                                <a href="../logout.php" class="logout">Logout</a>
+                            </div>
+                </aside>
 
-<div class="container">
+<main class="container">
+  <header>
     <h1>All Transactions</h1>
-    <table>
+    <button class="hamburger">&#9776;</button> <!-- Hamburger icon -->
+  </header>
+     <div class="content">
+        <h3>All Transactions</h3>
+        <br>
+    <div class="table-cont">
+     <table>
         <thead>
             <tr>
                 <th>Transaction ID</th>
@@ -197,12 +111,13 @@ $conn->close();
                     <td colspan="9" style="text-align:center; padding: 20px;">No transactions found.</td>
                 </tr>
             <?php endif; ?>
+            </div>
         </tbody>
     </table>
-
-   
 </div>
-
+   
+</main>
+</div>
 
 </body>
 </html>

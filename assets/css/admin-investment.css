@@ -1,0 +1,281 @@
+:root {
+  /* Colors */
+  --main-color: #FFFFFF;
+  --bg-color: #F5F7FA;
+  --bg-sidecolor-2: #6359e9;
+  --font-color: #343C6A;
+  --thin-font-color: #718EBF;
+  --inactive-font-color: #a3a3a3;
+  --hover-effects: #efeeff;
+
+  /* Font Sizes */
+  --big-font-size: clamp(4rem, 6vw, 6.6rem);
+  --semi-big-font-size: clamp(1.5rem, 3vw, 1.6rem);
+  --paragraph-font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+
+  /* Spacing */
+  --spacing-small: 0.75rem;
+  --spacing-medium: 1rem;
+  --spacing-large: 2rem;
+
+  /* Radius & Shadows */
+  --radius-base: 8px;
+  --radius-lg: 16px;
+  --shadow-base: 0 4px 12px rgba(99, 89, 233, 0.2);
+  --shadow-lg: 0 8px 24px rgba(52, 60, 106, 0.08);
+}
+
+
+
+/* Headings inside content */
+.content h2 {
+    margin-bottom: var(--spacing-medium);
+    color: var(--font-color);
+    border-bottom: 2px solid var(--bg-sidecolor-2);
+    padding-bottom: var(--spacing-small);
+    font-size: var(--semi-big-font-size);
+}
+
+/* Form styles */
+.content form {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    grid-gap: var(--spacing-medium) var(--spacing-large);
+    margin-bottom: var(--spacing-large);
+    align-items: center;
+}
+
+.content form label {
+    font-weight: 600;
+    color: var(--font-color);
+    justify-self: start;
+}
+
+
+.content form input[type="text"],
+.content form input[type="number"],
+.content form select {
+    padding: 8px 10px;
+    border: 1px solid var(--inactive-font-color);
+    border-radius: var(--radius-base);
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.content form input[type="text"]:focus,
+.content form input[type="number"]:focus,
+.content form select:focus {
+    border-color: var(--bg-sidecolor-2);
+    outline: none;
+}
+
+/* Submit button */
+.content form button[type="submit"] {
+    grid-column: 2 / 3;
+    background-color: var(--bg-sidecolor-2);
+    color: var(--main-color);
+    border: none;
+    padding: 10px 25px;
+    border-radius: var(--radius-base);
+    font-size: 16px;
+    cursor: pointer;
+    justify-self: start;
+    transition: background-color 0.3s ease;
+}
+
+.content form button[type="submit"]:hover {
+    background-color: #4a3edb;
+}
+
+/* Investment plans table */
+.investment-plans-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.investment-plans-table thead {
+    background-color: var(--bg-sidecolor-2);
+    color: var(--main-color);
+}
+
+.investment-plans-table th,
+.investment-plans-table td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.investment-plans-table tbody tr:nth-child(even) {
+    background-color: var(--hover-effects);
+}
+
+.investment-plans-table tbody tr:hover {
+    background-color: #d6e9f8;
+}
+
+/* Edit button in table */
+.investment-plans-table button {
+    background-color: #27ae60;
+    color: var(--main-color);
+    border: none;
+    padding: 6px 12px;
+    border-radius: var(--radius-base);
+    cursor: pointer;
+    font-size: 13px;
+    transition: background-color 0.3s ease;
+}
+
+.investment-plans-table button:hover {
+    background-color: #1e8449;
+}
+
+/* Edit modal styles */
+#edit-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: var(--main-color);
+    padding: 25px 30px;
+    border-radius: var(--radius-base);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    width: 400px;
+    max-height: 80vh;
+    overflow-y: auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--font-color);
+}
+
+#edit-modal h2 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-medium);
+    color: var(--font-color);
+    border-bottom: 2px solid var(--bg-sidecolor-2);
+    padding-bottom: var(--spacing-small);
+    font-size: var(--semi-big-font-size);
+}
+
+#edit-modal form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-small);
+}
+
+#edit-modal label {
+    font-weight: 600;
+    color: var(--thin-font-color);
+}
+
+#edit-modal input[type="text"],
+#edit-modal input[type="number"],
+#edit-modal select {
+    padding: 8px 10px;
+    border: 1px solid var(--inactive-font-color);
+    border-radius: var(--radius-base);
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+#edit-modal input[type="text"]:focus,
+#edit-modal input[type="number"]:focus,
+#edit-modal select:focus {
+    border-color: var(--bg-sidecolor-2);
+    outline: none;
+}
+
+#edit-modal button[type="submit"] {
+    background-color: var(--bg-sidecolor-2);
+    color: var(--main-color);
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--radius-base);
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: var(--spacing-small);
+    transition: background-color 0.3s ease;
+}
+
+#edit-modal button[type="submit"]:hover {
+    background-color: #4a3edb;
+}
+
+#edit-modal button[type="button"] {
+    background-color: #7f8c8d;
+    color: var(--main-color);
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--radius-base);
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: var(--spacing-small);
+    transition: background-color 0.3s ease;
+}
+
+#edit-modal button[type="button"]:hover {
+    background-color: #626f70;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1084px) {
+    .content form {
+        grid-template-columns: 1fr;
+    }
+
+    .content form label {
+        justify-self: start;
+    }
+
+    .content form button[type="submit"] {
+        grid-column: 1 / 2;
+        justify-self: stretch;
+        width: 100%;
+    }
+}
+
+@media (max-width: 1084px) {
+    
+    .content table,
+    .content table thead,
+    .content table tbody,
+    .content table th,
+    .content table td,
+    .content table tr {
+        display: block;
+        width: 100%;
+    }
+
+    .content table thead tr {
+        display: none;
+    }
+
+    .content table tbody tr {
+        margin-bottom: var(--spacing-medium);
+        border: 1px solid #ddd;
+        border-radius: var(--radius-base);
+        padding: var(--spacing-small);
+        background-color: var(--main-color);
+        box-shadow: var(--shadow-base);
+    }
+
+    .content table tbody tr td {
+        padding-left: 50%;
+        position: relative;
+        text-align: left;
+        border: none;
+        border-bottom: 1px solid #eee;
+    }
+
+    .content table tbody tr td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 15px;
+        top: 12px;
+        font-weight: 600;
+        color: var(--thin-font-color);
+        white-space: nowrap;
+    }
+}

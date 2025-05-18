@@ -54,49 +54,43 @@ $conn->close();
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Recent Transactions</title>
-    <style>
-        table {
-            border-collapse: collapse;
-            width: 90%;
-            margin: 20px auto;
-        }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 10px;
-            text-align: left;
-        }
-        h1 {
-            text-align: center;
-        }
-        .dashboard-nav {
-            text-align: center;
-            margin: 20px;
-        }
-        .dashboard-nav a {
-            margin: 0 10px;
-            text-decoration: none;
-            color: blue;
-        }
-        .dashboard-nav a.active {
-            font-weight: bold;
-            color: darkblue;
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/admin-main.css">
+    <link rel="stylesheet" href="../assets/css/admin-recent-transactions.css">
 </head>
 <body>
 
-    <!-- Navigation Menu -->
-    <nav class="dashboard-nav">
-        <a href="manage-users.php">Manage Users</a>
-        <a href="manage-loans.php">Manage Loans</a>
-        <a href="manage-investments.php">Manage Investments</a>
-        <a href="track-investments.php">Users Investments</a>
-        <a href="role.php">Roles</a>
-        <a href="recent_transactions.php" class="active">Transactions</a>
-        <a href="login-records.php">Login Records</a>
-    </nav>
+ <div class="wrapper">
+            <aside class="sidebar">
+                        
+                            <div class="Logos-cont">
+                                <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
+                            </div>
 
-    <div style="max-width: 1000px; margin: 0 auto; padding: 20px; text-align: center;">
+                            <nav class="dashboard-nav">
+                                <a href="dashboard.php" class="active btn ">Dashboard</a>
+                                <a href="manage-users.php" class="btn ">Manage Users</a>
+                                <a href="manage-loans.php" class="btn">Manage Loans</a>
+                                <a href="manage-investments.php" class="btn">Manage Investments</a>
+                                <a href="track-investments.php" class="btn">Users Investments</a>
+                                <a href="role.php" class="btn">Roles</a>
+                                <a href="recent_transactions.php" class="btn dash-text">Transactions</a>
+                                <a href="loan-history.php" class="btn">Loan History</a>
+                                <a href="login-records.php" class="btn">Login Records</a>
+                            </nav>
+
+                             <div class="logout-cont">
+                                <a href="../logout.php" class="logout">Logout</a>
+                            </div>
+                </aside>
+
+ <main class="container">
+        <header>
+            <h1>Manage Investments</h1>
+            <button class="hamburger">&#9776;</button> <!-- Hamburger icon -->
+        </header>
+
+        <div class="content">
+            <div>
         <h1>Recent Transactions</h1>
 
         <!-- Transaction Table -->
@@ -118,15 +112,15 @@ $conn->close();
                 <?php if (!empty($transactions)): ?>
                     <?php foreach ($transactions as $transaction): ?>
                         <tr>
-                            <td><?php echo $transaction['transaction_id']; ?></td>
-                            <td><?php echo $transaction['account_id']; ?></td>
-                            <td><?php echo $transaction['user_id']; ?></td>
-                            <td><?php echo htmlspecialchars($transaction['full_name']); ?></td>
-                            <td><?php echo htmlspecialchars($transaction['type']); ?></td>
-                            <td><?php echo "₱" . number_format($transaction['amount'], 2); ?></td>
-                            <td><?php echo !empty($transaction['description']) ? htmlspecialchars($transaction['description']) : 'N/A'; ?></td>
-                            <td><?php echo !empty($transaction['related_account_id']) ? $transaction['related_account_id'] : 'N/A'; ?></td>
-                            <td>
+                            <td data-label="Transaction ID"><?php echo $transaction['transaction_id']; ?></td>
+                            <td data-label="Account ID"><?php echo $transaction['account_id']; ?></td>
+                            <td data-label="User ID"><?php echo $transaction['user_id']; ?></td>
+                            <td data-label="User Name"><?php echo htmlspecialchars($transaction['full_name']); ?></td>
+                            <td data-label="Type"><?php echo htmlspecialchars($transaction['type']); ?></td>
+                            <td data-label="Amount"><?php echo "₱" . number_format($transaction['amount'], 2); ?></td>
+                            <td data-label="Description"><?php echo !empty($transaction['description']) ? htmlspecialchars($transaction['description']) : 'N/A'; ?></td>
+                            <td data-label="Related Account ID"><?php echo !empty($transaction['related_account_id']) ? $transaction['related_account_id'] : 'N/A'; ?></td>
+                            <td data-label="Date">
                                 <?php 
                                     echo !empty($transaction['created_at']) && strtotime($transaction['created_at']) 
                                         ? date("Y-m-d H:i:s", strtotime($transaction['created_at'])) 
@@ -145,5 +139,10 @@ $conn->close();
 
         <a href="all-transactions.php" style="display: inline-block; margin-top: 20px; padding: 10px 15px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">All Transactions</a>
     </div>
+        </div>
+            
+</main>
+</div>
+    
 </body>
 </html>

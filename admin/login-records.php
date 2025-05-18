@@ -29,85 +29,44 @@ $loginRecords = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <title>All Login Records - Admin</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            padding: 20px;
-            margin: 0;
-        }
-
-        .container {
-            max-width: 95%;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            overflow-x: auto;
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: auto;
-            white-space: nowrap;
-        }
-
-        thead tr {
-            background-color: #007bff;
-            color: white;
-        }
-
-        th, td {
-            padding: 10px;
-            border: 1px solid #ccc;
-            text-align: left;
-            vertical-align: top;
-        }
-
-        td:nth-child(6), td:nth-child(7) {
-            max-width: 300px;
-            word-break: break-word;
-            white-space: normal;
-        }
-
-        .status-success {
-            color: green;
-            font-weight: bold;
-        }
-
-        .status-failed {
-            color: red;
-            font-weight: bold;
-        }
-
-        .back {
-            margin-top: 20px;
-            display: inline-block;
-            padding: 10px 15px;
-            background: #6c757d;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-        }
-
-        @media screen and (max-width: 600px) {
-            th, td {
-                font-size: 12px;
-                padding: 6px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/admin-main.css">
+    <link rel="stylesheet" href="../assets/css/admin-login-records.css">
 </head>
 <body>
-    <div class="container">
-        <h1>All Login Records</h1>
 
+
+ <div class="wrapper">
+            <aside class="sidebar">
+                        
+                            <div class="Logos-cont">
+                                <img src="../assets/images/Logo-color.png" alt="SecureBank Logo" class="logo-container">
+                            </div>
+
+                            <nav class="dashboard-nav">
+                                <a href="dashboard.php" class="active btn ">Dashboard</a>
+                                <a href="manage-users.php" class="btn ">Manage Users</a>
+                                <a href="manage-loans.php" class="btn">Manage Loans</a>
+                                <a href="manage-investments.php" class="btn">Manage Investments</a>
+                                <a href="track-investments.php" class="btn">Users Investments</a>
+                                <a href="role.php" class="btn">Roles</a>
+                                <a href="recent_transactions.php" class="btn">Transactions</a>
+                                <a href="loan-history.php" class="btn">Loan History</a>
+                                <a href="login-records.php" class="btn dash-text">Login Records</a>
+                            </nav>
+
+                             <div class="logout-cont">
+                                <a href="../logout.php" class="logout">Logout</a>
+                            </div>
+                </aside>
+
+    <main class="container">
+        <header>
+            <h1>All Login Records</h1>
+        <button class="hamburger">&#9776;</button> <!-- Hamburger icon -->
+        </header>
+        
+    <div class="content">
+        <h1>Account Login Records</h1>
         <?php if (empty($loginRecords)): ?>
             <p>No login records found.</p>
         <?php else: ?>
@@ -126,22 +85,23 @@ $loginRecords = $stmt->fetchAll();
                 <tbody>
                     <?php foreach ($loginRecords as $record): ?>
                         <tr>
-                            <td><?= htmlspecialchars($record['id']) ?></td>
-                            <td><?= htmlspecialchars($record['full_name']) ?></td>
-                            <td><?= htmlspecialchars($record['email']) ?></td>
-                            <td class="status-<?= htmlspecialchars($record['status']) ?>">
+                            <td data-label="ID"><?= htmlspecialchars($record['id']) ?></td>
+                            <td data-label="User"><?= htmlspecialchars($record['full_name']) ?></td>
+                            <td data-label="Email"><?= htmlspecialchars($record['email']) ?></td>
+                            <td data-label="Status" class="status-<?= htmlspecialchars($record['status']) ?>">
                                 <?= ucfirst(htmlspecialchars($record['status'])) ?>
                             </td>
-                            <td><?= htmlspecialchars(date('Y-m-d H:i:s', strtotime($record['created_at']))) ?></td>
-                            <td><?= htmlspecialchars($record['ip_address']) ?></td>
-                            <td><?= htmlspecialchars($record['user_agent']) ?></td>
+                            <td data-label="Login Time"><?= htmlspecialchars(date('Y-m-d H:i:s', strtotime($record['created_at']))) ?></td>
+                            <td data-label="IP Address"><?= htmlspecialchars($record['ip_address']) ?></td>
+                            <td data-label="User Agent"><?= htmlspecialchars($record['user_agent']) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
         <?php endif; ?>
 
-        <a href="dashboard.php" class="back">Back to Dashboard</a>
+        </div>
+    </main>
     </div>
 </body>
 </html>

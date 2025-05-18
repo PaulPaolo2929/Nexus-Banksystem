@@ -171,7 +171,7 @@ $users = $pdo->query("
     <meta charset="UTF-8">
     <title>SecureBank - Manage Users</title>
     <link rel="stylesheet" href="../assets/css/admin-main.css">
-    
+    <link rel="stylesheet" href="../assets/css/admin-users.css">
 </head>
 <body>
     <div class="wrapper">
@@ -189,7 +189,8 @@ $users = $pdo->query("
                                 <a href="track-investments.php" class="btn">Users Investments</a>
                                 <a href="role.php" class="btn">Roles</a>
                                 <a href="recent_transactions.php" class="btn">Transactions</a>
-                                <a href="recent_transactions.php" class="btn">Loan History</a>
+                                <a href="loan-history.php" class="btn">Loan History</a>
+                                <a href="login-records.php" class="btn">Login Records</a>
                             </nav>
 
                              <div class="logout-cont">
@@ -218,6 +219,7 @@ $users = $pdo->query("
 
         <h2>All Users</h2>
 
+        <div class="table-cont">
         <?php if (empty($users)): ?>
             <p>No users found.</p>
         <?php else: ?>
@@ -237,14 +239,14 @@ $users = $pdo->query("
                 <tbody>
                     <?php foreach ($users as $user): ?>
                         <tr>
-                            <td><?= htmlspecialchars($user['full_name']) ?></td>
-                            <td><?= htmlspecialchars($user['email']) ?></td>
-                            <td><?= $user['account_number'] ?: 'N/A' ?></td>
-                            <td>$<?= number_format($user['balance'] ?? 0, 2) ?></td>
-                            <td><?= $user['status'] === 'approved' ? '✅ Approved' : '⏳ Pending' ?></td>
-                            <td><?= $user['is_active'] ? '🟢 Active' : '🔴 Inactive' ?></td>
-                            <td><?= date('M j, Y', strtotime($user['created_at'])) ?></td>
-                            <td>
+                            <td data-label="Name"><?= htmlspecialchars($user['full_name']) ?></td>
+                            <td data-label="Email"><?= htmlspecialchars($user['email']) ?></td>
+                            <td data-label="Account"><?= $user['account_number'] ?: 'N/A' ?></td>
+                            <td data-label="Balance">$<?= number_format($user['balance'] ?? 0, 2) ?></td>
+                            <td data-label="Status"><?= $user['status'] === 'approved' ? '✅ Approved' : '⏳ Pending' ?></td>
+                            <td data-label="Active"><?= $user['is_active'] ? '🟢 Active' : '🔴 Inactive' ?></td>
+                            <td data-label="Joined On"><?= date('M j, Y', strtotime($user['created_at'])) ?></td>
+                            <td data-label="Actions">
                                 <?php if ($user['status'] !== 'approved'): ?>
                                     <a href="manage-users.php?accept=<?= $user['user_id'] ?>" class="btn btn-sm btn-success">Accept</a>
                                     <a href="manage-users.php?reject=<?= $user['user_id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Reject and delete this user?')">Reject</a>
@@ -267,6 +269,7 @@ $users = $pdo->query("
                 </tbody>
             </table>
         <?php endif; ?>
+        </div>
     </div>
 </main>
 
