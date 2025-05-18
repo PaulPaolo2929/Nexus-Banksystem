@@ -38,15 +38,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!-- HTML Form -->
 <!DOCTYPE html>
 <html>
-<head><title>Forgot Password</title></head>
+<head><title>Forgot Password</title>
+<link rel="stylesheet" href="./assets/css/forgot-password.css">
+</head>
 <body>
-<h2>Forgot Password</h2>
-<?php if (!empty($_SESSION['error'])): ?><p style="color:red"><?= $_SESSION['error']; unset($_SESSION['error']); ?></p><?php endif; ?>
-<?php if (!empty($_SESSION['success'])): ?><p style="color:green"><?= $_SESSION['success']; unset($_SESSION['success']); ?></p><?php endif; ?>
-<form method="post">
-    <input type="email" name="email" placeholder="Your email" required>
-    <button type="submit">Send Reset Link</button>
-</form>
-<a href="login.php">Back to Login</a>
+  <div class="forgot-page">
+     <img src="./assets/images/Logo.png" alt="Nexus Logo" class="otp-logo">
+    <div class="forgot-card">
+     
+      <h2 class="forgot-title">Reset Your Password</h2>
+      <p class="forgot-desc">
+        Enter the email address associated with your account, and we'll send you a link to reset your password.
+      </p>
+
+      <?php if (!empty($_SESSION['error'])): ?>
+        <div class="alert alert-danger"><?= $_SESSION['error']; unset($_SESSION['error']); ?></div>
+      <?php endif; ?>
+
+      <?php if (!empty($_SESSION['success'])): ?>
+        <div class="alert alert-success"><?= $_SESSION['success']; unset($_SESSION['success']); ?></div>
+      <?php endif; ?>
+
+      <form method="post">
+        <input type="email" name="email" placeholder="Enter your email" required />
+        <button type="submit">Send Reset Link</button>
+      </form>
+
+      <div class="reminder-note">
+        <strong>Note:</strong> The reset link will expire in 1 hour for your security. If you don’t receive the email within a few minutes, please check your spam or junk folder.
+      </div>
+
+      <a href="login.php" class="back-link">Back to Login</a>
+    </div>
+  </div>
 </body>
 </html>
