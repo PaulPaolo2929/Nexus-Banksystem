@@ -190,4 +190,35 @@ textarea[name="purpose"]:focus {
     font-size: 0. eight rem;
     border-radius: 8px;
   }
+
+  @media (max-width: 1084px) {
+  .content {
+    padding: 1rem;
+    margin: 2rem 0.5rem 1rem 0.5rem;
+    border-radius: 10px;
+  }
+
+  form {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .content table {
+    min-width: 100%;
+    font-size: 0.95rem;
+    overflow-x: auto;
+    display: block;
+  }
+
+  .content thead th,
+  .content tbody td {
+    padding: 0.5rem 0.5rem;
+    font-size: 0.95rem;
+    white-space: normal;
+  }
+
+  .content h2 {
+    font-size: 1.3rem;
+  }
+}
   

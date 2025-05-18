@@ -38,6 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['plan_id'], $_POST['am
     } elseif ($amount > $plan['max_amount']) {
         $error = "Amount cannot exceed $" . number_format($plan['max_amount'], 2);
     } elseif ($amount > $balance) {
+
         $error = "Insufficient balance.";
     } else {
         try {
@@ -249,6 +250,17 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                         data-hover="../assets/images/hover-loans.png"
                         > 
                         Loans
+                    </a>
+
+                    <a href="profile.php" class="btn">
+                        <img 
+                        src="../assets/images/inactive-profile.png" 
+                        alt="loans-logo" 
+                        class="nav-icon"
+                        data-default="../assets/images/inactive-profile.png"
+                        data-hover="../assets/images/inactive-profile"
+                        > 
+                        Settings
                     </a>
                 </nav>       
  <hr>

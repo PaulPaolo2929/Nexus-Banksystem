@@ -48,14 +48,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!DOCTYPE html>
 <html>
-<head><title>Reset Password</title></head>
+<head><title>Reset Password</title>
+<link rel="stylesheet" href="./assets/css/reset-password.css">
+</head>
 <body>
-<h2>Reset Your Password</h2>
-<?php if (!empty($error)) echo "<p style='color:red'>$error</p>"; ?>
-<form method="post">
-    <input type="password" name="password" placeholder="New password" required>
-    <input type="password" name="confirm_password" placeholder="Confirm password" required>
-    <button type="submit">Reset Password</button>
-</form>
+  <div class="reset-page">
+    <img src="./assets/images/Logo.png" alt="Nexus Logo" class="otp-logo">
+    <div class="reset-card">
+      <h2 class="reset-title">Reset Your Password</h2>
+      <p class="reset-desc">Choose a strong and secure password you haven't used before.</p>
+
+      <?php if (!empty($error)): ?>
+        <div class="alert alert-danger"><?= $error; ?></div>
+      <?php endif; ?>
+
+      <form method="post">
+        <input type="password" name="password" placeholder="New password" required />
+        <input type="password" name="confirm_password" placeholder="Confirm password" required />
+        <button type="submit">Reset Password</button>
+      </form>
+
+      <div class="reminder-note">
+        <strong>Reminder:</strong> Your new password must be at least 8 characters, include uppercase and lowercase letters, and contain a number or special symbol for better security.
+      </div>
+
+      <a href="login.php" class="back-link">Back to Login</a>
+    </div>
+  </div>
 </body>
 </html>

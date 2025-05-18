@@ -124,7 +124,7 @@ textarea[name="purpose"]:focus {
   .content table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 600px;
+    
   }
   
   .content thead {
@@ -190,4 +190,56 @@ textarea[name="purpose"]:focus {
     font-size: 0. eight rem;
     border-radius: 8px;
   }
-  
+
+  @media (max-width: 1084px) {
+  .content {
+    padding: 1rem;
+    margin: 2rem 0.5rem 1rem 0.5rem;
+    border-radius: 10px;
+  }
+
+  form {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .table-responsive {
+    width: 100%;
+    overflow: auto;
+  }
+
+  .content table {
+    width: 100%;
+  .content thead th,
+  .content tbody td {
+    padding: 0.5rem 0.5rem;
+    font-size: 0.95rem;
+    white-space: nowrap;
+  }
+  .content tbody td {
+    padding: 0.5rem 0.5rem;
+    font-size: 0.95rem;
+    white-space: normal;
+  }
+
+  .content h2 {
+    font-size: 1.3rem;
+  }
+}
+
+
+  .loans-table thead th,
+  .loans-table tbody td {
+    padding: 0.5rem 0.5rem;
+    font-size: 0.95rem;
+
+  .loans-table tbody td {
+    padding: 0.5rem 0.5rem;
+    font-size: 0.95rem;
+    white-space: normal;
+  }
+
+  .loans-table h2 {
+    font-size: 1.3rem;
+}
+  } }

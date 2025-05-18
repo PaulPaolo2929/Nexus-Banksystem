@@ -95,11 +95,68 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
     <style>
     
        .transaction-distribution-chart, .weekly-activity-chart, .balance-over-time-chart {
-    background: #fff;
-    padding: 1rem;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.05);
-}
+            background: #fff;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        .btn-download {
+            padding: 6px 12px;
+            background: white;
+            color: #706EFF;
+            border: 1px solid #706EFF;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-download:hover {
+            background-color: #706EFF;
+            color: white;
+        }
+
+        .transactions-tabs {
+            margin-bottom: 20px;
+        }
+
+        .transactions-tabs .tab {
+            padding: 8px 16px;
+            margin-right: 10px;
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+
+        .transactions-tabs .tab:hover {
+            color: #706EFF;
+        }
+
+        .transactions-tabs .tab.active {
+            color: #706EFF;
+            font-weight: bold;
+            position: relative;
+        }
+
+        .transactions-tabs .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #706EFF;
+        }
+
+        .transactions-table-wrapper {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
     </style>
     
     <!--Google fonts -->
@@ -214,7 +271,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                         data-default="../assets/images/inactive-profile.png"
                         data-hover="../assets/images/inactive-profile"
                         > 
-                        Profile
+                        Settings
                     </a>
 
                     
@@ -260,10 +317,10 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                         <div class="transactions-container">
                             
                                         <div class="transactions-tabs">
-                                            <button class="tab active">All Transactions</button>
-                                            <button class="tab">Deposit</button>
-                                            <button class="tab">Withdraw</button>
-                                            <button class="tab">Transfer</button>
+                                            <button class="tab active" data-type="all">All Transactions</button>
+                                            <button class="tab" data-type="deposit">Deposit</button>
+                                            <button class="tab" data-type="withdrawal">Withdraw</button>
+                                            <button class="tab" data-type="transfer">Transfer</button>
                                         </div>
 
                                         <div class="transactions-table-wrapper">
@@ -271,7 +328,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                             <thead>
                                                 <tr>
                                                 <th></th>
-                                                <th>Transaction ID</th>
+                                                <th>Transaction ID</th>
                                                 <th>Description</th>
                                                 <th>Type</th>
                                                 <th>Date</th>
@@ -279,9 +336,9 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                                 <th>Receipt</th>
                                                 </tr>
                                             </thead>
-                                            <tbody>
+                                            <tbody id="transactionsTableBody">
                                                 <?php foreach ($transactions as $txn): ?>
-                                                <tr>
+                                                <tr class="transaction-row" data-type="<?= htmlspecialchars($txn['type']) ?>">
                                                 <!-- arrow icon -->
                                                 <td class="icon" style="width: 32px; text-align: center;">
                                                     <?php if (in_array($txn['type'], ['deposit','transfer_in'])): ?>
@@ -294,13 +351,14 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                                 <td><?= htmlspecialchars($txn['transaction_id']) ?></td>
                                                 <td><?= htmlspecialchars($txn['description'] ?? '') ?></td>
                                                 <td><?= ucfirst($txn['type']) ?></td>
-                                                <td><?= date('j M, g:i A', strtotime($txn['created_at'])) ?></td>
+                                                <td><?= date('j M, g:i A', strtotime($txn['created_at'])) ?></td>
                                                 <td class="amount <?= in_array($txn['type'],['deposit','transfer_in'])? 'positive':'negative' ?>">
                                                     <?= (in_array($txn['type'],['deposit','transfer_in'])? '+':'−') .
                                                         '$'.number_format($txn['amount'],2) ?>
                                                 </td>
                                                 <td>
-                                                    <button class="btn-download">Download</button>
+                                                    <button onclick="window.location.href='generate_receipt.php?transaction_id=<?= htmlspecialchars($txn['transaction_id']) ?>'" 
+                                                            class="btn-download">Download</button>
                                                 </td>
                                                 </tr>
                                                 <?php endforeach; ?>
@@ -612,5 +670,45 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
     });
 </script>
     <!-- <script src="../assets/js/Userdash.js"></script> -->
+    <script>
+    // Add this before your existing scripts
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get all tabs and transaction rows
+        const tabs = document.querySelectorAll('.transactions-tabs .tab');
+        const rows = document.querySelectorAll('.transaction-row');
+
+        // Add click event listener to each tab
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                // Add active class to clicked tab
+                this.classList.add('active');
+
+                // Get the type of transactions to show
+                const type = this.getAttribute('data-type');
+
+                // Show/hide rows based on type
+                rows.forEach(row => {
+                    const rowType = row.getAttribute('data-type');
+                    if (type === 'all') {
+                        row.style.display = '';
+                    } else if (type === 'transfer') {
+                        // Show both transfer_in and transfer_out for transfer tab
+                        if (rowType === 'transfer_in' || rowType === 'transfer_out') {
+                            row.style.display = '';
+                        } else {
+                            row.style.display = 'none';
+                        }
+                    } else {
+                        row.style.display = rowType === type ? '' : 'none';
+                    }
+                });
+            });
+        });
+    });
+
+    // Your existing scripts...
+</script>
 </body>
 </html>

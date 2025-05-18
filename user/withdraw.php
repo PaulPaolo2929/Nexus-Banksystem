@@ -194,7 +194,19 @@ $weeklyDeposits = $stmt->fetchColumn() ?: 0;
                 <img src="../assets/images/inactive-loans.png" alt="loans-logo" class="nav-icon" data-default="../assets/images/inactive-loans.png" data-hover="../assets/images/hover-loans.png"> 
                 Loans
             </a>
-        </nav>       
+
+            <a href="profile.php" class="btn">
+                <img 
+                src="../assets/images/inactive-profile.png" 
+                alt="loans-logo" 
+                class="nav-icon"
+                data-default="../assets/images/inactive-profile.png"
+                data-hover="../assets/images/inactive-profile"
+                > 
+                Settings
+            </a>
+
+        </nav>
 <hr>
         <div class="logout-cont">
             <a href="../logout.php" class="logout">Logout</a>
@@ -292,7 +304,7 @@ $weeklyDeposits = $stmt->fetchColumn() ?: 0;
                             '$'.number_format($txn['amount'],2) ?>
                     </td>                              
                     <td>
-                        <button class="btn-download">Download</button>
+                        <button onclick="window.location.href='generate_receipt.php?transaction_id=<?= htmlspecialchars($txn['transaction_id']) ?>'" class="btn-download">Download</button>
                     </td>
                     </tr>
                     <?php endforeach; ?>

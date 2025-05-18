@@ -208,6 +208,17 @@ $averageWeeklyDeposit = $stmt->fetchColumn() ?: 0;
                      data-hover="../assets/images/hover-loans.png"> 
                 Loans
             </a>
+
+            <a href="profile.php" class="btn">
+                        <img 
+                        src="../assets/images/inactive-profile.png" 
+                        alt="loans-logo" 
+                        class="nav-icon"
+                        data-default="../assets/images/inactive-profile.png"
+                        data-hover="../assets/images/inactive-profile"
+                        > 
+                        Settings
+                    </a>
         </nav>
          <hr>
         <div class="logout-cont">
@@ -297,7 +308,8 @@ $averageWeeklyDeposit = $stmt->fetchColumn() ?: 0;
                               '$'.number_format($txn['amount'],2) ?>
                       </td>                              
                       <td>
-                          <button class="btn-download">Download</button>
+                          <button onclick="window.location.href='generate_receipt.php?transaction_id=<?= htmlspecialchars($txn['transaction_id']) ?>'" 
+                                  class="btn-download">Download</button>
                       </td>
                       </tr>
                       <?php endforeach; ?>
@@ -323,7 +335,7 @@ $averageWeeklyDeposit = $stmt->fetchColumn() ?: 0;
       const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       const categories = monthNames;
       const totals = monthNames.map((_, idx) => {
-        const key = `${year}-${String(idx + 1).padStart(2, '0')}`;  // e.g. “2025-04”
+        const key = `${year}-${String(idx + 1).padStart(2, '0')}`;  // e.g. "2025-04"
         return depositMap[key] || 0;
       });
 
