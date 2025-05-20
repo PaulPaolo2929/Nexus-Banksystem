@@ -513,10 +513,13 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                         href="generate_receipt.php?transaction_id=<?= urlencode($txn['transaction_id']) ?>" 
                                         class="btn-download"
                                         title="Download Receipt for <?= htmlspecialchars($txn['transaction_id']) ?>"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onclick="window.open(this.href, '_blank'); return false;"
                                     >
                                         Download
                                     </a>
-                                    </td>
+                                </td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>

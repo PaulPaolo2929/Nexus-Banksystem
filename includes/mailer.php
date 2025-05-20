@@ -11,13 +11,13 @@ function sendOTP($recipientEmail, $otpCode) {
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
-        $mail->Username   = '0323-4199@lspu.edu.ph'; // Your Gmail
-        $mail->Password   = 'vopqytjrodlodxhe'; // App Password
+        $mail->Username   = 'shaison62@gmail.com'; // Your Gmail
+        $mail->Password   = 'awxn tpnn ogsm grut'; // App Password
         $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
 
         // Recipients
-        $mail->setFrom('0323-4199@lspu.edu.ph');
+        $mail->setFrom('shaison62@gmail.com', 'Nexus Bank');
         $mail->addAddress($recipientEmail);
 
         // Content
@@ -25,39 +25,6 @@ function sendOTP($recipientEmail, $otpCode) {
         $mail->Subject = 'Your Nexus Bank OTP Code';
         $mail->Body    = "Your OTP code is: <strong>$otpCode</strong><br>Valid for 5 minutes.";
         $mail->AltBody = "Your OTP code is: $otpCode (valid for 5 minutes)";
-
-        $mail->send();
-        return true;
-    } catch (Exception $e) {
-        error_log("Mail Error: " . $mail->ErrorInfo);
-        return false;
-    }
-}
-
-function sendEmail($to, $subject, $body, $replyToEmail = null, $replyToName = null) {
-    $mail = new PHPMailer\PHPMailer\PHPMailer(true);
-
-    try {
-        // Server settings
-        $mail->isSMTP();
-        $mail->Host       = 'smtp.gmail.com';
-        $mail->SMTPAuth   = true;
-        $mail->Username   = '0323-4199@lspu.edu.ph'; // Your Gmail
-        $mail->Password   = 'vopqytjrodlodxhe'; // App Password
-        $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-        $mail->Port       = 587;
-
-        // Recipients
-        $mail->setFrom('0323-4199@lspu.edu.ph', 'Nexus Bank');
-        $mail->addAddress($to);
-        if ($replyToEmail) {
-            $mail->addReplyTo($replyToEmail, $replyToName);
-        }
-
-        // Content
-        $mail->isHTML(false);
-        $mail->Subject = $subject;
-        $mail->Body    = $body;
 
         $mail->send();
         return true;

@@ -29,7 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $amount = filter_var($_POST['amount'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
 
         // Validate amount
-        if ($amount <= 0) {
+        if ($amount < 100) {
+            $error = "Minimum withdrawal amount is $100.";
+        } elseif ($amount <= 0) {
             $error = "Amount must be greater than 0.";
         } elseif ($amount > $balance) {
             $error = "Insufficient balance.";
@@ -304,7 +306,8 @@ $weeklyDeposits = $stmt->fetchColumn() ?: 0;
                             '$'.number_format($txn['amount'],2) ?>
                     </td>                              
                     <td>
-                        <button onclick="window.location.href='generate_receipt.php?transaction_id=<?= htmlspecialchars($txn['transaction_id']) ?>'" class="btn-download">Download</button>
+                        <button onclick="window.open('generate_receipt.php?transaction_id=<?= htmlspecialchars($txn['transaction_id']) ?>', '_blank')" 
+                                class="btn-download">Download</button>
                     </td>
                     </tr>
                     <?php endforeach; ?>
@@ -367,7 +370,7 @@ $weeklyDeposits = $stmt->fetchColumn() ?: 0;
       const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       const categories = monthNames;
       const totals = monthNames.map((_, idx) => {
-        const key = `${year}-${String(idx + 1).padStart(2, '0')}`;  // e.g. “2025-04”
+        const key = `${year}-${String(idx + 1).padStart(2, '0')}`;  // e.g. "2025-04"
         return depositMap[key] || 0;
       });
 

@@ -1,35 +1,21 @@
 <?php 
-// Database connection
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "securebank";  // Change to your actual database name
+// Include database connection
+require_once '../includes/db.php';
 
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
+try {
+    // Fetch all transactions joined with accounts and users
+    $sql = "SELECT t.*, u.user_id, u.full_name, u.email 
+            FROM transactions t
+            JOIN accounts a ON t.account_id = a.account_id
+            JOIN users u ON a.user_id = u.user_id
+            ORDER BY t.created_at DESC";
 
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    $stmt = $pdo->query($sql);
+    $transactions = $stmt->fetchAll();
+} catch (PDOException $e) {
+    error_log("Error fetching transactions: " . $e->getMessage());
+    die("Error fetching transactions. Please try again later.");
 }
-
-// Fetch all transactions joined with accounts and users
-$sql = "SELECT t.*, u.user_id, u.full_name, u.email 
-        FROM transactions t
-        JOIN accounts a ON t.account_id = a.account_id
-        JOIN users u ON a.user_id = u.user_id
-        ORDER BY t.created_at DESC";
-
-$result = $conn->query($sql);
-
-$transactions = [];
-if ($result && $result->num_rows > 0) {
-    while($row = $result->fetch_assoc()) {
-        $transactions[] = $row;
-    }
-}
-
-$conn->close();
 ?>
 
 <!DOCTYPE html>

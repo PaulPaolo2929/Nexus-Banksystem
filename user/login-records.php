@@ -9,19 +9,8 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-// Database connection details
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "securebank";
-
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
+// Include database connection
+require_once '../includes/db.php';
 
 // Fetch login records along with user info
 $sql = "
@@ -29,25 +18,18 @@ $sql = "
            u.full_name, u.email
     FROM login_records lr
     JOIN users u ON u.user_id = lr.user_id
-    WHERE lr.user_id = ?
+    WHERE lr.user_id = :user_id
     ORDER BY lr.created_at DESC
 ";
 
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-
-$result = $stmt->get_result();
-
-$login_records = [];
-if ($result && $result->num_rows > 0) {
-    while ($row = $result->fetch_assoc()) {
-        $login_records[] = $row;
-    }
+try {
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute(['user_id' => $user_id]);
+    $login_records = $stmt->fetchAll();
+} catch (PDOException $e) {
+    error_log("Error fetching login records: " . $e->getMessage());
+    $login_records = [];
 }
-
-$stmt->close();
-$conn->close();
 ?>
 
 <!DOCTYPE html>

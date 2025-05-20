@@ -357,7 +357,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                                         '$'.number_format($txn['amount'],2) ?>
                                                 </td>
                                                 <td>
-                                                    <button onclick="window.location.href='generate_receipt.php?transaction_id=<?= htmlspecialchars($txn['transaction_id']) ?>'" 
+                                                    <button onclick="window.open('generate_receipt.php?transaction_id=<?= htmlspecialchars($txn['transaction_id']) ?>', '_blank')" 
                                                             class="btn-download">Download</button>
                                                 </td>
                                                 </tr>

@@ -39,7 +39,9 @@ if ($account) {
         if (isset($_POST['amount'])) {
             $amount = filter_var($_POST['amount'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
 
-            if ($amount <= 0) {
+            if ($amount < 100) {
+                $error = "Minimum deposit amount is $100.";
+            } elseif ($amount <= 0) {
                 $error = "Amount must be greater than 0.";
             } elseif (($weeklyDeposits + $amount) > $weeklyLimit) {
                 $remaining = $weeklyLimit - $weeklyDeposits;
@@ -308,7 +310,7 @@ $averageWeeklyDeposit = $stmt->fetchColumn() ?: 0;
                               '$'.number_format($txn['amount'],2) ?>
                       </td>                              
                       <td>
-                          <button onclick="window.location.href='generate_receipt.php?transaction_id=<?= htmlspecialchars($txn['transaction_id']) ?>'" 
+                          <button onclick="window.open('generate_receipt.php?transaction_id=<?= htmlspecialchars($txn['transaction_id']) ?>', '_blank')" 
                                   class="btn-download">Download</button>
                       </td>
                       </tr>
