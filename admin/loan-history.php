@@ -5,14 +5,26 @@ require_once '../includes/functions.php';
 // Redirect if not admin
 redirectIfNotAdmin();
 
-// Fetch loan history records with loan and user info
+// Pagination setup
+$perPage = 10;
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $perPage;
+
+// Count total loan history records
+$totalCount = $pdo->query("SELECT COUNT(*) FROM loan_history")->fetchColumn();
+$totalPages = ceil($totalCount / $perPage);
+
+// Fetch loan history records with loan and user info (paginated)
 $stmt = $pdo->prepare("
     SELECT lh.*, l.amount, l.interest_rate, l.purpose, u.full_name, u.email 
     FROM loan_history lh
     JOIN loans l ON lh.loan_id = l.loan_id
     JOIN users u ON l.user_id = u.user_id
     ORDER BY lh.changed_at DESC
+    LIMIT :perPage OFFSET :offset
 ");
+$stmt->bindValue(':perPage', $perPage, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 $stmt->execute();
 $loanHistory = $stmt->fetchAll();
 ?>
@@ -45,8 +57,8 @@ $loanHistory = $stmt->fetchAll();
                                 <a href="role.php" class="btn">Roles</a>
                                 <a href="recent_transactions.php" class="btn">Transactions</a>
                                 <a href="loan-history.php" class="btn dash-text">Loan History</a>
-                                 <a href="login-records.php" class="btn">Login Records</a>
-
+                                <a href="login-records.php" class="btn">Login Records</a>
+                                <a href="manage-messages.php" class="btn">Contact Messages</a>
                             </nav>
 
                              <div class="logout-cont">
@@ -95,7 +107,26 @@ $loanHistory = $stmt->fetchAll();
             </table>
         <?php endif; ?>
 
-        
+        <!-- Pagination Controls -->
+        <?php if ($totalPages > 1): ?>
+        <style>
+        .pagination { text-align: center; margin: 20px 0; }
+        .pagination a { display: inline-block; margin: 0 4px; padding: 6px 12px; color: #007bff; background: #fff; border: 1px solid #ddd; border-radius: 4px; text-decoration: none; transition: background 0.2s, color 0.2s; }
+        .pagination a.btn-primary, .pagination a.active { background: #007bff; color: #fff; border-color: #007bff; pointer-events: none; }
+        .pagination a:hover:not(.btn-primary):not(.active) { background: #f0f0f0; }
+        </style>
+        <div class="pagination">
+            <?php if ($page > 1): ?>
+                <a href="?page=<?= $page - 1 ?>">&laquo; Prev</a>
+            <?php endif; ?>
+            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                <a href="?page=<?= $i ?>" class="<?= $i == $page ? 'btn-primary active' : '' ?>"><?= $i ?></a>
+            <?php endfor; ?>
+            <?php if ($page < $totalPages): ?>
+                <a href="?page=<?= $page + 1 ?>">Next &raquo;</a>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
     </div>
 </main>
 </div>

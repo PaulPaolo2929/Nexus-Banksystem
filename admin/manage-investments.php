@@ -46,7 +46,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_plan'])) {
 }
 
 // Fetch all investment plans
-$investmentPlans = $pdo->query("SELECT * FROM investment_plans")->fetchAll();
+$perPage = 10;
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $perPage;
+$totalCount = $pdo->query("SELECT COUNT(*) FROM investment_plans")->fetchColumn();
+$totalPages = ceil($totalCount / $perPage);
+$investmentPlans = $pdo->prepare("SELECT * FROM investment_plans LIMIT :perPage OFFSET :offset");
+$investmentPlans->bindValue(':perPage', $perPage, PDO::PARAM_INT);
+$investmentPlans->bindValue(':offset', $offset, PDO::PARAM_INT);
+$investmentPlans->execute();
+$investmentPlans = $investmentPlans->fetchAll();
 ?>
 
 <!DOCTYPE html>
@@ -54,7 +63,7 @@ $investmentPlans = $pdo->query("SELECT * FROM investment_plans")->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Investments - SecureBank Admin</title>
+    <title>Manage Investments - Nexus Bank Admin</title>
     <link rel="stylesheet" href="../assets/css/admin-main.css">
     <link rel="stylesheet" href="../assets/css/admin-investment.css">
 
@@ -78,6 +87,7 @@ $investmentPlans = $pdo->query("SELECT * FROM investment_plans")->fetchAll();
                                 <a href="recent_transactions.php" class="btn">Transactions</a>
                                 <a href="recent_transactions.php" class="btn">Loan History</a>
                                 <a href="login-records.php" class="btn">Login Records</a>
+                                <a href="manage-messages.php" class="btn">Contact Messages</a>
                             </nav>
 
                              <div class="logout-cont">
@@ -150,6 +160,26 @@ $investmentPlans = $pdo->query("SELECT * FROM investment_plans")->fetchAll();
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+            <?php endif; ?>
+            <!-- Pagination Controls -->
+            <?php if ($totalPages > 1): ?>
+            <style>
+            .pagination { text-align: center; margin: 20px 0; }
+            .pagination a { display: inline-block; margin: 0 4px; padding: 6px 12px; color: #007bff; background: #fff; border: 1px solid #ddd; border-radius: 4px; text-decoration: none; transition: background 0.2s, color 0.2s; }
+            .pagination a.btn-primary, .pagination a.active { background: #007bff; color: #fff; border-color: #007bff; pointer-events: none; }
+            .pagination a:hover:not(.btn-primary):not(.active) { background: #f0f0f0; }
+            </style>
+            <div class="pagination">
+                <?php if ($page > 1): ?>
+                    <a href="?page=<?= $page - 1 ?>">&laquo; Prev</a>
+                <?php endif; ?>
+                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                    <a href="?page=<?= $i ?>" class="<?= $i == $page ? 'btn-primary active' : '' ?>"><?= $i ?></a>
+                <?php endfor; ?>
+                <?php if ($page < $totalPages): ?>
+                    <a href="?page=<?= $page + 1 ?>">Next &raquo;</a>
+                <?php endif; ?>
+            </div>
             <?php endif; ?>
         </div>
     

@@ -6,11 +6,20 @@ require_once '../includes/functions.php';
 // Ensure the user is an admin
 redirectIfNotAdmin();
 
-// Fetch all user investments with plan and user details
-$stmt = $pdo->query("SELECT ui.investment_id, ui.user_id, ui.amount, ui.status, ui.created_at, ui.matured_at, up.plan_name, up.interest_rate, u.full_name, u.email 
+// Fetch all user investments with plan and user details (paginated)
+$perPage = 10;
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $perPage;
+$totalCount = $pdo->query("SELECT COUNT(*) FROM investments")->fetchColumn();
+$totalPages = ceil($totalCount / $perPage);
+$stmt = $pdo->prepare("SELECT ui.investment_id, ui.user_id, ui.amount, ui.status, ui.created_at, ui.matured_at, up.plan_name, up.interest_rate, u.full_name, u.email 
                      FROM investments ui
                      JOIN users u ON ui.user_id = u.user_id
-                     JOIN investment_plans up ON ui.plan_id = up.plan_id");
+                     JOIN investment_plans up ON ui.plan_id = up.plan_id
+                     LIMIT :perPage OFFSET :offset");
+$stmt->bindValue(':perPage', $perPage, PDO::PARAM_INT);
+$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmt->execute();
 $userInvestments = $stmt->fetchAll();
 ?>
 
@@ -19,7 +28,7 @@ $userInvestments = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Investments Tracking - SecureBank Admin</title>
+    <title>User Investments Tracking - Nexus Bank Admin</title>
     <link rel="stylesheet" href="../assets/css/admin-main.css">
     <link rel="stylesheet" href="../assets/css/admin-track-investment.css">
 
@@ -43,6 +52,7 @@ $userInvestments = $stmt->fetchAll();
                                 <a href="recent_transactions.php" class="btn">Transactions</a>
                                 <a href="recent_transactions.php" class="btn">Loan History</a>
                                 <a href="login-records.php" class="btn">Login Records</a>
+                                <a href="manage-messages.php" class="btn">Contact Messages</a>
                             </nav>
 
                              <div class="logout-cont">
@@ -91,6 +101,26 @@ $userInvestments = $stmt->fetchAll();
                         <?php endforeach; ?>
                     </tbody>
                 </table>
+            <?php endif; ?>
+            <!-- Pagination Controls -->
+            <?php if ($totalPages > 1): ?>
+            <style>
+            .pagination { text-align: center; margin: 20px 0; }
+            .pagination a { display: inline-block; margin: 0 4px; padding: 6px 12px; color: #007bff; background: #fff; border: 1px solid #ddd; border-radius: 4px; text-decoration: none; transition: background 0.2s, color 0.2s; }
+            .pagination a.btn-primary, .pagination a.active { background: #007bff; color: #fff; border-color: #007bff; pointer-events: none; }
+            .pagination a:hover:not(.btn-primary):not(.active) { background: #f0f0f0; }
+            </style>
+            <div class="pagination">
+                <?php if ($page > 1): ?>
+                    <a href="?page=<?= $page - 1 ?>">&laquo; Prev</a>
+                <?php endif; ?>
+                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                    <a href="?page=<?= $i ?>" class="<?= $i == $page ? 'btn-primary active' : '' ?>"><?= $i ?></a>
+                <?php endfor; ?>
+                <?php if ($page < $totalPages): ?>
+                    <a href="?page=<?= $page + 1 ?>">Next &raquo;</a>
+                <?php endif; ?>
+            </div>
             <?php endif; ?>
             </div>
         </div>

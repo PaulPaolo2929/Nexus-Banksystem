@@ -398,7 +398,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
 
         <button type="submit" class="btn-verify">Verify</button>
-        <a href="login.php" class="btn-cancel">Cancel</a>
+        <?php
+        $cancelUrl = 'login.php';
+        switch ($type) {
+            case 'deposit':
+                $cancelUrl = 'user/deposit.php';
+                break;
+            case 'withdraw':
+                $cancelUrl = 'user/withdraw.php';
+                break;
+            case 'transfer':
+                $cancelUrl = 'user/transfer.php';
+                break;
+            case 'register':
+                $cancelUrl = 'register.php';
+                break;
+            case 'login':
+                $cancelUrl = 'login.php';
+                break;
+        }
+        ?>
+        <a href="<?= $cancelUrl ?>" class="btn-cancel">Cancel</a>
       </form>
     </div>
   </div>

@@ -11,8 +11,8 @@ function sendResetLink($recipientEmail, $resetLink) {
         $mail->isSMTP();
         $mail->Host       = 'smtp.gmail.com';
         $mail->SMTPAuth   = true;
-        $mail->Username   = 'shaison62@gmail.com'; // Your Gmail
-        $mail->Password   = 'awxn tpnn ogsm grut'; // App Password
+        $mail->Username   = 'nexusbanksystem@gmail.com'; // Your Gmail
+        $mail->Password   = 'ntnl ttfo uayi vsxd'; // App Password
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
 

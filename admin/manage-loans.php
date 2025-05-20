@@ -91,7 +91,17 @@ if (isset($_GET['id']) && isset($_GET['action'])) {
 }
 
 // Limit for displaying results
-$limit = 10;
+$perPage = 10;
+$pendingPage = isset($_GET['pending_page']) && is_numeric($_GET['pending_page']) ? (int)$_GET['pending_page'] : 1;
+$approvedPage = isset($_GET['approved_page']) && is_numeric($_GET['approved_page']) ? (int)$_GET['approved_page'] : 1;
+$pendingOffset = ($pendingPage - 1) * $perPage;
+$approvedOffset = ($approvedPage - 1) * $perPage;
+
+// Count total pending and approved loans
+$totalPending = $pdo->query("SELECT COUNT(*) FROM loans WHERE status = 'pending'")->fetchColumn();
+$totalPendingPages = ceil($totalPending / $perPage);
+$totalApproved = $pdo->query("SELECT COUNT(*) FROM loans WHERE status = 'approved' AND approved_at IS NOT NULL")->fetchColumn();
+$totalApprovedPages = ceil($totalApproved / $perPage);
 
 // Fetch pending loan requests
 $pendingLoansStmt = $pdo->prepare("
@@ -100,9 +110,10 @@ $pendingLoansStmt = $pdo->prepare("
     JOIN users u ON l.user_id = u.user_id
     WHERE l.status = 'pending'
     ORDER BY l.created_at DESC
-    LIMIT ?
+    LIMIT :perPage OFFSET :offset
 ");
-$pendingLoansStmt->bindValue(1, $limit, PDO::PARAM_INT);
+$pendingLoansStmt->bindValue(':perPage', $perPage, PDO::PARAM_INT);
+$pendingLoansStmt->bindValue(':offset', $pendingOffset, PDO::PARAM_INT);
 $pendingLoansStmt->execute();
 $pendingLoans = $pendingLoansStmt->fetchAll();
 
@@ -113,9 +124,10 @@ $approvedLoansStmt = $pdo->prepare("
     JOIN users u ON l.user_id = u.user_id
     WHERE l.status = 'approved' AND l.approved_at IS NOT NULL
     ORDER BY l.approved_at DESC
-    LIMIT ?
+    LIMIT :perPage OFFSET :offset
 ");
-$approvedLoansStmt->bindValue(1, $limit, PDO::PARAM_INT);
+$approvedLoansStmt->bindValue(':perPage', $perPage, PDO::PARAM_INT);
+$approvedLoansStmt->bindValue(':offset', $approvedOffset, PDO::PARAM_INT);
 $approvedLoansStmt->execute();
 $approvedLoans = $approvedLoansStmt->fetchAll();
 ?>
@@ -124,7 +136,7 @@ $approvedLoans = $approvedLoansStmt->fetchAll();
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Manage Loans - SecureBank Admin</title>
+    <title>Manage Loans - Nexus Bank Admin</title>
     <link rel="stylesheet" href="../assets/css/admin-main.css">
     <link rel="stylesheet" href="../assets/css/admin-loans.css">
 
@@ -150,6 +162,7 @@ $approvedLoans = $approvedLoansStmt->fetchAll();
                                 <a href="recent_transactions.php" class="btn">Transactions</a>
                                 <a href="loan-history.php" class="btn">Loan History</a>
                                 <a href="login-records.php" class="btn">Login Records</a>
+                                <a href="manage-messages.php" class="btn">Contact Messages</a>
                             </nav>
 
                              <div class="logout-cont">
@@ -206,6 +219,27 @@ $approvedLoans = $approvedLoansStmt->fetchAll();
                         </table>
                     <?php endif; ?>
 
+                    <!-- Pagination Controls for Pending Loans -->
+                    <?php if ($totalPendingPages > 1): ?>
+                    <style>
+                    .pagination { text-align: center; margin: 20px 0; }
+                    .pagination a { display: inline-block; margin: 0 4px; padding: 6px 12px; color: #007bff; background: #fff; border: 1px solid #ddd; border-radius: 4px; text-decoration: none; transition: background 0.2s, color 0.2s; }
+                    .pagination a.btn-primary, .pagination a.active { background: #007bff; color: #fff; border-color: #007bff; pointer-events: none; }
+                    .pagination a:hover:not(.btn-primary):not(.active) { background: #f0f0f0; }
+                    </style>
+                    <div class="pagination">
+                        <?php if ($pendingPage > 1): ?>
+                            <a href="?pending_page=<?= $pendingPage - 1 ?>">&laquo; Prev</a>
+                        <?php endif; ?>
+                        <?php for ($i = 1; $i <= $totalPendingPages; $i++): ?>
+                            <a href="?pending_page=<?= $i ?>" class="<?= $i == $pendingPage ? 'btn-primary active' : '' ?>"><?= $i ?></a>
+                        <?php endfor; ?>
+                        <?php if ($pendingPage < $totalPendingPages): ?>
+                            <a href="?pending_page=<?= $pendingPage + 1 ?>">Next &raquo;</a>
+                        <?php endif; ?>
+                    </div>
+                    <?php endif; ?>
+
                     <hr>
 
                     <h2>✅ Recently Approved Loans (Latest 10)</h2>
@@ -243,6 +277,21 @@ $approvedLoans = $approvedLoansStmt->fetchAll();
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
+                    <?php endif; ?>
+
+                    <!-- Pagination Controls for Approved Loans -->
+                    <?php if ($totalApprovedPages > 1): ?>
+                    <div class="pagination">
+                        <?php if ($approvedPage > 1): ?>
+                            <a href="?approved_page=<?= $approvedPage - 1 ?>">&laquo; Prev</a>
+                        <?php endif; ?>
+                        <?php for ($i = 1; $i <= $totalApprovedPages; $i++): ?>
+                            <a href="?approved_page=<?= $i ?>" class="<?= $i == $approvedPage ? 'btn-primary active' : '' ?>"><?= $i ?></a>
+                        <?php endfor; ?>
+                        <?php if ($approvedPage < $totalApprovedPages): ?>
+                            <a href="?approved_page=<?= $approvedPage + 1 ?>">Next &raquo;</a>
+                        <?php endif; ?>
+                    </div>
                     <?php endif; ?>
 
                     </div>

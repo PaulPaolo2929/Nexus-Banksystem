@@ -157,12 +157,22 @@ if (isset($_GET['toggle_active']) && is_numeric($_GET['toggle_active'])) {
 }
 
 // Fetch all users
-$users = $pdo->query("
+$perPage = 10;
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $perPage;
+$totalCount = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
+$totalPages = ceil($totalCount / $perPage);
+$users = $pdo->prepare("
     SELECT u.*, a.account_number, a.balance 
     FROM users u 
     LEFT JOIN accounts a ON u.user_id = a.user_id 
     ORDER BY u.created_at DESC
-")->fetchAll();
+    LIMIT :perPage OFFSET :offset
+");
+$users->bindValue(':perPage', $perPage, PDO::PARAM_INT);
+$users->bindValue(':offset', $offset, PDO::PARAM_INT);
+$users->execute();
+$users = $users->fetchAll();
 ?>
 
 <!DOCTYPE html>
@@ -193,6 +203,7 @@ $users = $pdo->query("
                                 <a href="recent_transactions.php" class="btn">Transactions</a>
                                 <a href="loan-history.php" class="btn">Loan History</a>
                                 <a href="login-records.php" class="btn">Login Records</a>
+                                <a href="manage-messages.php" class="btn">Contact Messages</a>
                             </nav>
 
                              <div class="logout-cont">
@@ -272,6 +283,26 @@ $users = $pdo->query("
             </table>
         <?php endif; ?>
         </div>
+        <!-- Pagination Controls -->
+        <?php if ($totalPages > 1): ?>
+        <style>
+        .pagination { text-align: center; margin: 20px 0; }
+        .pagination a { display: inline-block; margin: 0 4px; padding: 6px 12px; color: #007bff; background: #fff; border: 1px solid #ddd; border-radius: 4px; text-decoration: none; transition: background 0.2s, color 0.2s; }
+        .pagination a.btn-primary, .pagination a.active { background: #007bff; color: #fff; border-color: #007bff; pointer-events: none; }
+        .pagination a:hover:not(.btn-primary):not(.active) { background: #f0f0f0; }
+        </style>
+        <div class="pagination">
+            <?php if ($page > 1): ?>
+                <a href="?page=<?= $page - 1 ?>">&laquo; Prev</a>
+            <?php endif; ?>
+            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                <a href="?page=<?= $i ?>" class="<?= $i == $page ? 'btn-primary active' : '' ?>"><?= $i ?></a>
+            <?php endfor; ?>
+            <?php if ($page < $totalPages): ?>
+                <a href="?page=<?= $page + 1 ?>">Next &raquo;</a>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
     </div>
 </main>
 
