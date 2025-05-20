@@ -1,51 +1,35 @@
 <?php
-// Database connection
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "securebank";  // Change to your actual database name
+// Include database connection
+require_once '../includes/db.php';
 
-// Create connection
-$conn = new mysqli($servername, $username, $password, $dbname);
+try {
+    // SQL query to fetch recent transactions with user info via accounts table
+    $sql = "
+        SELECT 
+            t.transaction_id, 
+            t.account_id, 
+            t.type, 
+            t.amount, 
+            t.description, 
+            t.related_account_id, 
+            t.created_at,
+            u.user_id,
+            u.full_name,
+            ra.account_number AS related_account_number
+        FROM transactions t
+        JOIN accounts a ON t.account_id = a.account_id
+        JOIN users u ON a.user_id = u.user_id
+        LEFT JOIN accounts ra ON t.related_account_id = ra.account_id
+        ORDER BY t.created_at DESC
+        LIMIT 10
+    ";
 
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    $stmt = $pdo->query($sql);
+    $transactions = $stmt->fetchAll();
+} catch (PDOException $e) {
+    error_log("Error fetching transactions: " . $e->getMessage());
+    die("Error fetching transactions. Please try again later.");
 }
-
-// SQL query to fetch recent transactions with user info via accounts table
-$sql = "
-    SELECT 
-        t.transaction_id, 
-        t.account_id, 
-        t.type, 
-        t.amount, 
-        t.description, 
-        t.related_account_id, 
-        t.created_at,
-        u.user_id,
-        u.full_name
-    FROM transactions t
-    JOIN accounts a ON t.account_id = a.account_id
-    JOIN users u ON a.user_id = u.user_id
-    ORDER BY t.created_at DESC
-    LIMIT 10
-";
-
-$result = $conn->query($sql);
-
-// Check if there are any transactions
-if ($result->num_rows > 0) {
-    // Output each transaction as an associative array
-    $transactions = [];
-    while($row = $result->fetch_assoc()) {
-        $transactions[] = $row;
-    }
-} else {
-    $transactions = [];
-}
-
-$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -106,7 +90,7 @@ $conn->close();
                     <th>Type</th>
                     <th>Amount</th>
                     <th>Description</th>
-                    <th>Related Account ID</th>
+                    <th>Related Account</th>
                     <th>Date</th>
                 </tr>
             </thead>
@@ -119,9 +103,9 @@ $conn->close();
                             <td data-label="User ID"><?php echo $transaction['user_id']; ?></td>
                             <td data-label="User Name"><?php echo htmlspecialchars($transaction['full_name']); ?></td>
                             <td data-label="Type"><?php echo htmlspecialchars($transaction['type']); ?></td>
-                            <td data-label="Amount"><?php echo "₱" . number_format($transaction['amount'], 2); ?></td>
+                            <td data-label="Amount"><?php echo "$" . number_format($transaction['amount'], 2); ?></td>
                             <td data-label="Description"><?php echo !empty($transaction['description']) ? htmlspecialchars($transaction['description']) : 'N/A'; ?></td>
-                            <td data-label="Related Account ID"><?php echo !empty($transaction['related_account_id']) ? $transaction['related_account_id'] : 'N/A'; ?></td>
+                            <td data-label="Related Account"><?php echo !empty($transaction['related_account_number']) ? htmlspecialchars($transaction['related_account_number']) : 'N/A'; ?></td>
                             <td data-label="Date">
                                 <?php 
                                     echo !empty($transaction['created_at']) && strtotime($transaction['created_at']) 
