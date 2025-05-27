@@ -179,7 +179,7 @@ $users = $users->fetchAll();
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SecureBank - Manage Users</title>
+    <title>Nexus Bank - Manage Users</title>
     <link rel="stylesheet" href="../assets/css/admin-main.css">
     <link rel="stylesheet" href="../assets/css/admin-users.css">
 
@@ -255,7 +255,7 @@ $users = $users->fetchAll();
                             <td data-label="Name"><?= htmlspecialchars($user['full_name']) ?></td>
                             <td data-label="Email"><?= htmlspecialchars($user['email']) ?></td>
                             <td data-label="Account"><?= $user['account_number'] ?: 'N/A' ?></td>
-                            <td data-label="Balance">$<?= number_format($user['balance'] ?? 0, 2) ?></td>
+                            <td data-label="Balance">₱<?= number_format($user['balance'] ?? 0, 2) ?></td>
                             <td data-label="Status"><?= $user['status'] === 'approved' ? '✅ Approved' : '⏳ Pending' ?></td>
                             <td data-label="Active"><?= $user['is_active'] ? '🟢 Active' : '🔴 Inactive' ?></td>
                             <td data-label="Joined On"><?= date('M j, Y', strtotime($user['created_at'])) ?></td>

@@ -6,6 +6,7 @@ error_reporting(E_ALL);
 
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
+require_once '../includes/session_manager.php';
 
 redirectIfNotLoggedIn();
 
@@ -23,9 +24,35 @@ if (!$account) {
 $accountId = $account['account_id'];
 $balance = $account['balance'];
 
-// Fetch unpaid and approved loans
+// Add this after the require statements at the top
+function calculatePenalty($loan) {
+    $currentDate = new DateTime();
+    $approvedDate = new DateTime($loan['approved_at']);
+    $termEndDate = clone $approvedDate;
+    $termEndDate->modify('+' . $loan['term_months'] . ' months');
+    
+    if ($currentDate > $termEndDate) {
+        $daysOverdue = $currentDate->diff($termEndDate)->days;
+        $penaltyRate = 0.01; // 1% penalty per day
+        $penaltyAmount = $loan['total_due'] * ($penaltyRate * $daysOverdue);
+        return $penaltyAmount;
+    }
+    return 0;
+}
+
+// Update the loan fetching query to include penalty calculation
 $stmt = $pdo->prepare("
-    SELECT * FROM loans 
+    SELECT *, 
+    CASE 
+        WHEN approved_at IS NOT NULL AND is_paid = 'no' THEN 
+            CASE 
+                WHEN DATE_ADD(approved_at, INTERVAL term_months MONTH) < NOW() THEN 
+                    total_due * (0.01 * DATEDIFF(NOW(), DATE_ADD(approved_at, INTERVAL term_months MONTH)))
+                ELSE 0 
+            END
+        ELSE 0 
+    END as penalty_amount
+    FROM loans 
     WHERE user_id = ? 
     AND status = 'approved' 
     AND is_paid = 'no'
@@ -51,8 +78,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($paymentAmount <= 0) {
             $error = "Invalid payment amount.";
         } else {
-            // Verify loan belongs to user
-            $stmt = $pdo->prepare("SELECT * FROM loans WHERE loan_id = ? AND user_id = ?");
+            // Verify loan belongs to user and calculate current total with penalty
+            $stmt = $pdo->prepare("
+                SELECT *, 
+                CASE 
+                    WHEN approved_at IS NOT NULL AND is_paid = 'no' THEN 
+                        CASE 
+                            WHEN DATE_ADD(approved_at, INTERVAL term_months MONTH) < NOW() THEN 
+                                total_due * (0.01 * DATEDIFF(NOW(), DATE_ADD(approved_at, INTERVAL term_months MONTH)))
+                            ELSE 0 
+                        END
+                    ELSE 0 
+                END as penalty_amount
+                FROM loans 
+                WHERE loan_id = ? AND user_id = ?
+            ");
             $stmt->execute([$loanId, $userId]);
             $loan = $stmt->fetch();
 
@@ -60,52 +100,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = "Loan not found.";
             } elseif ($loan['is_paid'] === 'yes') {
                 $error = "Loan is already marked as paid.";
-            } elseif ($paymentAmount > $loan['total_due']) {
-                $error = "Payment exceeds total due.";
-            } elseif ($balance < $paymentAmount) {
-                $error = "Insufficient balance.";
             } else {
-                try {
-                    $pdo->beginTransaction();
+                $totalDueWithPenalty = $loan['total_due'] + $loan['penalty_amount'];
+                
+                if ($paymentAmount > $totalDueWithPenalty) {
+                    $error = "Payment exceeds total due with penalties.";
+                } elseif ($balance < $paymentAmount) {
+                    $error = "Insufficient balance.";
+                } else {
+                    try {
+                        $pdo->beginTransaction();
 
-                    // Deduct from account
-                    $stmt = $pdo->prepare("UPDATE accounts SET balance = balance - ? WHERE user_id = ?");
-                    $stmt->execute([$paymentAmount, $userId]);
+                        // Deduct from account
+                        $stmt = $pdo->prepare("UPDATE accounts SET balance = balance - ? WHERE user_id = ?");
+                        $stmt->execute([$paymentAmount, $userId]);
 
-                    $remaining = round($loan['total_due'] - $paymentAmount, 2);
+                        $remaining = round($totalDueWithPenalty - $paymentAmount, 2);
 
-                    if ($remaining > 0) {
-                        $stmt = $pdo->prepare("UPDATE loans SET total_due = ? WHERE loan_id = ?");
-                        $stmt->execute([$remaining, $loanId]);
+                        if ($remaining > 0) {
+                            $stmt = $pdo->prepare("UPDATE loans SET total_due = ? WHERE loan_id = ?");
+                            $stmt->execute([$remaining, $loanId]);
 
-                        $desc = "Partial Loan Payment";
-                    } else {
-                        $stmt = $pdo->prepare("UPDATE loans SET is_paid = 'yes', total_due = 0 WHERE loan_id = ?");
-                        $stmt->execute([$loanId]);
+                            $desc = "Partial Loan Payment";
+                        } else {
+                            $stmt = $pdo->prepare("UPDATE loans SET is_paid = 'yes', total_due = 0 WHERE loan_id = ?");
+                            $stmt->execute([$loanId]);
 
-                        $desc = "Full Loan Payment";
+                            $desc = "Full Loan Payment";
 
-                        // Optional: delete loan after full payment
-                        $stmt = $pdo->prepare("DELETE FROM loans WHERE loan_id = ?");
-                        $stmt->execute([$loanId]);
+                            // Optional: delete loan after full payment
+                            $stmt = $pdo->prepare("DELETE FROM loans WHERE loan_id = ?");
+                            $stmt->execute([$loanId]);
+                        }
+
+                        // Log transaction
+                        $stmt = $pdo->prepare("
+                            INSERT INTO transactions (account_id, type, amount, description, related_account_id, created_at)
+                            VALUES (?, 'loanpayment', ?, ?, NULL, ?)
+                        ");
+                        $stmt->execute([$accountId, $paymentAmount, $desc, date('Y-m-d H:i:s')]);
+
+                        $pdo->commit();
+
+                        $_SESSION['loan_payment_token'] = bin2hex(random_bytes(32));
+                        $_SESSION['success_message'] = $desc . " successful.";
+                        header("Location: loan-payment.php");
+                        exit();
+                    } catch (Exception $e) {
+                        $pdo->rollBack();
+                        $error = "Payment failed: " . $e->getMessage();
                     }
-
-                    // Log transaction
-                    $stmt = $pdo->prepare("
-                        INSERT INTO transactions (account_id, type, amount, description, related_account_id, created_at)
-                        VALUES (?, 'loanpayment', ?, ?, NULL, ?)
-                    ");
-                    $stmt->execute([$accountId, $paymentAmount, $desc, date('Y-m-d H:i:s')]);
-
-                    $pdo->commit();
-
-                    $_SESSION['loan_payment_token'] = bin2hex(random_bytes(32));
-                    $_SESSION['success_message'] = $desc . " successful.";
-                    header("Location: loan-payment.php");
-                    exit();
-                } catch (Exception $e) {
-                    $pdo->rollBack();
-                    $error = "Payment failed: " . $e->getMessage();
                 }
             }
         }
@@ -284,7 +328,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                 <input type="number" name="loan_id" id="loan_id" required>
                             </div>
                             <div class="form-group">
-                                <label for="payment_amount">Payment Amount ($)</label>
+                                <label for="payment_amount">Payment Amount (₱)</label>
                                 <input type="number" name="payment_amount" id="payment_amount" min="0.01" step="0.01" required>
                             </div>
                             <button type="submit" class="btn">Submit Payment</button>
@@ -300,6 +344,8 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                 <tr>
                                     <th>Loan ID</th>
                                     <th>Amount Due</th>
+                                    <th>Penalty</th>
+                                    <th>Total with Penalty</th>
                                     <th>Interest Rate</th>
                                     <th>Term</th>
                                     <th>Status</th>
@@ -309,45 +355,35 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                 <tbody>
                                     <?php foreach ($loans as $loan): ?>
                                         <tr>
-                                            <td><?= $loan['loan_id'] ?></td> <!-- Display Loan ID here -->
-                                            <td>$<?= number_format($loan['total_due'], 2) ?></td>
+                                            <td><?= $loan['loan_id'] ?></td>
+                                            <td>₱<?= number_format($loan['total_due'], 2) ?></td>
+                                            <td>₱<?= number_format($loan['penalty_amount'], 2) ?></td>
+                                            <td>₱<?= number_format($loan['total_due'] + $loan['penalty_amount'], 2) ?></td>
                                             <td><?= $loan['interest_rate'] ?>%</td>
                                             <td><?= $loan['term_months'] ?> months</td>
-                                            <td><?= $loan['is_paid'] === 'yes' ? 'Paid' : 'Active' ?></td>
+                                            <td>
+                                                <?php 
+                                                $currentDate = new DateTime();
+                                                $approvedDate = new DateTime($loan['approved_at']);
+                                                $termEndDate = clone $approvedDate;
+                                                $termEndDate->modify('+' . $loan['term_months'] . ' months');
+                                                
+                                                if ($currentDate > $termEndDate && $loan['is_paid'] === 'no') {
+                                                    echo '<span class="status-overdue">Overdue</span>';
+                                                } else {
+                                                    echo '<span class="status-active">Active</span>';
+                                                }
+                                                ?>
+                                            </td>
                                             <td><?= date('M j, Y', strtotime($loan['created_at'])) ?></td>
                                         </tr>
-                                        <?php endforeach; ?>
+                                    <?php endforeach; ?>
                                 </tbody>
                             </table>
                         <?php endif; ?>
                     </div>
                 </main>
 </div>
+<script src="../assets/js/session.js"></script>
 </body>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Set session timeout to 10 minutes
-        const inactivityTime = 600000;
-        let inactivityTimer;
-
-        const resetInactivityTimer = () => {
-            // Clear existing timer
-            if (inactivityTimer) clearTimeout(inactivityTimer);
-
-            // Set timeout
-            inactivityTimer = setTimeout(() => {
-                window.location.href = '../logout.php?timeout=1';
-            }, inactivityTime);
-        };
-
-        // Reset timer on user activity
-        const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-        events.forEach(event => {
-            document.addEventListener(event, resetInactivityTimer);
-        });
-
-        // Initial timer start
-        resetInactivityTimer();
-    });
-    </script>
 </html>

@@ -6,6 +6,10 @@ error_reporting(E_ALL);
 session_start();
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
+require_once '../includes/session_manager.php';
+
+// Check session status
+checkSessionStatus();
 
 // Set the timeout duration (15 minutes in seconds)
 $timeoutDuration = 900;  // 15 minutes
@@ -84,7 +88,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexus-Banksystem - Dashboard</title>
     <link rel="stylesheet" href="../assets/css/main.css">
-
+    <script src="../assets/js/session.js"></script>
 
     <!-- Apexchart -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
@@ -296,7 +300,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                              <h2>Welcome, <?= htmlspecialchars($user['full_name']) ?></h2>
                             <h2>Account Summary</h2>
                             <p>Account Number: <?= htmlspecialchars($user['account_number']) ?></p>
-                            <p class="balance">Balance: $<?= number_format($user['balance'], 2) ?></p>
+                            <p class="balance">Balance: ₱<?= number_format($user['balance'], 2) ?></p>
                         </div>
                         
 
@@ -354,7 +358,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                                 <td><?= date('j M, g:i A', strtotime($txn['created_at'])) ?></td>
                                                 <td class="amount <?= in_array($txn['type'],['deposit','transfer_in'])? 'positive':'negative' ?>">
                                                     <?= (in_array($txn['type'],['deposit','transfer_in'])? '+':'−') .
-                                                        '$'.number_format($txn['amount'],2) ?>
+                                                        '₱'.number_format($txn['amount'],2) ?>
                                                 </td>
                                                 <td>
                                                     <button onclick="window.open('generate_receipt.php?transaction_id=<?= htmlspecialchars($txn['transaction_id']) ?>', '_blank')" 
@@ -423,7 +427,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                 },
                 yaxis: {
                     title: {
-                        text: 'Amount ($)'
+                        text: 'Amount (₱)'
                     }
                 },
                 series: [
@@ -472,7 +476,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                     intersect: false,
                     y: {
                         formatter: function (val) {
-                            return "$" + val.toFixed(2);
+                            return "₱" + val.toFixed(2);
                         }
                     }
                 },
@@ -610,10 +614,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                     },
                     yaxis: {
                         title: {
-                            text: 'Total Balance',
-                            style: {
-                                fontSize: '20px'
-                            }
+                            text: 'Amount (₱)'
                         }
                     },
                     grid: {
@@ -710,5 +711,6 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
 
     // Your existing scripts...
 </script>
+<script src="../assets/js/session.js"></script>
 </body>
 </html>

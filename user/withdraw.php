@@ -9,6 +9,7 @@ session_start();
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/otp.php';
+require_once '../includes/session_manager.php';
 
 redirectIfNotLoggedIn();  // Ensure user is logged in
 
@@ -30,9 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Validate amount
         if ($amount < 100) {
-            $error = "Minimum withdrawal amount is $100.";
+            $error = "Minimum withdrawal amount is ₱100.";
         } elseif ($amount <= 0) {
             $error = "Amount must be greater than 0.";
+        } elseif ($amount > 25000) {
+            $error = "Maximum withdrawal amount is ₱25,000 per transaction.";
         } elseif ($amount > $balance) {
             $error = "Insufficient balance.";
         } else {
@@ -82,14 +85,29 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
 
 // Get recent transactions
 $stmt = $pdo->prepare("
-    SELECT * 
-FROM transactions  
-WHERE type = 'withdrawal' 
-  AND account_id = (SELECT account_id FROM accounts WHERE user_id = ?) 
-ORDER BY created_at DESC;
-
+    SELECT COUNT(*) 
+    FROM transactions  
+    WHERE type = 'withdrawal' 
+      AND account_id = (SELECT account_id FROM accounts WHERE user_id = ?)
 ");
 $stmt->execute([$userId]);
+$totalTransactions = $stmt->fetchColumn();
+
+// Calculate pagination
+$transactionsPerPage = 10;
+$totalPages = ceil($totalTransactions / $transactionsPerPage);
+$currentPage = isset($_GET['page']) ? max(1, min($totalPages, intval($_GET['page']))) : 1;
+$offset = ($currentPage - 1) * $transactionsPerPage;
+
+$stmt = $pdo->prepare("
+    SELECT * 
+    FROM transactions  
+    WHERE type = 'withdrawal' 
+      AND account_id = (SELECT account_id FROM accounts WHERE user_id = ?) 
+    ORDER BY created_at DESC
+    LIMIT ? OFFSET ?
+");
+$stmt->execute([$userId, $transactionsPerPage, $offset]);
 $transactions = $stmt->fetchAll();
 
 // Get account ID of the current user
@@ -242,7 +260,7 @@ $weeklyDeposits = $stmt->fetchColumn() ?: 0;
                 <?php endif; ?>
                 <h2>Withdraw Money</h2>
                 <div class="balance-info">
-                    <p>Current Balance: <strong>$<?= number_format($balance, 2) ?></strong></p>
+                    <p>Current Balance: <strong>₱<?= number_format($balance, 2) ?></strong></p>
                 </div>
 
                 <form method="POST">
@@ -260,10 +278,9 @@ $weeklyDeposits = $stmt->fetchColumn() ?: 0;
                 <div style="width: 100%;">
                     <h2>Quick Summary</h2>
                     <ul>
-                        <li>Total Withdrawals This Month: <strong>$<?= number_format($monthlyTotal, 2) ?></strong></li>
-                        <li>Largest Withdraw: <strong>$<?= number_format($largestDeposit, 2) ?></strong></li>
-                        <li>Average Weekly withdrawal: <strong>$<?= number_format($averageWeeklyDeposit, 2) ?></strong></li>
-                        <li>Withdrawal this week: <strong>$<?= number_format($weeklyDeposits, 2) ?></strong> / $100,000 limit</li>
+                        <li>Total Withdrawals This Month: <strong>₱<?= number_format($monthlyTotal, 2) ?></strong></li>
+                        <li>Largest Withdraw: <strong>₱<?= number_format($largestDeposit, 2) ?></strong></li>
+                        <li>Average Weekly withdrawal: <strong>₱<?= number_format($averageWeeklyDeposit, 2) ?></strong></li>
                     </ul>
                   </div>
               </div>
@@ -303,7 +320,7 @@ $weeklyDeposits = $stmt->fetchColumn() ?: 0;
                     <td><?= ucfirst($txn['type']) ?></td>
                     <td class="amount <?= in_array($txn['type'],['deposit','transfer_in'])? 'positive':'negative' ?>">
                         <?= (in_array($txn['type'],['deposit','transfer_in'])? '+':'−') .
-                            '$'.number_format($txn['amount'],2) ?>
+                            '₱'.number_format($txn['amount'],2) ?>
                     </td>                              
                     <td>
                         <button onclick="window.open('generate_receipt.php?transaction_id=<?= htmlspecialchars($txn['transaction_id']) ?>', '_blank')" 
@@ -313,15 +330,29 @@ $weeklyDeposits = $stmt->fetchColumn() ?: 0;
                     <?php endforeach; ?>
                 </tbody>
                 </table> 
+
+                <!-- Pagination Controls -->
+                <?php if ($totalPages > 1): ?>
+                <div class="pagination">
+                    <?php if ($currentPage > 1): ?>
+                        <a href="?page=<?= $currentPage - 1 ?>" class="page-link">&laquo; Previous</a>
+                    <?php endif; ?>
+                    
+                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                        <a href="?page=<?= $i ?>" 
+                           class="page-link <?= $i === $currentPage ? 'active' : '' ?>">
+                            <?= $i ?>
+                        </a>
+                    <?php endfor; ?>
+                    
+                    <?php if ($currentPage < $totalPages): ?>
+                        <a href="?page=<?= $currentPage + 1 ?>" class="page-link">Next &raquo;</a>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
             </div>
     </main>
 </div>
-</body>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Set session timeout to 10 minutes
-        const inactivityTime = 600000;
-        let inactivityTimer;
 
         const resetInactivityTimer = () => {
             // Clear existing timer
@@ -502,4 +533,6 @@ $weeklyDeposits = $stmt->fetchColumn() ?: 0;
 
 
 </script>
+<script src="../assets/js/session.js"></script>
+</body>
 </html>

@@ -7,6 +7,7 @@ error_reporting(E_ALL);
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
 require_once '../includes/notification.php';
+require_once '../includes/session_manager.php';
 
 redirectIfNotLoggedIn();
 
@@ -166,7 +167,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $purpose = htmlspecialchars($_POST['purpose'], ENT_QUOTES, 'UTF-8');
 
             if ($amount < 100) {
-                $error = "Minimum loan amount is $100";
+                $error = "Minimum loan amount is ₱100";
             } elseif ($term < 1 || $term > 60) {
                 $error = "Loan term must be between 1 and 60 months";
             } else {
@@ -777,5 +778,6 @@ $profilePic = (!empty($user['profile_picture']) && file_exists('../uploads/' . $
             }
         });
     </script>
+    <script src="../assets/js/session.js"></script>
 </body>
 </html>

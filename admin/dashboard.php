@@ -88,7 +88,7 @@ $recentUsers = $pdo->query("SELECT * FROM users ORDER BY created_at DESC LIMIT 5
                 
                 <div class="stat-card">
                     <h3>Total Balance</h3>
-                    <p>$<?= number_format($totalBalance, 2) ?></p>
+                    <p>₱<?= number_format($totalBalance, 2) ?></p>
                 </div>
                 
                 <div class="stat-card">

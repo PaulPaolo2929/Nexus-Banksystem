@@ -6,6 +6,7 @@ error_reporting(E_ALL);
 
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
+require_once '../includes/session_manager.php';
 
 redirectIfNotLoggedIn();
 
@@ -44,7 +45,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $purpose = htmlspecialchars($_POST['purpose'], ENT_QUOTES, 'UTF-8');
 
         if ($amount < 100) {
-            $error = "Minimum loan amount is $100";
+            $error = "Minimum loan amount is ₱100";
+        } elseif ($amount > 50000) {
+            $error = "Maximum loan amount is ₱50,000";
         } elseif ($term < 1 || $term > 60) {
             $error = "Loan term must be between 1 and 60 months";
         } else {
@@ -98,7 +101,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SecureBank - Loans</title>
+    <title>Nexus Bank - Loans</title>
     <link rel="stylesheet" href="../assets/css/main.css">
     <link rel="stylesheet" href="../assets/css/loans.css">
 
@@ -244,12 +247,14 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                     <form method="POST">
                         <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
                         <div class="form-group">
-                            <label>Loan Amount ($)</label>
-                            <input type="number" name="amount" min="100" step="100" required>
+                            <label>Loan Amount (₱)</label>
+                            <input type="number" name="amount" min="100" max="50000" step="100" required>
+                            <small class="form-text">Minimum: ₱100 | Maximum: ₱50,000</small>
                         </div>
                         <div class="form-group">
                             <label>Loan Term (months)</label>
                             <input type="number" name="term" min="1" max="60" required>
+                            <small class="form-text">Term must be between 1 and 60 months</small>
                         </div>
                         <div class="form-group">
                             <label>Purpose</label>
@@ -276,7 +281,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                             <tbody>
                             <?php foreach ($loans as $loan): ?>
                                 <tr>
-                                    <td>$<?= number_format($loan['amount'], 2) ?></td>
+                                    <td>₱<?= number_format($loan['amount'], 2) ?></td>
                                     <td><?= $loan['interest_rate'] ?>%</td>
                                     <td><?= $loan['term_months'] ?> months</td>
                                     <td class="status-<?= $loan['status'] ?>"><?= ucfirst($loan['status']) ?></td>
@@ -289,31 +294,6 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
             </>
         </main>
     </div>
+    <script src="../assets/js/session.js"></script>
 </body>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Set session timeout to 10 minutes
-        const inactivityTime = 600000;
-        let inactivityTimer;
-
-        const resetInactivityTimer = () => {
-            // Clear existing timer
-            if (inactivityTimer) clearTimeout(inactivityTimer);
-
-            // Set timeout
-            inactivityTimer = setTimeout(() => {
-                window.location.href = '../logout.php?timeout=1';
-            }, inactivityTime);
-        };
-
-        // Reset timer on user activity
-        const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-        events.forEach(event => {
-            document.addEventListener(event, resetInactivityTimer);
-        });
-
-        // Initial timer start
-        resetInactivityTimer();
-    });
-    </script>
 </html>
