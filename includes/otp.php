@@ -19,16 +19,23 @@ function generateOTP($email) {
         
         // Insert new OTP with UTC timestamp
         $stmt = $pdo->prepare("INSERT INTO otp_verification 
-                            (email, otp_code, expires_at, is_used)
+                            (email, otp, expires_at, is_used)
                             VALUES (?, ?, ?, 0)");
         $stmt->execute([$email, $otp, $expiresAt]);
         
         // Debug logging
         error_log("Generated OTP for $email: $otp (Expires: $expiresAt)");
         
-        return sendOTP($email, $otp);
+        // Try to send OTP and log the result
+        $sendResult = sendOTP($email, $otp);
+        if (!$sendResult) {
+            error_log("Failed to send OTP email to $email");
+        }
+        return $sendResult;
     } catch (PDOException $e) {
         error_log("OTP Generation Error: " . $e->getMessage());
+        error_log("SQL State: " . $e->getCode());
+        error_log("Error Info: " . print_r($e->errorInfo, true));
         return false;
     }
 }
@@ -50,7 +57,7 @@ function verifyOTP($email, $otp) {
         // Use UTC time comparison and case-insensitive email match
         $stmt = $pdo->prepare("SELECT * FROM otp_verification 
                             WHERE LOWER(email) = ?
-                            AND otp_code = ?
+                            AND otp = ?
                             AND expires_at > UTC_TIMESTAMP()
                             AND is_used = 0");
         $stmt->execute([$email, $otp]);
@@ -58,7 +65,7 @@ function verifyOTP($email, $otp) {
         if ($stmt->fetch()) {
             // Immediately mark as used
             $pdo->prepare("UPDATE otp_verification SET is_used = 1 
-                         WHERE LOWER(email) = ? AND otp_code = ?")
+                         WHERE LOWER(email) = ? AND otp = ?")
                 ->execute([$email, $otp]);
             
             error_log("OTP verification successful for $email");
