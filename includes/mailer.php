@@ -16,6 +16,12 @@ function sendOTP($recipientEmail, $otpCode) {
         $mail->SMTPSecure = PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port       = 587;
 
+        // Enable debug output
+        $mail->SMTPDebug = 2; // Enable verbose debug output
+        $mail->Debugoutput = function($str, $level) {
+            error_log("SMTP Debug: $str");
+        };
+
         // Recipients
         $mail->setFrom('nexusbanksystem@gmail.com', 'Nexus Bank');
         $mail->addAddress($recipientEmail);
@@ -27,9 +33,12 @@ function sendOTP($recipientEmail, $otpCode) {
         $mail->AltBody = "Your OTP code is: $otpCode (valid for 5 minutes)";
 
         $mail->send();
+        error_log("OTP email sent successfully to $recipientEmail");
         return true;
     } catch (Exception $e) {
         error_log("Mail Error: " . $mail->ErrorInfo);
+        error_log("Exception details: " . $e->getMessage());
+        error_log("Stack trace: " . $e->getTraceAsString());
         return false;
     }
 }

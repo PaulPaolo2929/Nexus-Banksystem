@@ -1,7 +1,7 @@
 <?php
 
 $host = 'localhost';
-$dbname = 'nexusbank';
+$dbname = 'try';
 $username = 'root';
 $password = '';
 
