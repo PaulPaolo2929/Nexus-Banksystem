@@ -6,6 +6,21 @@ require_once '../includes/notification.php';  // Include notification script
 // Redirect if not admin
 redirectIfNotAdmin();
 
+// Add this after the require statements at the top
+function calculatePenalty($loan) {
+    $currentDate = new DateTime();
+    $approvedDate = new DateTime($loan['approved_at']);
+    $termEndDate = clone $approvedDate;
+    $termEndDate->modify('+' . $loan['term_months'] . ' months');
+    
+    if ($currentDate > $termEndDate) {
+        $penaltyRate = 0.05; // 5% penalty
+        $penaltyAmount = $loan['total_due'] * $penaltyRate;
+        return $penaltyAmount;
+    }
+    return 0;
+}
+
 // Handle loan approval, rejection, or deletion
 if (isset($_GET['id']) && isset($_GET['action'])) {
     $loanId = $_GET['id'];
@@ -19,7 +34,7 @@ if (isset($_GET['id']) && isset($_GET['action'])) {
 
     if ($action == 'approve' || $action == 'reject') {
         $status = ($action == 'approve') ? 'approved' : 'rejected';
-        $approvedAt = ($status == 'approved') ? date('Y-m-d H:i:s') : null;
+        $approvedAt = ($action == 'approve') ? date('Y-m-d H:i:s') : null;
 
         // Fetch loan details
         $stmt = $pdo->prepare("SELECT amount, interest_rate, user_id FROM loans WHERE loan_id = ?");
@@ -40,7 +55,7 @@ if (isset($_GET['id']) && isset($_GET['action'])) {
             $stmt->execute([$loanId, $status, date('Y-m-d H:i:s')]);
 
             // If the loan is approved, update the user's account balance
-            if ($status == 'approved') {
+            if ($action == 'approve') {
                 $stmt = $pdo->prepare("UPDATE accounts SET balance = balance + ? WHERE user_id = ?");
                 $stmt->execute([$amount, $loan['user_id']]);
             }
@@ -52,7 +67,7 @@ if (isset($_GET['id']) && isset($_GET['action'])) {
 
             if ($user) {
                 // Prepare the email content
-                if ($status == 'approved') {
+                if ($action == 'approve') {
                     $subject = 'Your Loan Request Has Been Approved';
                     $messageHtml = "<p>Dear User,</p><p>Your loan request has been <strong>approved</strong>.</p><p>Amount: ₱".number_format($amount, 2)."<br>Total Due: ₱".number_format($totalDue, 2)."</p><p>Thank you for choosing us.</p>";
                     $messagePlain = "Dear User, Your loan request has been approved.\nAmount: ₱".number_format($amount, 2)."\nTotal Due: ₱".number_format($totalDue, 2)."\nThank you for choosing us.";
@@ -100,12 +115,21 @@ $approvedOffset = ($approvedPage - 1) * $perPage;
 // Count total pending and approved loans
 $totalPending = $pdo->query("SELECT COUNT(*) FROM loans WHERE status = 'pending'")->fetchColumn();
 $totalPendingPages = ceil($totalPending / $perPage);
-$totalApproved = $pdo->query("SELECT COUNT(*) FROM loans WHERE status = 'approved' AND approved_at IS NOT NULL")->fetchColumn();
+$totalApproved = $pdo->query("SELECT COUNT(*) FROM loans WHERE status = 'approved' AND is_paid = 'no'")->fetchColumn();
 $totalApprovedPages = ceil($totalApproved / $perPage);
 
 // Fetch pending loan requests
 $pendingLoansStmt = $pdo->prepare("
-    SELECT l.*, u.full_name, u.email 
+    SELECT l.*, u.full_name, u.email,
+    CASE 
+        WHEN l.approved_at IS NOT NULL AND l.is_paid = 'no' THEN 
+            CASE 
+                WHEN DATE_ADD(l.approved_at, INTERVAL l.term_months MONTH) < NOW() THEN 
+                    l.total_due * 0.05
+                ELSE 0 
+            END
+        ELSE 0 
+    END as calculated_penalty
     FROM loans l
     JOIN users u ON l.user_id = u.user_id
     WHERE l.status = 'pending'
@@ -119,10 +143,19 @@ $pendingLoans = $pendingLoansStmt->fetchAll();
 
 // Fetch recent approved loans
 $approvedLoansStmt = $pdo->prepare("
-    SELECT l.*, u.full_name, u.email 
+    SELECT l.*, u.full_name, u.email,
+    CASE 
+        WHEN l.approved_at IS NOT NULL AND l.is_paid = 'no' THEN 
+            CASE 
+                WHEN DATE_ADD(l.approved_at, INTERVAL l.term_months MONTH) < NOW() THEN 
+                    l.total_due * 0.05
+                ELSE 0 
+            END
+        ELSE 0 
+    END as calculated_penalty
     FROM loans l
     JOIN users u ON l.user_id = u.user_id
-    WHERE l.status = 'approved' AND l.approved_at IS NOT NULL
+    WHERE l.status = 'approved' AND l.is_paid = 'no'
     ORDER BY l.approved_at DESC
     LIMIT :perPage OFFSET :offset
 ");
@@ -242,10 +275,10 @@ $approvedLoans = $approvedLoansStmt->fetchAll();
 
                     <hr>
 
-                    <h2>✅ Recently Approved Loans (Latest 10)</h2>
+                    <h2>✅ Active Loans</h2>
 
                     <?php if (empty($approvedLoans)): ?>
-                        <p>No approved loans yet.</p>
+                        <p>No active loans at the moment.</p>
                     <?php else: ?>
                         <table>
                             <thead>
@@ -259,6 +292,7 @@ $approvedLoans = $approvedLoansStmt->fetchAll();
                                     <th>Total Due</th>
                                     <th>Purpose</th>
                                     <th>Approved On</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -270,9 +304,35 @@ $approvedLoans = $approvedLoansStmt->fetchAll();
                                         <td data-label="Amount">₱<?= number_format($loan['amount'], 2) ?></td>
                                         <td data-label="Interest"><?= $loan['interest_rate'] ?>%</td>
                                         <td data-label="Term"><?= $loan['term_months'] ?> months</td>
-                                        <td data-label="Total Due">₱<?= number_format($loan['total_due'], 2) ?></td>
+                                        <td data-label="Total Due">₱<?= number_format($loan['total_due'] + ($loan['calculated_penalty'] ?? 0), 2) ?></td>
                                         <td data-label="Purpose"><?= htmlspecialchars($loan['purpose']) ?></td>
-                                        <td data-label="Approved On"><?= date('M d, Y', strtotime($loan['approved_at'])) ?></td>
+                                        <td data-label="Approved On">
+                                            <?php 
+                                            if ($loan['approved_at'] !== null) {
+                                                echo date('M d, Y', strtotime($loan['approved_at']));
+                                            } else {
+                                                echo 'Not approved yet';
+                                            }
+                                            ?>
+                                        </td>
+                                        <td data-label="Status">
+                                            <?php 
+                                            if ($loan['approved_at'] !== null) {
+                                                $currentDate = new DateTime();
+                                                $approvedDate = new DateTime($loan['approved_at']);
+                                                $termEndDate = clone $approvedDate;
+                                                $termEndDate->modify('+' . $loan['term_months'] . ' months');
+                                                
+                                                if ($currentDate > $termEndDate && $loan['is_paid'] === 'no') {
+                                                    echo '<span class="status-overdue">Overdue</span>';
+                                                } else {
+                                                    echo '<span class="status-' . $loan['status'] . '">' . ucfirst($loan['status']) . '</span>';
+                                                }
+                                            } else {
+                                                echo '<span class="status-' . $loan['status'] . '">' . ucfirst($loan['status']) . '</span>';
+                                            }
+                                            ?>
+                                        </td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>

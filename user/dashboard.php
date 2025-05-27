@@ -6,6 +6,10 @@ error_reporting(E_ALL);
 session_start();
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
+require_once '../includes/session_manager.php';
+
+// Check session status
+checkSessionStatus();
 
 // Set the timeout duration (15 minutes in seconds)
 $timeoutDuration = 900;  // 15 minutes
@@ -84,7 +88,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nexus-Banksystem - Dashboard</title>
     <link rel="stylesheet" href="../assets/css/main.css">
-
+    <script src="../assets/js/session.js"></script>
 
     <!-- Apexchart -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
@@ -707,5 +711,6 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
 
     // Your existing scripts...
 </script>
+<script src="../assets/js/session.js"></script>
 </body>
 </html>

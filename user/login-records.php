@@ -1,6 +1,10 @@
 <?php 
 session_start();
 
+// Include database connection
+require_once '../includes/db.php';
+require_once '../includes/session_manager.php';
+
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -8,9 +12,6 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
-
-// Include database connection
-require_once '../includes/db.php';
 
 // Fetch login records along with user info
 $sql = "
@@ -181,5 +182,6 @@ try {
 
         <a href="dashboard.php" class="back-link">Back to Dashboard</a>
     </div>
+    <script src="../assets/js/session.js"></script>
 </body>
 </html>

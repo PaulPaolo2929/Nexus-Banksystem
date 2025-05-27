@@ -9,6 +9,7 @@ session_start();
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/otp.php';
+require_once '../includes/session_manager.php';
 
 redirectIfNotLoggedIn();
 
@@ -470,41 +471,7 @@ $weeklyTransfers = $stmt->fetchColumn() ?: 0;
             </main>
     </div>
 </body>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Set session timeout to 10 minutes
-        const inactivityTime = 600000;
-        let inactivityTimer;
-
-        const resetInactivityTimer = () => {
-            // Clear existing timer
-            if (inactivityTimer) clearTimeout(inactivityTimer);
-
-            // Set timeout
-            inactivityTimer = setTimeout(() => {
-                window.location.href = '../logout.php?timeout=1';
-            }, inactivityTime);
-        };
-
-        // Reset timer on user activity
-        const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'submit'];
-        events.forEach(event => {
-            document.addEventListener(event, resetInactivityTimer);
-        });
-
-        // Add form submit handler
-        const form = document.querySelector('form');
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                // Reset timer but don't prevent form submission
-                resetInactivityTimer();
-            });
-        }
-
-        // Initial timer start
-        resetInactivityTimer();
-    });
-    </script>
+    <script src="../assets/js/session.js"></script>
 
 <!-- Apexchart Transfer in Monthly statistics-->
     <script>
@@ -797,4 +764,5 @@ $weeklyTransfers = $stmt->fetchColumn() ?: 0;
     .catch(err => console.error('Error fetching deposit data:', err));
 });
     </script>
+    <script src="../assets/js/session.js"></script>
 </html>

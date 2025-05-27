@@ -6,8 +6,13 @@ error_reporting(E_ALL);
 
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
+require_once '../includes/session_manager.php';
 
-redirectIfNotLoggedIn();
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit;
+}
 
 $userId = $_SESSION['user_id'];
 
@@ -694,31 +699,6 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
         });
 });
     </script>
+    <script src="../assets/js/session.js"></script>
 </body>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Set session timeout to 10 minutes
-        const inactivityTime = 600000;
-        let inactivityTimer;
-
-        const resetInactivityTimer = () => {
-            // Clear existing timer
-            if (inactivityTimer) clearTimeout(inactivityTimer);
-
-            // Set timeout
-            inactivityTimer = setTimeout(() => {
-                window.location.href = '../logout.php?timeout=1';
-            }, inactivityTime);
-        };
-
-        // Reset timer on user activity
-        const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-        events.forEach(event => {
-            document.addEventListener(event, resetInactivityTimer);
-        });
-
-        // Initial timer start
-        resetInactivityTimer();
-    });
-    </script>
 </html>

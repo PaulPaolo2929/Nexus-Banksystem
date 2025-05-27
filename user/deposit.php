@@ -6,9 +6,10 @@ error_reporting(E_ALL);
 
 session_start();
 
-require_once __DIR__ . '/../includes/db.php';
-require_once __DIR__ . '/../includes/functions.php';
-require_once __DIR__ . '/../includes/otp.php';
+require_once '../includes/db.php';
+require_once '../includes/functions.php';
+require_once '../includes/otp.php';
+require_once '../includes/session_manager.php';
 
 redirectIfNotLoggedIn();
 
@@ -502,5 +503,6 @@ $averageWeeklyDeposit = $stmt->fetchColumn() ?: 0;
 
 
 </script>
+<script src="../assets/js/session.js"></script>
 </body>
 </html>

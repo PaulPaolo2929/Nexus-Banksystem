@@ -7,6 +7,7 @@ error_reporting(E_ALL);
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
 require_once '../includes/notification.php';
+require_once '../includes/session_manager.php';
 
 redirectIfNotLoggedIn();
 
@@ -777,5 +778,6 @@ $profilePic = (!empty($user['profile_picture']) && file_exists('../uploads/' . $
             }
         });
     </script>
+    <script src="../assets/js/session.js"></script>
 </body>
 </html>

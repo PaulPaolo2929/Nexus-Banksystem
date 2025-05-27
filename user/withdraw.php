@@ -9,6 +9,7 @@ session_start();
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/otp.php';
+require_once '../includes/session_manager.php';
 
 redirectIfNotLoggedIn();  // Ensure user is logged in
 
@@ -352,12 +353,6 @@ $weeklyDeposits = $stmt->fetchColumn() ?: 0;
             </div>
     </main>
 </div>
-</body>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Set session timeout to 10 minutes
-        const inactivityTime = 600000;
-        let inactivityTimer;
 
         const resetInactivityTimer = () => {
             // Clear existing timer
@@ -538,4 +533,6 @@ $weeklyDeposits = $stmt->fetchColumn() ?: 0;
 
 
 </script>
+<script src="../assets/js/session.js"></script>
+</body>
 </html>

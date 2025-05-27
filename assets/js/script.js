@@ -97,24 +97,4 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-
-    // Auto-logout after 15 minutes of inactivity
-    const inactivityTime = 15 * 60 * 1000;
-    let inactivityTimer;
-
-    const resetInactivityTimer = () => {
-        clearTimeout(inactivityTimer);
-        inactivityTimer = setTimeout(() => {
-            if (window.location.pathname !== '/login.php' && 
-                window.location.pathname !== '/register.php') {
-                window.location.href = 'logout.php?timeout=1';
-            }
-        }, inactivityTime);
-    };
-
-    ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
-        document.addEventListener(event, resetInactivityTimer);
-    });
-
-    resetInactivityTimer();
 });

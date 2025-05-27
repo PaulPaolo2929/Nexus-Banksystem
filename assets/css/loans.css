@@ -243,3 +243,51 @@ textarea[name="purpose"]:focus {
     font-size: 1.3rem;
 }
   } }
+
+.status-overdue {
+    background-color: #ff4444;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.status-active {
+    background-color: #00C851;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.status-pending {
+    background-color: #ffbb33;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.status-rejected {
+    background-color: #ff4444;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+
+.form-text {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.25rem;
+}
+
+.form-group input[type="number"] {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #dfe6f3;
+    background: #f9f9fb;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+}
