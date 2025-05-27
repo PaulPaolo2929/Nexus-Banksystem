@@ -100,6 +100,30 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
 // Get transactions for the user's transfer history
 $typeFilter = $_GET['type'] ?? '';
 
+// Get total number of transactions for pagination
+$countSql = "
+    SELECT COUNT(*) FROM transactions 
+    WHERE account_id = (SELECT account_id FROM accounts WHERE user_id = ?)
+      AND type IN ('transfer_in', 'transfer_out')
+";
+
+$countParams = [$userId];
+
+if ($typeFilter === 'transfer_in' || $typeFilter === 'transfer_out') {
+    $countSql .= " AND type = ?";
+    $countParams[] = $typeFilter;
+}
+
+$stmt = $pdo->prepare($countSql);
+$stmt->execute($countParams);
+$totalTransactions = $stmt->fetchColumn();
+
+// Calculate pagination
+$transactionsPerPage = 10;
+$totalPages = ceil($totalTransactions / $transactionsPerPage);
+$currentPage = isset($_GET['page']) ? max(1, min($totalPages, intval($_GET['page']))) : 1;
+$offset = ($currentPage - 1) * $transactionsPerPage;
+
 $sql = "
     SELECT * FROM transactions 
     WHERE account_id = (SELECT account_id FROM accounts WHERE user_id = ?)
@@ -113,7 +137,9 @@ if ($typeFilter === 'transfer_in' || $typeFilter === 'transfer_out') {
     $params[] = $typeFilter;
 }
 
-$sql .= " ORDER BY created_at DESC";
+$sql .= " ORDER BY created_at DESC LIMIT ? OFFSET ?";
+$params[] = $transactionsPerPage;
+$params[] = $offset;
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
@@ -303,7 +329,7 @@ $weeklyTransfers = $stmt->fetchColumn() ?: 0;
                     <div>
                             <h2>Deposit Money</h2>
                             <div class="balance-info">
-                                <p>Current Balance: <strong>$<?= number_format((float)$balance, 2) ?></strong></p>
+                                <p>Current Balance: <strong>₱<?= number_format((float)$balance, 2) ?></strong></p>
                             </div>
 
                             <form method="POST">
@@ -349,16 +375,13 @@ $weeklyTransfers = $stmt->fetchColumn() ?: 0;
                           </div>
                             <ul>
                                 <li>Total <?= $typeLabel ?> This Month: 
-                                    <strong>$<?= number_format($monthlyTotal, 2) ?></strong>
+                                    <strong>₱<?= number_format($monthlyTotal, 2) ?></strong>
                                 </li>
                                 <li>Largest <?= $typeLabel ?>: 
-                                    <strong>$<?= number_format($largestTransfer, 2) ?></strong>
+                                    <strong>₱<?= number_format($largestTransfer, 2) ?></strong>
                                 </li>
                                 <li>Average Weekly <?= $typeLabel ?>: 
-                                    <strong>$<?= number_format($averageWeeklyTransfer, 2) ?></strong>
-                                </li>
-                                <li><?= $typeLabel ?> This Week: 
-                                    <strong>$<?= number_format($weeklyTransfers, 2) ?></strong> / $100,000 limit
+                                    <strong>₱<?= number_format($averageWeeklyTransfer, 2) ?></strong>
                                 </li>
                             </ul>
                         </div>
@@ -414,7 +437,7 @@ $weeklyTransfers = $stmt->fetchColumn() ?: 0;
                                   <td><?= ucfirst($txn['type']) ?></td>
                                   <td class="amount <?= in_array($txn['type'],['deposit','transfer_in'])? 'positive':'negative' ?>">
                                       <?= (in_array($txn['type'],['deposit','transfer_in'])? '+':'−') .
-                                          '$'.number_format($txn['amount'],2) ?>
+                                          '₱'.number_format($txn['amount'],2) ?>
                                   </td>                              
                                   <td>
                                       <button onclick="window.location.href='generate_receipt.php?transaction_id=<?= htmlspecialchars($txn['transaction_id']) ?>'" class="btn-download">Download</button>
@@ -423,6 +446,26 @@ $weeklyTransfers = $stmt->fetchColumn() ?: 0;
                                   <?php endforeach; ?>
                               </tbody>
                               </table> 
+
+                              <!-- Pagination Controls -->
+                              <?php if ($totalPages > 1): ?>
+                              <div class="pagination">
+                                  <?php if ($currentPage > 1): ?>
+                                      <a href="?page=<?= $currentPage - 1 ?><?= $typeFilter ? '&type=' . urlencode($typeFilter) : '' ?>" class="page-link">&laquo; Previous</a>
+                                  <?php endif; ?>
+                                  
+                                  <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                                      <a href="?page=<?= $i ?><?= $typeFilter ? '&type=' . urlencode($typeFilter) : '' ?>" 
+                                         class="page-link <?= $i === $currentPage ? 'active' : '' ?>">
+                                          <?= $i ?>
+                                      </a>
+                                  <?php endfor; ?>
+                                  
+                                  <?php if ($currentPage < $totalPages): ?>
+                                      <a href="?page=<?= $currentPage + 1 ?><?= $typeFilter ? '&type=' . urlencode($typeFilter) : '' ?>" class="page-link">Next &raquo;</a>
+                                  <?php endif; ?>
+                              </div>
+                              <?php endif; ?>
                           </div>
             </main>
     </div>
@@ -480,7 +523,7 @@ $weeklyTransfers = $stmt->fetchColumn() ?: 0;
       const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       const categories = monthNames;
       const totals = monthNames.map((_, idx) => {
-        const key = `${year}-${String(idx + 1).padStart(2, '0')}`;  // e.g. “2025-04”
+        const key = `${year}-${String(idx + 1).padStart(2, '0')}`;  // e.g. "2025-04"
         return depositMap[key] || 0;
       });
 
@@ -626,7 +669,7 @@ $weeklyTransfers = $stmt->fetchColumn() ?: 0;
       const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       const categories = monthNames;
       const totals = monthNames.map((_, idx) => {
-        const key = `${year}-${String(idx + 1).padStart(2, '0')}`;  // e.g. “2025-04”
+        const key = `${year}-${String(idx + 1).padStart(2, '0')}`;  // e.g. "2025-04"
         return depositMap[key] || 0;
       });
 

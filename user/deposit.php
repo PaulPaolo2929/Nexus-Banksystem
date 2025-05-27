@@ -40,12 +40,12 @@ if ($account) {
             $amount = filter_var($_POST['amount'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
 
             if ($amount < 100) {
-                $error = "Minimum deposit amount is $100.";
+                $error = "Minimum deposit amount is ₱100.";
             } elseif ($amount <= 0) {
                 $error = "Amount must be greater than 0.";
             } elseif (($weeklyDeposits + $amount) > $weeklyLimit) {
                 $remaining = $weeklyLimit - $weeklyDeposits;
-                $error = "Weekly deposit limit exceeded. You can only deposit $" . number_format($remaining, 2) . " more this week.";
+                $error = "Weekly deposit limit exceeded. You can only deposit ₱" . number_format($remaining, 2) . " more this week.";
             } else {
                 // Get user's email
                 $stmt = $pdo->prepare("SELECT email FROM users WHERE user_id = ?");
@@ -97,14 +97,29 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
 
 // Get recent transactions
 $stmt = $pdo->prepare("
-    SELECT * 
-FROM transactions  
-WHERE type = 'deposit' 
-  AND account_id = (SELECT account_id FROM accounts WHERE user_id = ?) 
-ORDER BY created_at DESC;
-
+    SELECT COUNT(*) 
+    FROM transactions  
+    WHERE type = 'deposit' 
+      AND account_id = (SELECT account_id FROM accounts WHERE user_id = ?)
 ");
 $stmt->execute([$userId]);
+$totalTransactions = $stmt->fetchColumn();
+
+// Calculate pagination
+$transactionsPerPage = 10;
+$totalPages = ceil($totalTransactions / $transactionsPerPage);
+$currentPage = isset($_GET['page']) ? max(1, min($totalPages, intval($_GET['page']))) : 1;
+$offset = ($currentPage - 1) * $transactionsPerPage;
+
+$stmt = $pdo->prepare("
+    SELECT * 
+    FROM transactions  
+    WHERE type = 'deposit' 
+      AND account_id = (SELECT account_id FROM accounts WHERE user_id = ?) 
+    ORDER BY created_at DESC
+    LIMIT ? OFFSET ?
+");
+$stmt->execute([$userId, $transactionsPerPage, $offset]);
 $transactions = $stmt->fetchAll();
 
 // Calculate total deposits for the current month
@@ -246,7 +261,7 @@ $averageWeeklyDeposit = $stmt->fetchColumn() ?: 0;
                   <?php endif; ?>
                     <h2>Deposit Money</h2>
                   <div class="balance-info">
-                      <p>Current Balance: <strong>$<?= number_format($balance, 2) ?></strong></p>   
+                      <p>Current Balance: <strong>₱<?= number_format($balance, 2) ?></strong></p>   
                   </div>
 
                   <form method="POST">
@@ -264,10 +279,10 @@ $averageWeeklyDeposit = $stmt->fetchColumn() ?: 0;
                 <div style="width: 100%;">
                     <h2>Quick Summary</h2>
                     <ul>
-                        <li>Total Deposits This Month: <strong>$<?= number_format($monthlyTotal, 2) ?></strong></li>
-                        <li>Largest Deposit: <strong>$<?= number_format($largestDeposit, 2) ?></strong></li>
-                        <li>Average Weekly Deposit: <strong>$<?= number_format($averageWeeklyDeposit, 2) ?></strong></li>
-                        <li>Deposited this week: <strong>$<?= number_format($weeklyDeposits, 2) ?></strong> / $100,000 limit</li>
+                        <li>Total Deposits This Month: <strong>₱<?= number_format($monthlyTotal, 2) ?></strong></li>
+                        <li>Largest Deposit: <strong>₱<?= number_format($largestDeposit, 2) ?></strong></li>
+                        <li>Average Weekly Deposit: <strong>₱<?= number_format($averageWeeklyDeposit, 2) ?></strong></li>
+                        <li>Deposited this week: <strong>₱<?= number_format($weeklyDeposits, 2) ?></strong> / ₱100,000 limit</li>
                     </ul>
                   </div>
               </div>
@@ -307,7 +322,7 @@ $averageWeeklyDeposit = $stmt->fetchColumn() ?: 0;
                       <td><?= ucfirst($txn['type']) ?></td>
                       <td class="amount <?= in_array($txn['type'],['deposit','transfer_in'])? 'positive':'negative' ?>">
                           <?= (in_array($txn['type'],['deposit','transfer_in'])? '+':'−') .
-                              '$'.number_format($txn['amount'],2) ?>
+                              '₱'.number_format($txn['amount'],2) ?>
                       </td>                              
                       <td>
                           <button onclick="window.open('generate_receipt.php?transaction_id=<?= htmlspecialchars($txn['transaction_id']) ?>', '_blank')" 
@@ -317,6 +332,26 @@ $averageWeeklyDeposit = $stmt->fetchColumn() ?: 0;
                       <?php endforeach; ?>
                   </tbody>
                   </table> 
+
+                  <!-- Pagination Controls -->
+                  <?php if ($totalPages > 1): ?>
+                  <div class="pagination">
+                      <?php if ($currentPage > 1): ?>
+                          <a href="?page=<?= $currentPage - 1 ?>" class="page-link">&laquo; Previous</a>
+                      <?php endif; ?>
+                      
+                      <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                          <a href="?page=<?= $i ?>" 
+                             class="page-link <?= $i === $currentPage ? 'active' : '' ?>">
+                              <?= $i ?>
+                          </a>
+                      <?php endfor; ?>
+                      
+                      <?php if ($currentPage < $totalPages): ?>
+                          <a href="?page=<?= $currentPage + 1 ?>" class="page-link">Next &raquo;</a>
+                      <?php endif; ?>
+                  </div>
+                  <?php endif; ?>
               </div>
                        
     </main>

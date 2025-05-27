@@ -150,8 +150,8 @@ $investmentPlans = $investmentPlans->fetchAll();
                             <tr>
                                 <td data-label="Plan Name"><?= htmlspecialchars($plan['plan_name']) ?></td>
                                 <td data-label="Interest Rate"><?= htmlspecialchars($plan['interest_rate']) ?>%</td>
-                                <td data-label="Min Investment">$<?= number_format($plan['min_amount'] ?? 0, 2) ?></td>
-                                <td data-label="Max Investment">$<?= number_format($plan['max_amount'] ?? 0, 2) ?></td>
+                                <td data-label="Min Investment">₱<?= number_format($plan['min_amount'] ?? 0, 2) ?></td>
+                                <td data-label="Max Investment">₱<?= number_format($plan['max_amount'] ?? 0, 2) ?></td>
                                 <td data-label="Action">
                                     <!-- Edit button for each plan -->
                                     <button onclick="openEditForm(<?= $plan['plan_id'] ?>, '<?= htmlspecialchars($plan['plan_name']) ?>', <?= $plan['interest_rate'] ?>, <?= $plan['min_amount'] ?>, <?= $plan['max_amount'] ?>, <?= $plan['duration_months'] ?>, '<?= htmlspecialchars($plan['risk_level']) ?>')">Edit</button>

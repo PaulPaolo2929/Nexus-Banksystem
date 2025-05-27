@@ -296,7 +296,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                              <h2>Welcome, <?= htmlspecialchars($user['full_name']) ?></h2>
                             <h2>Account Summary</h2>
                             <p>Account Number: <?= htmlspecialchars($user['account_number']) ?></p>
-                            <p class="balance">Balance: $<?= number_format($user['balance'], 2) ?></p>
+                            <p class="balance">Balance: ₱<?= number_format($user['balance'], 2) ?></p>
                         </div>
                         
 
@@ -354,7 +354,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                                 <td><?= date('j M, g:i A', strtotime($txn['created_at'])) ?></td>
                                                 <td class="amount <?= in_array($txn['type'],['deposit','transfer_in'])? 'positive':'negative' ?>">
                                                     <?= (in_array($txn['type'],['deposit','transfer_in'])? '+':'−') .
-                                                        '$'.number_format($txn['amount'],2) ?>
+                                                        '₱'.number_format($txn['amount'],2) ?>
                                                 </td>
                                                 <td>
                                                     <button onclick="window.open('generate_receipt.php?transaction_id=<?= htmlspecialchars($txn['transaction_id']) ?>', '_blank')" 
@@ -423,7 +423,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                 },
                 yaxis: {
                     title: {
-                        text: 'Amount ($)'
+                        text: 'Amount (₱)'
                     }
                 },
                 series: [
@@ -472,7 +472,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                     intersect: false,
                     y: {
                         formatter: function (val) {
-                            return "$" + val.toFixed(2);
+                            return "₱" + val.toFixed(2);
                         }
                     }
                 },
@@ -610,10 +610,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                     },
                     yaxis: {
                         title: {
-                            text: 'Total Balance',
-                            style: {
-                                fontSize: '20px'
-                            }
+                            text: 'Amount (₱)'
                         }
                     },
                     grid: {

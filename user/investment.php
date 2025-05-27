@@ -34,11 +34,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['plan_id'], $_POST['am
     if (!$plan) {
         $error = "Invalid investment plan.";
     } elseif ($amount < $plan['min_amount']) {
-        $error = "Amount must be at least $" . number_format($plan['min_amount'], 2);
+        $error = "Amount must be at least ₱" . number_format($plan['min_amount'], 2);
     } elseif ($amount > $plan['max_amount']) {
-        $error = "Amount cannot exceed $" . number_format($plan['max_amount'], 2);
+        $error = "Amount cannot exceed ₱" . number_format($plan['max_amount'], 2);
     } elseif ($amount > $balance) {
-
         $error = "Insufficient balance.";
     } else {
         try {
@@ -51,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['plan_id'], $_POST['am
             $stmt->execute([$userId, $planId, $amount]);
 
             $pdo->commit();
-            $_SESSION['success'] = "Investment of $" . number_format($amount, 2) . " placed in " . htmlspecialchars($plan['plan_name']) . "!";
+            $_SESSION['success'] = "Investment of ₱" . number_format($amount, 2) . " placed in " . htmlspecialchars($plan['plan_name']) . "!";
             header("Location: investment.php");
             exit();
         } catch (Exception $e) {
@@ -91,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['withdraw_investment_i
             $stmt->execute([$investmentId]);
 
             $pdo->commit();
-            $_SESSION['success'] = "Successfully withdrawn $" . number_format($totalReturn, 2) . " from matured investment.";
+            $_SESSION['success'] = "Successfully withdrawn ₱" . number_format($totalReturn, 2) . " from matured investment.";
             header("Location: investment.php");
             exit();
         } catch (Exception $e) {
@@ -294,14 +293,14 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                 <option value="">-- Choose a Plan --</option>
                                 <?php foreach ($plans as $plan): ?>
                                     <option value="<?= $plan['plan_id'] ?>">
-                                        <?= htmlspecialchars($plan['plan_name']) ?> - <?= $plan['interest_rate'] ?>% for <?= $plan['duration_months'] ?> months (Min: $<?= number_format($plan['min_amount'], 2) ?>)(Max: $<?= number_format($plan['max_amount'], 2) ?>)
+                                        <?= htmlspecialchars($plan['plan_name']) ?> - <?= $plan['interest_rate'] ?>% for <?= $plan['duration_months'] ?> months (Min: ₱<?= number_format($plan['min_amount'], 2) ?>)(Max: ₱<?= number_format($plan['max_amount'], 2) ?>)
                                     </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
 
                         <div class="form-group">
-                            <label for="amount">Investment Amount ($):</label>
+                            <label for="amount">Investment Amount (₱):</label>
                             <input type="number" name="amount" id="amount" step="0.01" required>
                         </div>
 
@@ -327,7 +326,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                 <?php foreach ($investments as $inv): ?>
                                     <tr>
                                         <td><?= htmlspecialchars($inv['plan_name']) ?></td>
-                                        <td>$<?= number_format($inv['amount'], 2) ?></td>
+                                        <td>₱<?= number_format($inv['amount'], 2) ?></td>
                                         <td><?= $inv['interest_rate'] ?>%</td>
                                         <td><?= $inv['duration_months'] ?> months</td>
                                         <td><?= date('Y-m-d', strtotime($inv['created_at'])) ?></td>

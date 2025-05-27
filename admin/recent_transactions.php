@@ -103,7 +103,7 @@ try {
                             <td data-label="User ID"><?php echo $transaction['user_id']; ?></td>
                             <td data-label="User Name"><?php echo htmlspecialchars($transaction['full_name']); ?></td>
                             <td data-label="Type"><?php echo htmlspecialchars($transaction['type']); ?></td>
-                            <td data-label="Amount"><?php echo "$" . number_format($transaction['amount'], 2); ?></td>
+                            <td data-label="Amount"><?php echo "₱" . number_format($transaction['amount'], 2); ?></td>
                             <td data-label="Description"><?php echo !empty($transaction['description']) ? htmlspecialchars($transaction['description']) : 'N/A'; ?></td>
                             <td data-label="Related Account"><?php echo !empty($transaction['related_account_number']) ? htmlspecialchars($transaction['related_account_number']) : 'N/A'; ?></td>
                             <td data-label="Date">

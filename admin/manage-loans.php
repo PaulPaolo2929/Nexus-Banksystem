@@ -54,8 +54,8 @@ if (isset($_GET['id']) && isset($_GET['action'])) {
                 // Prepare the email content
                 if ($status == 'approved') {
                     $subject = 'Your Loan Request Has Been Approved';
-                    $messageHtml = "<p>Dear User,</p><p>Your loan request has been <strong>approved</strong>.</p><p>Amount: $".number_format($amount, 2)."<br>Total Due: $".number_format($totalDue, 2)."</p><p>Thank you for choosing us.</p>";
-                    $messagePlain = "Dear User, Your loan request has been approved.\nAmount: $".number_format($amount, 2)."\nTotal Due: $".number_format($totalDue, 2)."\nThank you for choosing us.";
+                    $messageHtml = "<p>Dear User,</p><p>Your loan request has been <strong>approved</strong>.</p><p>Amount: ₱".number_format($amount, 2)."<br>Total Due: ₱".number_format($totalDue, 2)."</p><p>Thank you for choosing us.</p>";
+                    $messagePlain = "Dear User, Your loan request has been approved.\nAmount: ₱".number_format($amount, 2)."\nTotal Due: ₱".number_format($totalDue, 2)."\nThank you for choosing us.";
                 } else {
                     $subject = 'Your Loan Request Has Been Rejected';
                     $messageHtml = "<p>Dear User,</p><p>Your loan request has been <strong>rejected</strong>.</p><p>We regret to inform you that we are unable to process your loan request at this time.</p><p>Thank you.</p>";
@@ -203,7 +203,7 @@ $approvedLoans = $approvedLoansStmt->fetchAll();
                                         <td data-label="Loan ID"><?= $loan['loan_id'] ?></td>
                                         <td data-label="User"><?= htmlspecialchars($loan['full_name']) ?></td>
                                         <td data-label="Email"><?= htmlspecialchars($loan['email']) ?></td>
-                                        <td data-label="Amount">$<?= number_format($loan['amount'], 2) ?></td>
+                                        <td data-label="Amount">₱<?= number_format($loan['amount'], 2) ?></td>
                                         <td data-label="Interest"><?= $loan['interest_rate'] ?>%</td>
                                         <td data-label="Term"><?= $loan['term_months'] ?> months</td>
                                         <td data-label="Purpose"><?= htmlspecialchars($loan['purpose']) ?></td>
@@ -267,10 +267,10 @@ $approvedLoans = $approvedLoansStmt->fetchAll();
                                         <td data-label="Loan ID"><?= $loan['loan_id'] ?></td>
                                         <td data-label="User"><?= htmlspecialchars($loan['full_name']) ?></td>
                                         <td data-label="Email"><?= htmlspecialchars($loan['email']) ?></td>
-                                        <td data-label="Amount">$<?= number_format($loan['amount'], 2) ?></td>
+                                        <td data-label="Amount">₱<?= number_format($loan['amount'], 2) ?></td>
                                         <td data-label="Interest"><?= $loan['interest_rate'] ?>%</td>
                                         <td data-label="Term"><?= $loan['term_months'] ?> months</td>
-                                        <td data-label="Total Due">$<?= number_format($loan['total_due'], 2) ?></td>
+                                        <td data-label="Total Due">₱<?= number_format($loan['total_due'], 2) ?></td>
                                         <td data-label="Purpose"><?= htmlspecialchars($loan['purpose']) ?></td>
                                         <td data-label="Approved On"><?= date('M d, Y', strtotime($loan['approved_at'])) ?></td>
                                     </tr>

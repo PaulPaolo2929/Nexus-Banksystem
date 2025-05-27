@@ -33,7 +33,7 @@ $loanHistory = $stmt->fetchAll();
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Loan History - SecureBank Admin</title>
+    <title>Loan History - Nexus Bank Admin</title>
     <link rel="stylesheet" href="../assets/css/admin-main.css">
     <link rel="stylesheet" href="../assets/css/admin-loan-history.css">
 
@@ -96,7 +96,7 @@ $loanHistory = $stmt->fetchAll();
                             <td data-label="Loan ID"><?= $entry['loan_id'] ?></td>
                             <td data-label="User"><?= htmlspecialchars($entry['full_name']) ?></td>
                             <td data-label="Email"><?= htmlspecialchars($entry['email']) ?></td>
-                            <td data-label="Amount">$<?= number_format($entry['amount'], 2) ?></td>
+                            <td data-label="Amount">₱<?= number_format($entry['amount'], 2) ?></td>
                             <td data-label="Interest"><?= $entry['interest_rate'] ?>%</td>
                             <td data-label="Purpose"><?= htmlspecialchars($entry['purpose']) ?></td>
                             <td data-label="Status"><?= ucfirst($entry['status']) ?></td>

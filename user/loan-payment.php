@@ -284,7 +284,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                 <input type="number" name="loan_id" id="loan_id" required>
                             </div>
                             <div class="form-group">
-                                <label for="payment_amount">Payment Amount ($)</label>
+                                <label for="payment_amount">Payment Amount (₱)</label>
                                 <input type="number" name="payment_amount" id="payment_amount" min="0.01" step="0.01" required>
                             </div>
                             <button type="submit" class="btn">Submit Payment</button>
@@ -310,7 +310,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                     <?php foreach ($loans as $loan): ?>
                                         <tr>
                                             <td><?= $loan['loan_id'] ?></td> <!-- Display Loan ID here -->
-                                            <td>$<?= number_format($loan['total_due'], 2) ?></td>
+                                            <td>₱<?= number_format($loan['total_due'], 2) ?></td>
                                             <td><?= $loan['interest_rate'] ?>%</td>
                                             <td><?= $loan['term_months'] ?> months</td>
                                             <td><?= $loan['is_paid'] === 'yes' ? 'Paid' : 'Active' ?></td>

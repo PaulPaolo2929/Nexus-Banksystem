@@ -166,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $purpose = htmlspecialchars($_POST['purpose'], ENT_QUOTES, 'UTF-8');
 
             if ($amount < 100) {
-                $error = "Minimum loan amount is $100";
+                $error = "Minimum loan amount is ₱100";
             } elseif ($term < 1 || $term > 60) {
                 $error = "Loan term must be between 1 and 60 months";
             } else {

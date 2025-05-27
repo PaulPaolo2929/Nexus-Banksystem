@@ -505,7 +505,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                 <td><?= ucfirst($txn['type']) ?></td>
                                 <td class="amount <?= in_array($txn['type'],['deposit','transfer_in'])? 'positive':'negative' ?>">
                                     <?= (in_array($txn['type'],['deposit','transfer_in'])? '+':'−') .
-                                        '$'.number_format($txn['amount'],2) ?>
+                                        '₱'.number_format($txn['amount'],2) ?>
                                 </td>
                                 <td><?= $txn['related_account_number'] ?: 'N/A' ?></td>
                                 <td>
@@ -604,7 +604,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                 },
                 yaxis: {
                     title: {
-                        text: 'Amount ($)'
+                        text: 'Amount (₱)'
                     }
                 },
                 series: [

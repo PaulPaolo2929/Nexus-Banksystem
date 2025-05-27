@@ -54,10 +54,10 @@ $pdf->setPrintFooter(false);
 $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
 
 // Set margins
-$pdf->SetMargins(15, 15, 15);
+$pdf->SetMargins(20, 20, 20);
 
 // Set auto page breaks
-$pdf->SetAutoPageBreak(TRUE, 15);
+$pdf->SetAutoPageBreak(TRUE, 20);
 
 // Add a page
 $pdf->AddPage();
@@ -66,53 +66,60 @@ $pdf->AddPage();
 $pdf->SetDrawColor(70, 110, 255); // #706EFF - Nexus Bank blue
 $pdf->SetTextColor(52, 60, 106);  // #343C6A - Dark blue
 
+// Set font to support peso sign
+$pdf->SetFont('dejavusans', '', 12, '', true);
+
 // Add logo (if you have one)
-// $pdf->Image('../assets/images/Logo-color.png', 15, 15, 40);
+// $pdf->Image('../assets/images/Logo-color.png', 20, 20, 40);
 
 // Add decorative line
 $pdf->SetLineWidth(0.5);
-$pdf->Line(15, 30, 195, 30);
+$pdf->Line(20, 35, 190, 35);
 
 // Title
-$pdf->Ln(20);
-$pdf->SetFont('helvetica', 'B', 24);
-$pdf->Cell(0, 10, 'NEXUS BANK', 0, 1, 'C');
-$pdf->SetFont('helvetica', '', 14);
-$pdf->Cell(0, 8, 'Transaction Receipt', 0, 1, 'C');
+$pdf->Ln(25);
+$pdf->SetFont('dejavusans', 'B', 28);
+$pdf->Cell(0, 15, 'NEXUS BANK', 0, 1, 'C');
+$pdf->SetFont('dejavusans', '', 16);
+$pdf->Cell(0, 10, 'Transaction Receipt', 0, 1, 'C');
 
 // Add decorative line
-$pdf->Line(15, 55, 195, 55);
-$pdf->Ln(10);
+$pdf->Line(20, 60, 190, 60);
+$pdf->Ln(15);
 
 // Transaction Info Box
 $pdf->SetFillColor(245, 245, 250); // Light gray background
-$pdf->RoundedRect(15, 65, 180, 100, 3.50, '1111', 'DF');
+$pdf->RoundedRect(20, 75, 170, 120, 5.00, '1111', 'DF');
 
 // Transaction Info
-$pdf->SetFont('helvetica', 'B', 12);
-$pdf->SetXY(25, 75);
-$pdf->Cell(50, 8, 'Transaction ID:', 0, 0);
-$pdf->SetFont('helvetica', '', 12);
+$pdf->SetFont('dejavusans', 'B', 12);
+$pdf->SetXY(30, 85);
+$pdf->Cell(40, 8, 'Transaction ID:', 0, 0);
+$pdf->SetFont('dejavusans', '', 12);
+$pdf->SetX(75); // Explicitly set X for value
 $pdf->Cell(0, 8, $txn['transaction_id'], 0, 1);
 
-$pdf->SetFont('helvetica', 'B', 12);
-$pdf->SetXY(25, 85);
-$pdf->Cell(50, 8, 'Date & Time:', 0, 0);
-$pdf->SetFont('helvetica', '', 12);
+$pdf->SetFont('dejavusans', 'B', 12);
+$pdf->SetXY(30, 95);
+$pdf->Cell(40, 8, 'Date & Time:', 0, 0);
+$pdf->SetFont('dejavusans', '', 12);
+$pdf->SetX(75); // Explicitly set X for value
 $pdf->Cell(0, 8, date('j M Y, g:i A', strtotime($txn['created_at'])), 0, 1);
 
-$pdf->SetFont('helvetica', 'B', 12);
-$pdf->SetXY(25, 95);
-$pdf->Cell(50, 8, 'Type:', 0, 0);
-$pdf->SetFont('helvetica', '', 12);
+$pdf->SetFont('dejavusans', 'B', 12);
+$pdf->SetXY(30, 105);
+$pdf->Cell(40, 8, 'Type:', 0, 0);
+$pdf->SetFont('dejavusans', '', 12);
+$pdf->SetX(75); // Explicitly set X for value
 $pdf->Cell(0, 8, ucfirst(str_replace('_',' ',$txn['type'])), 0, 1);
 
-$pdf->SetFont('helvetica', 'B', 12);
-$pdf->SetXY(25, 105);
-$pdf->Cell(50, 8, 'Amount:', 0, 0);
-$pdf->SetFont('helvetica', 'B', 12);
+$pdf->SetFont('dejavusans', 'B', 12);
+$pdf->SetXY(30, 115);
+$pdf->Cell(40, 8, 'Amount:', 0, 0);
+$pdf->SetFont('dejavusans', 'B', 14);
+$pdf->SetX(75); // Explicitly set X for value
 $amount = $txn['amount'] ?? 0;
-$formattedAmount = '$' . number_format($amount, 2);
+$formattedAmount = '₱' . number_format($amount, 2);
 if (in_array($txn['type'], ['deposit','transfer_in'])) {
     $formattedAmount = '+' . $formattedAmount;
 } elseif (in_array($txn['type'], ['withdrawal','transfer_out'])) {
@@ -120,54 +127,59 @@ if (in_array($txn['type'], ['deposit','transfer_in'])) {
 }
 $pdf->Cell(0, 8, $formattedAmount, 0, 1);
 
-$pdf->SetFont('helvetica', 'B', 12);
-$pdf->SetXY(25, 115);
-$pdf->Cell(50, 8, 'Account #:', 0, 0);
-$pdf->SetFont('helvetica', '', 12);
+$pdf->SetFont('dejavusans', 'B', 12);
+$pdf->SetXY(30, 125);
+$pdf->Cell(40, 8, 'Account #:', 0, 0);
+$pdf->SetFont('dejavusans', '', 12);
+$pdf->SetX(75); // Explicitly set X for value
 $pdf->Cell(0, 8, $txn['account_id'], 0, 1);
 
 if ($txn['related_account_number']) {
-    $pdf->SetFont('helvetica', 'B', 12);
-    $pdf->SetXY(25, 125);
-    $pdf->Cell(50, 8, 'Related Acct #:', 0, 0);
-    $pdf->SetFont('helvetica', '', 12);
+    $pdf->SetFont('dejavusans', 'B', 12);
+    $pdf->SetXY(30, 135);
+    $pdf->Cell(40, 8, 'Related Acct #:', 0, 0);
+    $pdf->SetFont('dejavusans', '', 12);
+    $pdf->SetX(75); // Explicitly set X for value
     $pdf->Cell(0, 8, $txn['related_account_number'], 0, 1);
 }
 
-$pdf->Ln(10);
+$pdf->Ln(15);
 
 // Optional: branch by type for extra details
 if ($txn['type'] === 'transfer_out') {
-    $pdf->SetFont('helvetica', 'I', 11);
+    $pdf->SetFont('dejavusans', 'I', 11);
     $pdf->SetTextColor(100, 100, 100);
     $pdf->MultiCell(0, 6, 'Note: This was a transfer to another account. Make sure the recipient has acknowledged receipt.');
     $pdf->SetTextColor(52, 60, 106);
 }
 
 // Footer with user name and balance
-$pdf->Ln(10);
-$pdf->SetFont('helvetica', 'B', 12);
+$pdf->Ln(15);
+$pdf->SetFont('dejavusans', 'B', 12);
 $pdf->Cell(0, 8, "Account Holder: {$txn['full_name']}", 0, 1);
 
 // Only show balance for deposits
 if ($txn['type'] === 'deposit') {
     $balance = $txn['balance'] ?? 0;
-    $pdf->SetFont('helvetica', 'B', 12);
-    $pdf->Cell(0, 8, "Current Balance: $" . number_format($balance, 2), 0, 1);
+    $pdf->SetFont('dejavusans', 'B', 12);
+    $pdf->Cell(0, 8, "Current Balance: ₱" . number_format($balance, 2), 0, 1);
 }
 
 // Add footer line
-$pdf->Ln(10);
+$pdf->Ln(15);
 $pdf->SetLineWidth(0.5);
-$pdf->Line(15, 270, 195, 270);
+$pdf->Line(20, 260, 190, 260);
 
 // Add footer text
-$pdf->SetFont('helvetica', 'I', 8);
+$pdf->SetFont('dejavusans', 'I', 9);
 $pdf->SetTextColor(100, 100, 100);
-$pdf->SetXY(15, 275);
+$pdf->SetXY(20, 265);
 $pdf->Cell(0, 5, 'This is a computer-generated receipt. No signature is required.', 0, 1, 'C');
-$pdf->SetXY(15, 280);
+$pdf->SetXY(20, 270);
 $pdf->Cell(0, 5, 'Thank you for banking with Nexus Bank', 0, 1, 'C');
+
+// Add QR Code or Barcode (optional)
+// $pdf->Image('path_to_qr_code.png', 20, 280, 30);
 
 // Close and output PDF document
 $filename = "receipt_{$txn['transaction_id']}.pdf";

@@ -92,7 +92,7 @@ $userInvestments = $stmt->fetchAll();
                                 <td data-label="User"><?= htmlspecialchars($investment['full_name']) ?></td>
                                 <td data-label="Email"><?= htmlspecialchars($investment['email']) ?></td>
                                 <td data-label="Investment Plan"><?= htmlspecialchars($investment['plan_name']) ?></td>
-                                <td data-label="Amount Invested">$<?= number_format($investment['amount'], 2) ?></td>
+                                <td data-label="Amount Invested">₱<?= number_format($investment['amount'], 2) ?></td>
                                 <td data-label="Interest Rate"><?= number_format($investment['interest_rate'], 2) ?>%</td>
                                 <td data-label="Status"><?= htmlspecialchars($investment['status']) ?></td>
                                 <td data-label="Invested Date"><?= !empty($investment['created_at']) ? date('M j, Y', strtotime($investment['created_at'])) : 'N/A' ?></td>
