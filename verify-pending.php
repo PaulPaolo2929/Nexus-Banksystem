@@ -5,6 +5,10 @@ require_once __DIR__ . '/includes/db.php';
 // Set timezone to UTC for consistency
 date_default_timezone_set('UTC');
 
+// Get IP address and user agent
+$ip_address = $_SERVER['REMOTE_ADDR'];
+$user_agent = $_SERVER['HTTP_USER_AGENT'];
+
 // Cleanup expired tokens (older than 24 hours)
 try {
     $stmt = $pdo->prepare("DELETE FROM login_verifications 
@@ -26,7 +30,7 @@ if (isset($_GET['check_status'])) {
         $token = $_SESSION['login_verification_token'];
         
         // Check if verification is complete (verified = 1)
-        $stmt = $pdo->prepare("SELECT v.verified, v.user_id, u.is_admin 
+        $stmt = $pdo->prepare("SELECT v.verified, v.user_id, u.is_admin, v.ip_address, v.user_agent 
                               FROM login_verifications v 
                               JOIN users u ON v.user_id = u.user_id 
                               WHERE v.token = ? AND v.expires_at > UTC_TIMESTAMP()");
