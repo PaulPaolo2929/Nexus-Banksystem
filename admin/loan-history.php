@@ -16,7 +16,8 @@ $totalPages = ceil($totalCount / $perPage);
 
 // Fetch loan history records with loan and user info (paginated)
 $stmt = $pdo->prepare("
-    SELECT lh.*, l.amount, l.interest_rate, l.purpose, u.full_name, u.email 
+    SELECT lh.*, l.amount, l.interest_rate, l.purpose, u.full_name, u.email,
+    CONVERT_TZ(lh.changed_at, '+00:00', '+08:00') as ph_time
     FROM loan_history lh
     JOIN loans l ON lh.loan_id = l.loan_id
     JOIN users u ON l.user_id = u.user_id
@@ -100,7 +101,7 @@ $loanHistory = $stmt->fetchAll();
                             <td data-label="Interest"><?= $entry['interest_rate'] ?>%</td>
                             <td data-label="Purpose"><?= htmlspecialchars($entry['purpose']) ?></td>
                             <td data-label="Status"><?= ucfirst($entry['status']) ?></td>
-                            <td data-label="Changed At"><?= date('M d, Y - h:i A', strtotime($entry['changed_at'])) ?></td>
+                            <td data-label="Changed At"><?= date('M d, Y - h:i A', strtotime($entry['ph_time'])) ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

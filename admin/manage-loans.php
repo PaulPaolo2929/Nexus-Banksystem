@@ -120,16 +120,7 @@ $totalApprovedPages = ceil($totalApproved / $perPage);
 
 // Fetch pending loan requests
 $pendingLoansStmt = $pdo->prepare("
-    SELECT l.*, u.full_name, u.email,
-    CASE 
-        WHEN l.approved_at IS NOT NULL AND l.is_paid = 'no' THEN 
-            CASE 
-                WHEN DATE_ADD(l.approved_at, INTERVAL l.term_months MONTH) < NOW() THEN 
-                    l.total_due * 0.05
-                ELSE 0 
-            END
-        ELSE 0 
-    END as calculated_penalty
+    SELECT l.*, u.full_name, u.email
     FROM loans l
     JOIN users u ON l.user_id = u.user_id
     WHERE l.status = 'pending'
@@ -143,16 +134,7 @@ $pendingLoans = $pendingLoansStmt->fetchAll();
 
 // Fetch recent approved loans
 $approvedLoansStmt = $pdo->prepare("
-    SELECT l.*, u.full_name, u.email,
-    CASE 
-        WHEN l.approved_at IS NOT NULL AND l.is_paid = 'no' THEN 
-            CASE 
-                WHEN DATE_ADD(l.approved_at, INTERVAL l.term_months MONTH) < NOW() THEN 
-                    l.total_due * 0.05
-                ELSE 0 
-            END
-        ELSE 0 
-    END as calculated_penalty
+    SELECT l.*, u.full_name, u.email
     FROM loans l
     JOIN users u ON l.user_id = u.user_id
     WHERE l.status = 'approved' AND l.is_paid = 'no'
@@ -163,6 +145,27 @@ $approvedLoansStmt->bindValue(':perPage', $perPage, PDO::PARAM_INT);
 $approvedLoansStmt->bindValue(':offset', $approvedOffset, PDO::PARAM_INT);
 $approvedLoansStmt->execute();
 $approvedLoans = $approvedLoansStmt->fetchAll();
+
+// Update penalty amounts for all approved loans
+foreach ($approvedLoans as $loan) {
+    $currentDate = new DateTime();
+    $approvedDate = new DateTime($loan['approved_at']);
+    $termEndDate = clone $approvedDate;
+    $termEndDate->modify('+' . $loan['term_months'] . ' months');
+    
+    if ($currentDate > $termEndDate) {
+        $daysOverdue = $currentDate->diff($termEndDate)->days;
+        $penaltyRate = 0.01; // 1% penalty per day
+        $penaltyAmount = $loan['total_due'] * ($penaltyRate * $daysOverdue);
+        
+        // Update the penalty amount in the database
+        $updateStmt = $pdo->prepare("UPDATE loans SET penalty_amount = ? WHERE loan_id = ?");
+        $updateStmt->execute([$penaltyAmount, $loan['loan_id']]);
+        
+        // Update the penalty amount in our current result set
+        $loan['penalty_amount'] = $penaltyAmount;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -304,7 +307,7 @@ $approvedLoans = $approvedLoansStmt->fetchAll();
                                         <td data-label="Amount">₱<?= number_format($loan['amount'], 2) ?></td>
                                         <td data-label="Interest"><?= $loan['interest_rate'] ?>%</td>
                                         <td data-label="Term"><?= $loan['term_months'] ?> months</td>
-                                        <td data-label="Total Due">₱<?= number_format($loan['total_due'] + ($loan['calculated_penalty'] ?? 0), 2) ?></td>
+                                        <td data-label="Total Due">₱<?= number_format($loan['total_due'] + ($loan['penalty_amount'] ?? 0), 2) ?></td>
                                         <td data-label="Purpose"><?= htmlspecialchars($loan['purpose']) ?></td>
                                         <td data-label="Approved On">
                                             <?php 

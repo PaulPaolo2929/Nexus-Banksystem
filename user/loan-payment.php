@@ -40,18 +40,9 @@ function calculatePenalty($loan) {
     return 0;
 }
 
-// Update the loan fetching query to include penalty calculation
+// Update the loan fetching query to use stored penalty amount
 $stmt = $pdo->prepare("
-    SELECT *, 
-    CASE 
-        WHEN approved_at IS NOT NULL AND is_paid = 'no' THEN 
-            CASE 
-                WHEN DATE_ADD(approved_at, INTERVAL term_months MONTH) < NOW() THEN 
-                    total_due * (0.01 * DATEDIFF(NOW(), DATE_ADD(approved_at, INTERVAL term_months MONTH)))
-                ELSE 0 
-            END
-        ELSE 0 
-    END as penalty_amount
+    SELECT * 
     FROM loans 
     WHERE user_id = ? 
     AND status = 'approved' 
@@ -60,6 +51,27 @@ $stmt = $pdo->prepare("
 ");
 $stmt->execute([$userId]);
 $loans = $stmt->fetchAll();
+
+// Update penalty amounts for all loans
+foreach ($loans as $loan) {
+    $currentDate = new DateTime();
+    $approvedDate = new DateTime($loan['approved_at']);
+    $termEndDate = clone $approvedDate;
+    $termEndDate->modify('+' . $loan['term_months'] . ' months');
+    
+    if ($currentDate > $termEndDate) {
+        $daysOverdue = $currentDate->diff($termEndDate)->days;
+        $penaltyRate = 0.01; // 0.1% penalty per day
+        $penaltyAmount = $loan['total_due'] * ($penaltyRate * $daysOverdue);
+        
+        // Update the penalty amount in the database
+        $updateStmt = $pdo->prepare("UPDATE loans SET penalty_amount = ? WHERE loan_id = ?");
+        $updateStmt->execute([$penaltyAmount, $loan['loan_id']]);
+        
+        // Update the penalty amount in our current result set
+        $loan['penalty_amount'] = $penaltyAmount;
+    }
+}
 
 // CSRF token
 if (empty($_SESSION['loan_payment_token'])) {

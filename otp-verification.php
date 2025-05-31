@@ -11,6 +11,10 @@ require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/otp.php';
 require_once __DIR__ . '/includes/notification.php';
 
+// Get IP address and user agent
+$ip_address = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+$user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+
 $type = $_GET['type'] ?? '';
 
 if ($type !== 'login') {
@@ -111,8 +115,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Store verification token in database
                     date_default_timezone_set('UTC');
                     $expires_at = gmdate('Y-m-d H:i:s', strtotime('+15 minutes'));
-                    $stmt = $pdo->prepare("INSERT INTO login_verifications (user_id, token, expires_at) VALUES (?, ?, ?)");
-                    $stmt->execute([$user_id, $verificationToken, $expires_at]);
+                    $stmt = $pdo->prepare("INSERT INTO login_verifications (user_id, token, expires_at, ip_address, user_agent) VALUES (?, ?, ?, ?, ?)");
+                    $stmt->execute([$user_id, $verificationToken, $expires_at, $ip_address, $user_agent]);
                     
                     // Store token in session
                     $_SESSION['login_verification_token'] = $verificationToken;

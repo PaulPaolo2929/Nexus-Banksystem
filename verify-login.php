@@ -6,6 +6,10 @@ require_once __DIR__ . '/includes/notification.php';
 // Set timezone to UTC for consistency
 date_default_timezone_set('UTC');
 
+// Get IP address and user agent
+$ip_address = $_SERVER['REMOTE_ADDR'];
+$user_agent = $_SERVER['HTTP_USER_AGENT'];
+
 $token = $_GET['token'] ?? '';
 $action = $_GET['action'] ?? '';
 
@@ -16,7 +20,7 @@ if (empty($token) || empty($action)) {
 
 try {
     // Verify token from database
-    $stmt = $pdo->prepare("SELECT v.*, u.email, u.is_admin 
+    $stmt = $pdo->prepare("SELECT v.*, u.email, u.is_admin, v.ip_address, v.user_agent 
                           FROM login_verifications v 
                           JOIN users u ON v.user_id = u.user_id 
                           WHERE v.token = ? AND v.verified = 0 
@@ -48,6 +52,9 @@ try {
         $subject = "Login Confirmed - Nexus E-Banking";
         $body = "Hello,<br><br>"
               . "You have successfully verified your login to Nexus E-Banking.<br>"
+              . "Login details:<br>"
+              . "IP Address: " . htmlspecialchars($verification['ip_address'] ?? 'Unknown') . "<br>"
+              . "Browser: " . htmlspecialchars($verification['user_agent'] ?? 'Unknown') . "<br><br>"
               . "If this wasn't you, please contact support immediately.<br><br>"
               . "Thank you,<br>Nexus Bank";
         sendNotification($verification['email'], $subject, $body);
@@ -109,6 +116,9 @@ try {
         $subject = "Security Alert - Unauthorized Login Attempt";
         $body = "Hello,<br><br>"
               . "You have indicated that you did not attempt to log in to your Nexus E-Banking account.<br>"
+              . "Login attempt details:<br>"
+              . "IP Address: " . htmlspecialchars($verification['ip_address'] ?? 'Unknown') . "<br>"
+              . "Browser: " . htmlspecialchars($verification['user_agent'] ?? 'Unknown') . "<br><br>"
               . "For your security, the login attempt has been blocked.<br><br>"
               . "If you did not attempt to log in, we recommend:<br>"
               . "1. Change your password immediately<br>"
