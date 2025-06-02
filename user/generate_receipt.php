@@ -2,34 +2,65 @@
 // generate_receipt.php
 
 // Show errors for debugging; disable in production
-ini_set('display_errors',1);
+ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
-require_once '../vendor/autoload.php';  // if using Composer
+require_once '../vendor/autoload.php';  // TCPDF
 
 // Make sure user is logged in
 redirectIfNotLoggedIn();
 
-// Get the transaction ID (and optional type) from the query string
+// ---------------------------------------------------------------------------
+// Helper to mask an account number (e.g. “123400150015” → “**** **** 0015”)
+// ---------------------------------------------------------------------------
+function maskAccountNumber($acctNumber) {
+    $acctNumber = trim($acctNumber);
+    $len = strlen($acctNumber);
+    if ($len <= 4) {
+        return $acctNumber;
+    }
+    $last4 = substr($acctNumber, -4);
+    return '**** **** ' . $last4;
+}
+
+// ---------------------------------------------------------------------------
+// 1) Get transaction ID from query string
+// ---------------------------------------------------------------------------
 $txnId = $_GET['transaction_id'] ?? '';
 if (!$txnId) {
     die('No transaction specified.');
 }
 
-// Fetch transaction details (and type) from DB, verifying it belongs to the logged-in user
+// ---------------------------------------------------------------------------
+// 2) Fetch transaction details from the DB (verifying it belongs to this user)
+// ---------------------------------------------------------------------------
 $userId = $_SESSION['user_id'];
+
 $stmt = $pdo->prepare("
-    SELECT t.*, 
-           a.account_number AS related_account_number, 
-           u.full_name, 
-           me.balance
+    SELECT 
+        t.transaction_id,
+        t.created_at,
+        t.type,
+        t.amount,
+        t.description,
+        
+        -- The user’s own account (for masking & new balance)
+        me.account_number      AS account_number,
+        me.balance             AS new_balance,
+        
+        -- Account holder’s name
+        u.full_name            AS full_name,
+
+        -- Related account (if any)
+        a.account_number       AS related_account_number
     FROM transactions t
-    JOIN accounts me ON t.account_id = me.account_id
-    JOIN users u ON me.user_id = u.user_id
-    LEFT JOIN accounts a ON t.related_account_id = a.account_id
-    WHERE t.transaction_id = ? AND me.user_id = ?
+    JOIN accounts me       ON t.account_id = me.account_id
+    JOIN users u           ON me.user_id = u.user_id
+    LEFT JOIN accounts a   ON t.related_account_id = a.account_id
+    WHERE t.transaction_id = ?
+      AND me.user_id = ?
 ");
 $stmt->execute([$txnId, $userId]);
 $txn = $stmt->fetch();
@@ -38,150 +69,301 @@ if (!$txn) {
     die('Transaction not found or access denied.');
 }
 
-// Create new PDF document
+// ---------------------------------------------------------------------------
+// 3) Derive values for display
+// ---------------------------------------------------------------------------
+$rawAmount  = floatval($txn['amount'] ?? 0);
+$isCredit   = in_array($txn['type'], ['deposit','transfer_in']);
+$signPrefix = $isCredit ? '+' : '-';
+$absAmt     = number_format(abs($rawAmount), 2);
+$displayAmt = $signPrefix . '₱ ' . $absAmt;
+
+// Status is always “SUCCESS” for a completed transaction
+$statusText   = 'SUCCESS';
+
+// Format date as “10 December, 2025 20:22”
+$formattedDate = date('j F, Y H:i', strtotime($txn['created_at']));
+
+// Mask the user’s own account number
+$maskedAcct = maskAccountNumber($txn['account_number']);
+
+// Related account (or “—” if none)
+$relatedAcct = $txn['related_account_number']
+    ? $txn['related_account_number']
+    : '—';
+
+// Currency is always “PHP”
+$currency = 'PHP';
+
+// ---------------------------------------------------------------------------
+// 4) Create TCPDF document
+// ---------------------------------------------------------------------------
 $pdf = new \TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);
 
-// Set document information
+// Document metadata
 $pdf->SetCreator('Nexus Bank');
 $pdf->SetAuthor('Nexus Bank');
 $pdf->SetTitle('Transaction Receipt');
 
-// Remove default header/footer
+// Disable default header/footer
 $pdf->setPrintHeader(false);
 $pdf->setPrintFooter(false);
 
-// Set default monospaced font
-$pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
-
-// Set margins
+// Margins: left=20mm, top=20mm, right=20mm
 $pdf->SetMargins(20, 20, 20);
 
-// Set auto page breaks
+// Auto page breaks with bottom margin = 20mm
 $pdf->SetAutoPageBreak(TRUE, 20);
 
-// Add a page
+// Add first page
 $pdf->AddPage();
 
-// Set colors
-$pdf->SetDrawColor(70, 110, 255); // #706EFF - Nexus Bank blue
-$pdf->SetTextColor(52, 60, 106);  // #343C6A - Dark blue
+// ────────────────────────────────────────────────────────────────────────────
+// A) COLORS & FONT SHORTCUTS
+// ────────────────────────────────────────────────────────────────────────────
+$blueBright    = [0, 174, 239];   // #00AEEF
+$darkBlue      = [52,  60,  106]; // #343C6A
+$greyMedium    = [128, 128, 128]; // #808080
+$greyLight     = [200, 200, 200]; // #C8C8C8
+$greyPromo     = [150, 150, 150]; // #969696
 
-// Set font to support peso sign
-$pdf->SetFont('dejavusans', '', 12, '', true);
+// All text will use DejaVu Sans (UTF-8 support)
+$fontNormal    = 'dejavusans';
+$fontBold      = 'dejavusans';
+$fontItalic    = 'dejavusans';
 
-// Add logo (if you have one)
-// $pdf->Image('../assets/images/Logo-color.png', 20, 20, 40);
+// ────────────────────────────────────────────────────────────────────────────
+// B) HEADER: Logo + “NEXUS E-BANKING SYSTEM” (left)     “Transaction Receipt” (right)
+// ────────────────────────────────────────────────────────────────────────────
 
-// Add decorative line
-$pdf->SetLineWidth(0.5);
-$pdf->Line(20, 35, 190, 35);
+// B.1) Nexus Logo at (20mm, 20mm), width = 30mm
+$logoFile = '../assets/images/nexus_logo.png';
+if (file_exists($logoFile)) {
+    // Arguments: file, x, y, width (mm), height="", type="", link="", align="", resize=false, dpi=300
+    $pdf->Image($logoFile, 20, 20, 30, '', '', '', 'T', false, 300);
+}
 
-// Title
+// B.2) “NEXUS” (16pt bold, bright blue) just to the right of logo
+$pdf->SetTextColor(...$blueBright);
+$pdf->SetFont($fontBold, 'B', 16);
+$pdf->SetXY(55, 20);
+$pdf->Cell(0, 6, 'NEXUS', 0, 1, 'L', false);
+
+// B.3) “E-BANKING SYSTEM” (9pt normal, bright blue) below “NEXUS”
+$pdf->SetTextColor(...$blueBright);
+$pdf->SetFont($fontNormal, '', 9);
+$pdf->SetX(55);
+$pdf->Cell(0, 5, 'E-BANKING SYSTEM', 0, 1, 'L', false);
+
+// B.4) “Transaction Receipt” (12pt bold, dark blue) on the top‐right
+$pdf->SetTextColor(...$darkBlue);
+$pdf->SetFont($fontBold, 'B', 12);
+$pdf->SetXY(20, 20);
+$pdf->Cell(0, 6, 'Transaction Receipt', 0, 1, 'R', false);
+
+// ────────────────────────────────────────────────────────────────────────────
+// C) LARGE AMOUNT + STATUS + DATE
+// ────────────────────────────────────────────────────────────────────────────
+
+// C.1) Move down to about Y = 50mm
 $pdf->Ln(25);
-$pdf->SetFont('dejavusans', 'B', 28);
-$pdf->Cell(0, 15, 'NEXUS BANK', 0, 1, 'C');
-$pdf->SetFont('dejavusans', '', 16);
-$pdf->Cell(0, 10, 'Transaction Receipt', 0, 1, 'C');
 
-// Add decorative line
-$pdf->Line(20, 60, 190, 60);
-$pdf->Ln(15);
-
-// Transaction Info Box
-$pdf->SetFillColor(245, 245, 250); // Light gray background
-$pdf->RoundedRect(20, 75, 170, 120, 5.00, '1111', 'DF');
-
-// Transaction Info
-$pdf->SetFont('dejavusans', 'B', 12);
-$pdf->SetXY(30, 85);
-$pdf->Cell(40, 8, 'Transaction ID:', 0, 0);
-$pdf->SetFont('dejavusans', '', 12);
-$pdf->SetX(75); // Explicitly set X for value
-$pdf->Cell(0, 8, $txn['transaction_id'], 0, 1);
-
-$pdf->SetFont('dejavusans', 'B', 12);
-$pdf->SetXY(30, 95);
-$pdf->Cell(40, 8, 'Date & Time:', 0, 0);
-$pdf->SetFont('dejavusans', '', 12);
-$pdf->SetX(75); // Explicitly set X for value
-$pdf->Cell(0, 8, date('j M Y, g:i A', strtotime($txn['created_at'])), 0, 1);
-
-$pdf->SetFont('dejavusans', 'B', 12);
-$pdf->SetXY(30, 105);
-$pdf->Cell(40, 8, 'Type:', 0, 0);
-$pdf->SetFont('dejavusans', '', 12);
-$pdf->SetX(75); // Explicitly set X for value
-$pdf->Cell(0, 8, ucfirst(str_replace('_',' ',$txn['type'])), 0, 1);
-
-$pdf->SetFont('dejavusans', 'B', 12);
-$pdf->SetXY(30, 115);
-$pdf->Cell(40, 8, 'Amount:', 0, 0);
-$pdf->SetFont('dejavusans', 'B', 14);
-$pdf->SetX(75); // Explicitly set X for value
-$amount = $txn['amount'] ?? 0;
-$formattedAmount = '₱' . number_format($amount, 2);
-if (in_array($txn['type'], ['deposit','transfer_in'])) {
-    $formattedAmount = '+' . $formattedAmount;
-} elseif (in_array($txn['type'], ['withdrawal','transfer_out'])) {
-    $formattedAmount = '-' . $formattedAmount;
-}
-$pdf->Cell(0, 8, $formattedAmount, 0, 1);
-
-$pdf->SetFont('dejavusans', 'B', 12);
-$pdf->SetXY(30, 125);
-$pdf->Cell(40, 8, 'Account #:', 0, 0);
-$pdf->SetFont('dejavusans', '', 12);
-$pdf->SetX(75); // Explicitly set X for value
-$pdf->Cell(0, 8, $txn['account_id'], 0, 1);
-
-if ($txn['related_account_number']) {
-    $pdf->SetFont('dejavusans', 'B', 12);
-    $pdf->SetXY(30, 135);
-    $pdf->Cell(40, 8, 'Related Acct #:', 0, 0);
-    $pdf->SetFont('dejavusans', '', 12);
-    $pdf->SetX(75); // Explicitly set X for value
-    $pdf->Cell(0, 8, $txn['related_account_number'], 0, 1);
+// Big, blue amount (centered)
+if (in_array($txn['type'], ['withdrawal', 'transfer_out'])) {
+    $amountColor = [255, 0, 0]; // red
+} else {
+    $amountColor = [0, 174, 239]; // Nexus blue
 }
 
-$pdf->Ln(15);
+// C.2) Amount (32pt bold, colored), centered
+$pdf->SetTextColor(...$amountColor);
+$pdf->SetFont($fontBold, 'B', 32);
+$pdf->Cell(0, 12, $displayAmt, 0, 1, 'C', false);
 
-// Optional: branch by type for extra details
-if ($txn['type'] === 'transfer_out') {
-    $pdf->SetFont('dejavusans', 'I', 11);
-    $pdf->SetTextColor(100, 100, 100);
-    $pdf->MultiCell(0, 6, 'Note: This was a transfer to another account. Make sure the recipient has acknowledged receipt.');
-    $pdf->SetTextColor(52, 60, 106);
-}
+// C.3) “SUCCESS” (18pt bold, dark blue), centered
+$pdf->SetTextColor(...$darkBlue);
+$pdf->SetFont($fontBold, 'B', 18);
+$pdf->Cell(0, 10, $statusText, 0, 1, 'C', false);
 
-// Footer with user name and balance
-$pdf->Ln(15);
-$pdf->SetFont('dejavusans', 'B', 12);
-$pdf->Cell(0, 8, "Account Holder: {$txn['full_name']}", 0, 1);
+// C.4) Date (12pt normal, medium grey), centered
+$pdf->SetTextColor(...$greyMedium);
+$pdf->SetFont($fontNormal, '', 12);
+$pdf->Cell(0, 8, $formattedDate, 0, 1, 'C', false);
 
-// Only show balance for deposits
-if ($txn['type'] === 'deposit') {
-    $balance = $txn['balance'] ?? 0;
-    $pdf->SetFont('dejavusans', 'B', 12);
-    $pdf->Cell(0, 8, "Current Balance: ₱" . number_format($balance, 2), 0, 1);
-}
-
-// Add footer line
-$pdf->Ln(15);
+// ────────────────────────────────────────────────────────────────────────────
+// D) First Divider Line (1pt thick, light grey) at current Y
+// ────────────────────────────────────────────────────────────────────────────
+$pdf->Ln(2);
+$pdf->SetDrawColor(...$greyLight);
 $pdf->SetLineWidth(0.5);
-$pdf->Line(20, 260, 190, 260);
+$yDivider1 = $pdf->GetY();
+$pdf->Line(20, $yDivider1, 190, $yDivider1);
+$pdf->Ln(8);
 
-// Add footer text
-$pdf->SetFont('dejavusans', 'I', 9);
-$pdf->SetTextColor(100, 100, 100);
-$pdf->SetXY(20, 265);
-$pdf->Cell(0, 5, 'This is a computer-generated receipt. No signature is required.', 0, 1, 'C');
-$pdf->SetXY(20, 270);
-$pdf->Cell(0, 5, 'Thank you for banking with Nexus Bank', 0, 1, 'C');
+// ────────────────────────────────────────────────────────────────────────────
+// E) TRANSACTION DETAILS TABLE (Left labels, colon, right‐aligned values)
+// ────────────────────────────────────────────────────────────────────────────
 
-// Add QR Code or Barcode (optional)
-// $pdf->Image('path_to_qr_code.png', 20, 280, 30);
+// E.1) Prepare all rows as [label, value]
+$rows = [
+    ['Transaction ID',       $txn['transaction_id']],
+    ['Account Number',       $maskedAcct],
+    ['Account Holder',       $txn['full_name']],
+    ['Transaction Type',     strtoupper($txn['type'])],
+    ['Currency',             $currency],
+    ['New Account Balance',  number_format($txn['new_balance'], 2)],
+    ['Related Account',      $relatedAcct],
+];
 
-// Close and output PDF document
+// E.2) Layout constants
+$xLabel     = 20;   // left margin for label
+$wLabel     = 60;   // width for label cell
+$xColon     = $xLabel + $wLabel + 2;  // small gap, colon
+$wColon     = 5;    // width for colon
+$xValue     = $xColon + $wColon + 2;  // start of value cell
+$wValue     = 190 - $xValue;  // until right margin (190mm)
+$rowHeight  = 10;   // each row is 10mm tall
+
+// E.3) Loop through rows
+foreach ($rows as $row) {
+    list($label, $value) = $row;
+
+    // Label (11pt normal, medium grey)
+    $pdf->SetTextColor(...$greyMedium);
+    $pdf->SetFont($fontNormal, '', 11);
+    $pdf->SetXY($xLabel, $pdf->GetY());
+    $pdf->Cell($wLabel, $rowHeight, $label, 0, 0, 'L', false);
+
+    // Colon “:” (11pt normal, medium grey)
+    $pdf->SetTextColor(...$greyMedium);
+    $pdf->SetFont($fontNormal, '', 11);
+    $pdf->SetXY($xColon, $pdf->GetY());
+    $pdf->Cell($wColon, $rowHeight, ':', 0, 0, 'L', false);
+
+    // Value (11pt bold, dark blue), right‐aligned
+    $pdf->SetTextColor(...$darkBlue);
+    $pdf->SetFont($fontBold, 'B', 11);
+    $pdf->SetXY($xValue, $pdf->GetY());
+    $pdf->Cell($wValue, $rowHeight, $value, 0, 1, 'R', false);
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// F) Second Divider (1pt thick, light grey) after last detail row
+// ────────────────────────────────────────────────────────────────────────────
+$pdf->Ln(2);
+$pdf->SetDrawColor(...$greyLight);
+$pdf->SetLineWidth(0.5);
+$yDivider2 = $pdf->GetY();
+$pdf->Line(20, $yDivider2, 190, $yDivider2);
+$pdf->Ln(8);
+
+// ────────────────────────────────────────────────────────────────────────────
+// G) DESCRIPTION ROW (Same style, single row)
+// ────────────────────────────────────────────────────────────────────────────
+
+// G.1) Label = “Description”
+$pdf->SetTextColor(...$greyMedium);
+$pdf->SetFont($fontNormal, '', 11);
+$pdf->SetXY($xLabel, $pdf->GetY());
+$pdf->Cell($wLabel, $rowHeight, 'Description', 0, 0, 'L', false);
+
+// G.2) Colon “:”
+$pdf->SetTextColor(...$greyMedium);
+$pdf->SetFont($fontNormal, '', 11);
+$pdf->SetXY($xColon, $pdf->GetY());
+$pdf->Cell($wColon, $rowHeight, ':', 0, 0, 'L', false);
+
+// G.3) Value = the description text (11pt bold, dark blue), right‐aligned
+$descText = trim($txn['description'] ?? '');
+if ($descText === '') {
+    $descText = '—';
+}
+$pdf->SetTextColor(...$darkBlue);
+$pdf->SetFont($fontBold, 'B', 11);
+$pdf->SetXY($xValue, $pdf->GetY());
+$pdf->Cell($wValue, $rowHeight, $descText, 0, 1, 'R', false);
+
+// ────────────────────────────────────────────────────────────────────────────
+// H) Third Divider (1pt thick, light grey) after description
+// ────────────────────────────────────────────────────────────────────────────
+$pdf->Ln(2);
+$pdf->SetDrawColor(...$greyLight);
+$pdf->SetLineWidth(0.5);
+$yDivider3 = $pdf->GetY();
+$pdf->Line(20, $yDivider3, 190, $yDivider3);
+$pdf->Ln(12);
+
+// ────────────────────────────────────────────────────────────────────────────
+// I) FOOTER TEXT (“system‐generated receipt…” + Support + email)
+// ────────────────────────────────────────────────────────────────────────────
+
+// I.1) “This is a system‐generated receipt. No signature is required.” (11pt normal, grey)
+// We want two lines, centered.
+$pdf->SetTextColor(...$greyMedium);
+$pdf->SetFont($fontNormal, '', 11);
+// Use MultiCell to handle the line break:
+$pdf->MultiCell(
+    0,               // width = full content width
+    6,               // line height
+    "This is a system-generated receipt.\nNo signature is required.",
+    0,               // no border
+    'C',             // centered
+    false,           // fill = false
+    1                // move cursor to next line
+);
+$pdf->Ln(6);
+
+// I.2) “Support” (12pt normal, dark blue), centered
+$pdf->SetTextColor(...$darkBlue);
+$pdf->SetFont($fontNormal, '', 12);
+$pdf->Cell(0, 6, 'Support', 0, 1, 'C', false);
+
+// I.3) Support email (12pt bold, bright blue), centered
+$pdf->SetTextColor(...$blueBright);
+$pdf->SetFont($fontBold, 'B', 12);
+$pdf->Cell(0, 6, 'nexusbanksystem@gmail.com', 0, 1, 'C', false);
+$pdf->Ln(8);
+
+// ────────────────────────────────────────────────────────────────────────────
+// J) DOTTED GREY LINE (0.5pt, dash pattern 2/2 for better visibility)
+
+// J.1) Set dash pattern for dotted line (2mm on, 2mm off)
+$pdf->SetDrawColor(...$greyLight);
+$pdf->SetLineWidth(0.5);
+$pdf->SetLineStyle(['width' => 0.5, 'dash' => '2,2', 'color' => $greyLight]);
+
+// J.2) Draw the line from x=20 to x=190 at current Y
+$yDotted = $pdf->GetY();
+$pdf->Line(20, $yDotted, 190, $yDotted);
+
+// J.3) Reset to solid lines
+$pdf->SetLineStyle(['width' => 0.5, 'dash' => 0, 'color' => $greyLight]);
+$pdf->Ln(10);
+
+// ────────────────────────────────────────────────────────────────────────────
+// K) PROMO / DISCLAIMER PARAGRAPH (9pt normal, light grey), centered
+// ────────────────────────────────────────────────────────────────────────────
+$pdf->SetTextColor(...$greyPromo);
+$pdf->SetFont($fontNormal, '', 9);
+
+// We manually insert line breaks to avoid automatic wrapping outside margins.
+$promoText = 
+    "Enjoy a better life with Nexus Bank. Get free transfers, withdrawals, bill payments, instant\n" .
+    "loans, and competitive annual interest on your savings. Nexus Bank is licensed by the\n" .
+    "Bangko Sentral ng Pilipinas and insured by the PDIC.";
+
+$pdf->MultiCell(
+    0,            // full width
+    5,            // line height
+    $promoText,
+    0,            // no border
+    'C',          // centered
+    false
+);
+
+// ────────────────────────────────────────────────────────────────────────────
+// L) OUTPUT THE PDF
+// ────────────────────────────────────────────────────────────────────────────
 $filename = "receipt_{$txn['transaction_id']}.pdf";
-$pdf->Output($filename, 'I'); // 'I' for inline display in browser
+$pdf->Output($filename, 'I');
 exit();

@@ -252,12 +252,25 @@
     display: flex;
     flex-direction: column;
     padding: 1rem;
-    padding-top: 5rem;
     gap: 2rem;
   }
 
   /* ====== Main designs========= */
-  
+.dash-acc-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 1.5rem;
+    padding-top: 4rem;
+}
+
+.dash-acc-wrapper > .account-summary,
+.dash-acc-wrapper > .quick-actions {
+    width: 50%;
+    box-sizing: border-box;
+}
+
+
+
 /* Container */
 .transactions-container {
     background: var(--main-color);
@@ -452,6 +465,17 @@
     box-shadow: 0 2px 8px rgba(52, 60, 106, 0.05);
     overflow: hidden;
   }
+
+  .quick-actions::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, var(--bg-sidecolor-2), #7e6cf1);
+  overflow: hidden;
+}
   
   .quick-actions h2 {
     font-size: 1.5rem;
@@ -465,10 +489,66 @@
     flex-wrap: wrap;
     gap: 12px;
   }
+
+  /* .quick-actions .action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 12px;
+  } */
   
+@media screen and (max-width: 876px) {
+   .dash-acc-wrapper{
+    flex-direction: column;
+   }
+
+
+
+.dash-acc-wrapper > .account-summary,
+.dash-acc-wrapper > .quick-actions {
+    width: 100%;
+    box-sizing: border-box;
+}
+  }
+
+ @media screen and (max-width: 509px) {
+  .quick-actions .action-buttons {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+ }
+
+  .quick-actions .action-buttons a {
+    flex: 1 1 calc(50% - 12px);
+    padding: 16px;
+    background: var(--bg-sidecolor-2);
+    color: var(--main-color);
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: background 0.2s, transform 0.1s;
+  }
+  
+  .quick-actions .action-buttons a:hover {
+    background: #4f4ad1; /* slightly darker accent */
+    transform: translateY(-2px);
+  }
+  
+  .quick-actions .action-buttons a:active {
+    transform: translateY(0);
+  }
+  
+
+
   .quick-actions .btn1 {
     flex: 1 1 140px;
     padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     font-size: 0. nine rem;
     font-weight: 600;
@@ -565,4 +645,28 @@
 .pagination .page-link:first-child,
 .pagination .page-link:last-child {
     padding: 8px 15px;
+}
+
+/*———— Keyframe Animations ————*/
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);   opacity: 1; }
+}
+
+/* Animation for the container with class .content */
+.content {
+  overflow: hidden;
+  animation: slideUp 0.8s ease-out 0.2s both, fadeIn 0.8s ease-out forwards;
+}
+
+/* Additional animations for withdraw page elements */
+.Summary,
+.deposit-distribution-chart.content-1,
+.transactions-table-wrapper.content-1,
+table, .quick-actions, .dashboard-content {
+  animation: slideUp 0.8s ease-out 0.2s both, fadeIn 0.8s ease-out forwards;
+  overflow: hidden;
 }
