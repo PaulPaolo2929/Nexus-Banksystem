@@ -205,7 +205,7 @@ $user = $stmt->fetch();
 // ─── Fetch profile picture ───
 $profilePic = $user['profile_picture']
     ? '../uploads/' . $user['profile_picture']
-    : '../assets/images/default-avatar.png';
+    : '../assets/images/default-avatars.png';
 
 // ─── (rest of your loans code unchanged) ───
 $stmt = $pdo->prepare("

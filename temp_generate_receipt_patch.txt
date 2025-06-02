@@ -1,0 +1,71 @@
+$pdf->setPrintHeader(false);
+$pdf->setPrintFooter(false);
+
+// Set default monospaced font
+$pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+
+// Set margins
+$pdf->SetMargins(20, 20, 20);
+
+// Set auto page breaks
+$pdf->SetAutoPageBreak(TRUE, 20);
+
+// Add a page
+$pdf->AddPage();
+
+// Set colors
+$pdf->SetDrawColor(70, 110, 255); // #706EFF - Nexus Bank blue
+$pdf->SetTextColor(52, 60, 106);  // #343C6A - Dark blue
+
+// Set font to support peso sign
+$pdf->SetFont('dejavusans', '', 12, '', true);
+
+// Add logo (if you have one)
+// $pdf->Image('../assets/images/Logo-color.png', 20, 20, 40);
+
+// Add decorative line
+$pdf->SetLineWidth(0.5);
+$pdf->Line(20, 35, 190, 35);
+
+// Title
+$pdf->Ln(25);
+$pdf->SetFont('dejavusans', 'B', 28);
+$pdf->Cell(0, 15, 'NEXUS BANK', 0, 1, 'C');
+$pdf->SetFont('dejavusans', '', 16);
+$pdf->Cell(0, 10, 'Transaction Receipt', 0, 1, 'C');
+
+// Add decorative line
+$pdf->Line(20, 60, 190, 60);
+$pdf->Ln(15);
+=======
+ // Remove default header/footer
+$pdf->setPrintHeader(false);
+$pdf->setPrintFooter(false);
+
+// Set default monospaced font
+$pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+
+// Set margins
+$pdf->SetMargins(20, 20, 20);
+
+// Set auto page breaks
+$pdf->SetAutoPageBreak(TRUE, 20);
+
+// Add a page
+$pdf->AddPage();
+
+// Set font to support peso sign
+$pdf->SetFont('dejavusans', '', 12, '', true);
+
+// Add logo
+$logoFile = '../assets/images/Logo-color.png';
+if (file_exists($logoFile)) {
+    $pdf->Image($logoFile, 20, 15, 30);
+}
+
+// Title and header
+$pdf->SetXY(55, 20);
+$pdf->SetFont('dejavusans', 'B', 20);
+$pdf->Cell(0, 10, 'Transaction Receipt', 0, 1, 'L');
+
+$pdf->Ln(10);

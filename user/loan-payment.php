@@ -185,7 +185,7 @@ if (!$user) {
 
 // Check if the user has a profile picture
 $stmt = $pdo->prepare("SELECT profile_picture FROM users WHERE user_id = ?");
-$profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'] : '../assets/images/default-avatar.png';
+$profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'] : '../assets/images/default-avatars.png';
 // Fetch user's profile information
 
 ?>

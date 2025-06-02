@@ -77,7 +77,7 @@ if (!$user) {
 
 // Check if the user has a profile picture
 $stmt = $pdo->prepare("SELECT profile_picture FROM users WHERE user_id = ?");
-$profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'] : '../assets/images/default-avatar.png';
+$profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'] : '../assets/images/default-avatars.png';
 // Fetch user's profile information
 
 ?>
@@ -296,6 +296,8 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                     
                     
                     <div class="dashboard-content">
+
+                    <div class="dash-acc-wrapper">
                         <div class="account-summary">
                              <h2>Welcome, <?= htmlspecialchars($user['full_name']) ?></h2>
                             <h2>Account Summary</h2>
@@ -316,7 +318,8 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                 <a href="login-records.php" class="btn1">Login Records</a>
                             </div>
                         </div>
-                        
+                        </div>
+
                         <h2>Recent Transactions</h2>
                         <div class="transactions-container">
                             
