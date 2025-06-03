@@ -666,7 +666,9 @@
 .Summary,
 .deposit-distribution-chart.content-1,
 .transactions-table-wrapper.content-1,
-table, .quick-actions, .dashboard-content {
+table, .quick-actions, .dashboard-content, .loan_list{
   animation: slideUp 0.8s ease-out 0.2s both, fadeIn 0.8s ease-out forwards;
   overflow: hidden;
 }
+
+
