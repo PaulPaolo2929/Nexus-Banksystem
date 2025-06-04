@@ -283,3 +283,7 @@ html, body {
   .btn:hover {
     background-color: #585899; /* indigo-700 */
   }
+
+  .g-recaptcha{
+    width: 100%;
+  }
