@@ -50,6 +50,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['plan_id'], $_POST['am
             $stmt = $pdo->prepare("INSERT INTO investments (user_id, plan_id, amount, created_at, status) VALUES (?, ?, ?, NOW(), 'active')");
             $stmt->execute([$userId, $planId, $amount]);
 
+            // Insert transaction record for investment
+            $stmt = $pdo->prepare("SELECT account_id FROM accounts WHERE user_id = ?");
+            $stmt->execute([$userId]);
+            $account = $stmt->fetch();
+            $accountId = $account['account_id'];
+
+            $stmt = $pdo->prepare('INSERT INTO transactions (account_id, type, amount, description, created_at) VALUES (?, \'investment\', ?, ?, NOW())');
+            $stmt->execute([$accountId, -$amount, 'Investment in ' . $plan['plan_name']]);
+
             $pdo->commit();
             $_SESSION['success'] = "Investment of ₱" . number_format($amount, 2) . " placed in " . htmlspecialchars($plan['plan_name']) . "!";
             header("Location: investment.php");
@@ -90,6 +99,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['withdraw_investment_i
             $stmt = $pdo->prepare("UPDATE investments SET withdrawn_at = NOW(), status = 'withdrawn' WHERE investment_id = ?");
             $stmt->execute([$investmentId]);
 
+            // Insert transaction record for withdrawal of matured investment
+            $stmt = $pdo->prepare("SELECT account_id FROM accounts WHERE user_id = ?");
+            $stmt->execute([$userId]);
+            $account = $stmt->fetch();
+            $accountId = $account['account_id'];
+
+            $stmt = $pdo->prepare('INSERT INTO transactions (account_id, type, amount, description, created_at) VALUES (?, \'withdrawal_matured_investment\', ?, ?, NOW())');
+            $stmt->execute([$accountId, $totalReturn, 'Withdrawal of matured investment: ₱' . number_format($totalReturn, 2)]);
+
             $pdo->commit();
             $_SESSION['success'] = "Successfully withdrawn ₱" . number_format($totalReturn, 2) . " from matured investment.";
             header("Location: investment.php");
@@ -103,15 +121,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['withdraw_investment_i
     }
 }
 
-// Update matured investments (once matured, mark them as such)
-$stmt = $pdo->prepare("
-    UPDATE investments inv
-    JOIN investment_plans plans ON inv.plan_id = plans.plan_id
-    SET inv.status = 'matured', inv.matured_at = NOW()
-    WHERE inv.status = 'active' 
-    AND DATE_ADD(inv.created_at, INTERVAL plans.duration_months MONTH) <= NOW()
-");
-$stmt->execute();
+/**
+ * Update matured investments (once matured, mark them as such)
+ * This function can be called on page load or via a scheduled job (cron)
+ */
+function updateMaturedInvestments($pdo) {
+    $stmt = $pdo->prepare("
+        UPDATE investments inv
+        JOIN investment_plans plans ON inv.plan_id = plans.plan_id
+        SET inv.status = 'matured', inv.matured_at = NOW()
+        WHERE inv.status = 'active' 
+        AND DATE_ADD(inv.created_at, INTERVAL plans.duration_months MONTH) <= NOW()
+        AND (inv.matured_at IS NULL OR inv.matured_at = '0000-00-00 00:00:00')
+    ");
+    $stmt->execute();
+}
+
+// Call the function to update matured investments
+updateMaturedInvestments($pdo);
 
 // Fetch user's investment history
 $stmt = $pdo->prepare("
@@ -320,6 +347,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                     <th>Interest</th>
                                     <th>Duration</th>
                                     <th>Start Date</th>
+                                    <th>Matured Date</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
@@ -331,6 +359,7 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                         <td><?= $inv['interest_rate'] ?>%</td>
                                         <td><?= $inv['duration_months'] ?> months</td>
                                         <td><?= date('Y-m-d', strtotime($inv['created_at'])) ?></td>
+                                        <td><?= $inv['matured_at'] ? date('Y-m-d', strtotime($inv['matured_at'])) : 'N/A' ?></td>
                                         <td>
                                             <?php if ($inv['status'] === 'matured'): ?>
                                                 <span>Matured</span><br>

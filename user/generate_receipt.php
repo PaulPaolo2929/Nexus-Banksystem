@@ -54,11 +54,15 @@ $stmt = $pdo->prepare("
         u.full_name            AS full_name,
 
         -- Related account (if any)
-        a.account_number       AS related_account_number
+        a.account_number       AS related_account_number,
+        
+        -- Loan due date if available (join with loans table)
+        l.due_date             AS loan_due_date
     FROM transactions t
     JOIN accounts me       ON t.account_id = me.account_id
     JOIN users u           ON me.user_id = u.user_id
     LEFT JOIN accounts a   ON t.related_account_id = a.account_id
+    LEFT JOIN loans l      ON t.type = 'approved_loan' AND l.amount = t.amount AND l.user_id = me.user_id
     WHERE t.transaction_id = ?
       AND me.user_id = ?
 ");
@@ -73,10 +77,11 @@ if (!$txn) {
 // 3) Derive values for display
 // ---------------------------------------------------------------------------
 $rawAmount  = floatval($txn['amount'] ?? 0);
-$isCredit   = in_array($txn['type'], ['deposit','transfer_in']);
+$isCredit   = in_array($txn['type'], ['deposit','transfer_in', 'approved_loan', 'withdrawal_matured_investment']);
 $signPrefix = $isCredit ? '+' : '-';
 $absAmt     = number_format(abs($rawAmount), 2);
 $displayAmt = $signPrefix . '₱ ' . $absAmt;
+
 
 // Status is always “SUCCESS” for a completed transaction
 $statusText   = 'SUCCESS';
@@ -169,7 +174,7 @@ $pdf->Cell(0, 6, 'Transaction Receipt', 0, 1, 'R', false);
 $pdf->Ln(25);
 
 // Big, blue amount (centered)
-if (in_array($txn['type'], ['withdrawal', 'transfer_out'])) {
+if (in_array($txn['type'], ['withdrawal', 'transfer_out', 'investment'])) {
     $amountColor = [255, 0, 0]; // red
 } else {
     $amountColor = [0, 174, 239]; // Nexus blue
@@ -273,7 +278,6 @@ $pdf->SetFont($fontNormal, '', 11);
 $pdf->SetXY($xColon, $pdf->GetY());
 $pdf->Cell($wColon, $rowHeight, ':', 0, 0, 'L', false);
 
-// G.3) Value = the description text (11pt bold, dark blue), right‐aligned
 $descText = trim($txn['description'] ?? '');
 if ($descText === '') {
     $descText = '—';
@@ -282,6 +286,25 @@ $pdf->SetTextColor(...$darkBlue);
 $pdf->SetFont($fontBold, 'B', 11);
 $pdf->SetXY($xValue, $pdf->GetY());
 $pdf->Cell($wValue, $rowHeight, $descText, 0, 1, 'R', false);
+
+// Add Due Date row for approved loans
+if ($txn['type'] === 'approved_loan' && !empty($txn['loan_due_date'])) {
+    $pdf->SetTextColor(...$greyMedium);
+    $pdf->SetFont($fontNormal, '', 11);
+    $pdf->SetXY($xLabel, $pdf->GetY());
+    $pdf->Cell($wLabel, $rowHeight, 'Due Date', 0, 0, 'L', false);
+
+    $pdf->SetTextColor(...$greyMedium);
+    $pdf->SetFont($fontNormal, '', 11);
+    $pdf->SetXY($xColon, $pdf->GetY());
+    $pdf->Cell($wColon, $rowHeight, ':', 0, 0, 'L', false);
+
+    $dueDateFormatted = date('M j, Y', strtotime($txn['loan_due_date']));
+    $pdf->SetTextColor(...$darkBlue);
+    $pdf->SetFont($fontBold, 'B', 11);
+    $pdf->SetXY($xValue, $pdf->GetY());
+    $pdf->Cell($wValue, $rowHeight, $dueDateFormatted, 0, 1, 'R', false);
+}
 
 // ────────────────────────────────────────────────────────────────────────────
 // H) Third Divider (1pt thick, light grey) after description

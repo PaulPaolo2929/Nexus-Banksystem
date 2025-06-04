@@ -467,6 +467,7 @@ $totalOverdue = $overdue['total_overdue'];
                                 <th>Amount</th>
                                 <th>Interest Rate</th>
                                 <th>Term</th>
+                                <th>Due Date</th>
                                 <th>Status</th>
                                 <th>Applied On</th>
                             </tr>
@@ -477,6 +478,18 @@ $totalOverdue = $overdue['total_overdue'];
                                 <td>₱<?= number_format($loan['amount'], 2) ?></td>
                                 <td><?= $loan['interest_rate'] ?>%</td>
                                 <td><?= $loan['term_months'] ?> months</td>
+                                <td>
+                                    <?php 
+                                    if (!empty($loan['due_date'])) {
+                                        // Set due date based on term_months after applied date
+                                        $appliedDate = new DateTime($loan['created_at']);
+                                        $appliedDate->modify('+' . $loan['term_months'] . ' months');
+                                        echo $appliedDate->format('M j, Y');
+                                    } else {
+                                        echo 'N/A';
+                                    }
+                                    ?>
+                                </td>
                                 <td class="status-<?= $loan['status'] ?>">
                                     <?= ucfirst($loan['status']) ?>
                                 </td>
