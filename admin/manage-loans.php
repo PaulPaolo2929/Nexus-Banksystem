@@ -47,8 +47,8 @@ if (isset($_GET['id']) && isset($_GET['action'])) {
             $totalDue = $amount + ($amount * ($interest / 100));
 
             // Update loan status
-            $stmt = $pdo->prepare("UPDATE loans SET status = ?, approved_at = ?, total_due = ?, amount = ?, is_paid = 'no' WHERE loan_id = ?");
-            $stmt->execute([$status, $approvedAt, $totalDue, $amount, $loanId]);
+            $stmt = $pdo->prepare("UPDATE loans SET status = ?, approved_at = ?, total_due = ?, amount = ?, due_date = DATE_SUB(DATE_ADD(?, INTERVAL term_months MONTH), INTERVAL 1 DAY), is_paid = 'no' WHERE loan_id = ?");
+            $stmt->execute([$status, $approvedAt, $totalDue, $amount, $approvedAt, $loanId]);
 
             // Insert into loan_history to track status change
             $stmt = $pdo->prepare("INSERT INTO loan_history (loan_id, status, changed_at) VALUES (?, ?, ?)");
@@ -58,6 +58,15 @@ if (isset($_GET['id']) && isset($_GET['action'])) {
             if ($action == 'approve') {
                 $stmt = $pdo->prepare("UPDATE accounts SET balance = balance + ? WHERE user_id = ?");
                 $stmt->execute([$amount, $loan['user_id']]);
+
+                // Insert transaction record for approved loan
+                $stmt = $pdo->prepare("SELECT account_id FROM accounts WHERE user_id = ?");
+                $stmt->execute([$loan['user_id']]);
+                $account = $stmt->fetch();
+                $accountId = $account['account_id'];
+
+                $stmt = $pdo->prepare('INSERT INTO transactions (account_id, type, amount, description, created_at) VALUES (?, \'approved_loan\', ?, ?, NOW())');
+                $stmt->execute([$accountId, $amount, 'Loan approved: ₱' . number_format($amount, 2)]);
             }
 
             // Fetch user's email for notification
@@ -300,6 +309,7 @@ foreach ($approvedLoans as $loan) {
                                     <th>Amount</th>
                                     <th>Interest</th>
                                     <th>Term</th>
+                                    <th>Due Date</th>
                                     <th>Total Due</th>
                                     <th>Purpose</th>
                                     <th>Approved On</th>
@@ -315,6 +325,17 @@ foreach ($approvedLoans as $loan) {
                                         <td data-label="Amount">₱<?= number_format($loan['amount'], 2) ?></td>
                                         <td data-label="Interest"><?= $loan['interest_rate'] ?>%</td>
                                         <td data-label="Term"><?= $loan['term_months'] ?> months</td>
+                                        <td data-label="Due Date">
+                                            <?php 
+                                            if ($loan['approved_at'] !== null) {
+                                                $dueDate = new DateTime($loan['approved_at']);
+                                                $dueDate->modify('+1 year');
+                                                echo $dueDate->format('M d, Y');
+                                            } else {
+                                                echo 'N/A';
+                                            }
+                                            ?>
+                                        </td>
                                         <td data-label="Total Due">₱<?= number_format($loan['total_due'] + ($loan['penalty_amount'] ?? 0), 2) ?></td>
                                         <td data-label="Purpose"><?= htmlspecialchars($loan['purpose']) ?></td>
                                         <td data-label="Approved On">

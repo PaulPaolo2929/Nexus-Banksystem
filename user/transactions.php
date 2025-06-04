@@ -445,11 +445,14 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                 
                                 <div class="filter-box">
                                     <select name="type">
-                                        <option value="">All Types</option>
-                                        <option value="deposit" <?= ($_GET['type'] ?? '') === 'deposit' ? 'selected' : '' ?>>Deposit</option>
-                                        <option value="withdrawal" <?= ($_GET['type'] ?? '') === 'withdrawal' ? 'selected' : '' ?>>Withdraw</option>
-                                        <option value="transfer_in" <?= ($_GET['type'] ?? '') === 'transfer_in' ? 'selected' : '' ?>>Transfer In</option>
-                                        <option value="transfer_out" <?= ($_GET['type'] ?? '') === 'transfer_out' ? 'selected' : '' ?>>Transfer Out</option>
+                                    <option value="">All Types</option>
+                                    <option value="deposit" <?= ($_GET['type'] ?? '') === 'deposit' ? 'selected' : '' ?>>Deposit</option>
+                                    <option value="withdrawal" <?= ($_GET['type'] ?? '') === 'withdrawal' ? 'selected' : '' ?>>Withdraw</option>
+                                    <option value="withdrawal_matured_investment" <?= ($_GET['type'] ?? '') === 'withdrawal_matured_investment' ? 'selected' : '' ?>>Withdrawal Matured Investment</option>
+                                    <option value="investment" <?= ($_GET['type'] ?? '') === 'investment' ? 'selected' : '' ?>>Investment</option>
+                                    <option value="approved_loan" <?= ($_GET['type'] ?? '') === 'approved_loan' ? 'selected' : '' ?>>Approved Loan</option>
+                                    <option value="transfer_in" <?= ($_GET['type'] ?? '') === 'transfer_in' ? 'selected' : '' ?>>Transfer In</option>
+                                    <option value="transfer_out" <?= ($_GET['type'] ?? '') === 'transfer_out' ? 'selected' : '' ?>>Transfer Out</option>
                                     </select>
 
                                     <div class="date-range-inputs">
@@ -508,8 +511,8 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                 <td><?= date('j M, g:i A', strtotime($txn['created_at'])) ?></td>
                                 <td><?= htmlspecialchars($txn['transaction_id']) ?></td>
                                 <td><?= ucfirst($txn['type']) ?></td>
-                                <td class="amount <?= in_array($txn['type'],['deposit','transfer_in'])? 'positive':'negative' ?>">
-                                    <?= (in_array($txn['type'],['deposit','transfer_in'])? '+':'−') .
+                                <td class="amount <?= in_array($txn['type'],['deposit','transfer_in', 'approved_loan', 'withdrawal_matured_investment'])? 'positive':'negative' ?>">
+                                    <?= (in_array($txn['type'],['deposit','transfer_in', 'approved_loan', 'withdrawal_matured_investment'])? '+':'−') .
                                         '₱'.number_format($txn['amount'],2) ?>
                                 </td>
                                 <td><?= $txn['related_account_number'] ?: 'N/A' ?></td>
