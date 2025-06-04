@@ -137,4 +137,4 @@ try {
     header("Location: login.php?error=verification_failed");
     exit();
 }
-?> 
+?>
