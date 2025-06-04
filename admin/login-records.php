@@ -5,17 +5,47 @@ require_once '../includes/functions.php';
 // Ensure only admin can access this page
 redirectIfNotAdmin();
 
+$searchName = isset($_GET['search_name']) ? trim($_GET['search_name']) : '';
+$statusFilter = isset($_GET['status']) ? trim($_GET['status']) : '';
+$startDate = isset($_GET['start_date']) ? trim($_GET['start_date']) : '';
+$endDate = isset($_GET['end_date']) ? trim($_GET['end_date']) : '';
+
 // Pagination setup
 $perPage = 10;
 $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $perPage;
 
-// Count total login records
-$totalCount = $pdo->query("SELECT COUNT(*) FROM login_records")->fetchColumn();
+// Build count query with filters
+$countSql = "SELECT COUNT(*) FROM login_records lr JOIN users u ON u.user_id = lr.user_id WHERE 1=1";
+$countParams = [];
+
+if ($searchName !== '') {
+    $countSql .= " AND u.full_name LIKE :searchName";
+    $countParams[':searchName'] = '%' . $searchName . '%';
+}
+
+if ($statusFilter !== '' && in_array($statusFilter, ['success', 'failed', 'pending'])) {
+    $countSql .= " AND lr.status = :status";
+    $countParams[':status'] = $statusFilter;
+}
+
+if ($startDate !== '') {
+    $countSql .= " AND lr.created_at >= :startDate";
+    $countParams[':startDate'] = $startDate . ' 00:00:00';
+}
+
+if ($endDate !== '') {
+    $countSql .= " AND lr.created_at <= :endDate";
+    $countParams[':endDate'] = $endDate . ' 23:59:59';
+}
+
+$countStmt = $pdo->prepare($countSql);
+$countStmt->execute($countParams);
+$totalCount = $countStmt->fetchColumn();
 $totalPages = ceil($totalCount / $perPage);
 
-// Fetch paginated login records with user details
-$stmt = $pdo->prepare("
+// Build main query with filters
+$sql = "
     SELECT 
         lr.id,
         lr.user_id,
@@ -27,9 +57,37 @@ $stmt = $pdo->prepare("
         lr.created_at
     FROM login_records lr
     JOIN users u ON u.user_id = lr.user_id
-    ORDER BY lr.created_at DESC
-    LIMIT :perPage OFFSET :offset
-");
+    WHERE 1=1
+";
+
+$params = [];
+
+if ($searchName !== '') {
+    $sql .= " AND u.full_name LIKE :searchName";
+    $params[':searchName'] = '%' . $searchName . '%';
+}
+
+if ($statusFilter !== '' && in_array($statusFilter, ['success', 'failed', 'pending'])) {
+    $sql .= " AND lr.status = :status";
+    $params[':status'] = $statusFilter;
+}
+
+if ($startDate !== '') {
+    $sql .= " AND lr.created_at >= :startDate";
+    $params[':startDate'] = $startDate . ' 00:00:00';
+}
+
+if ($endDate !== '') {
+    $sql .= " AND lr.created_at <= :endDate";
+    $params[':endDate'] = $endDate . ' 23:59:59';
+}
+
+$sql .= " ORDER BY lr.created_at DESC LIMIT :perPage OFFSET :offset";
+
+$stmt = $pdo->prepare($sql);
+foreach ($params as $key => $value) {
+    $stmt->bindValue($key, $value);
+}
 $stmt->bindValue(':perPage', $perPage, PDO::PARAM_INT);
 $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 $stmt->execute();
@@ -82,6 +140,22 @@ $loginRecords = $stmt->fetchAll();
         
     <div class="content">
         <h1>Account Login Records</h1>
+
+        <form method="GET" class="filter-form">
+            <label for="search_name">User Name:</label>
+            <input type="text" id="search_name" name="search_name" value="<?= htmlspecialchars($searchName) ?>" placeholder="Search by user name">
+
+            <label for="status">Status:</label>
+            <select id="status" name="status">
+                <option value="">All</option>
+                <option value="success" <?= $statusFilter === 'success' ? 'selected' : '' ?>>Success</option>
+                <option value="failed" <?= $statusFilter === 'failed' ? 'selected' : '' ?>>Failed</option>
+                <option value="pending" <?= $statusFilter === 'pending' ? 'selected' : '' ?>>Pending</option>
+            </select>
+
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </form>
+
         <?php if (empty($loginRecords)): ?>
             <p>No login records found.</p>
         <?php else: ?>
