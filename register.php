@@ -22,7 +22,8 @@ $data = [
     'birth_year' => '',
     'address' => '',
     'occupation' => '',
-    'phone' => ''
+    'phone' => '',
+    'id_type' => ''
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -36,6 +37,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data['address'] = sanitizeInput($_POST['address'] ?? '');
     $data['occupation'] = sanitizeInput($_POST['occupation'] ?? '');
     $data['phone'] = sanitizeInput($_POST['phone'] ?? '');
+    $data['id_type'] = sanitizeInput($_POST['id_type'] ?? '');
+
+    // Validate ID file upload
+    if (!isset($_FILES['id_file']) || $_FILES['id_file']['error'] !== UPLOAD_ERR_OK) {
+        $errors[] = "Please upload a valid ID document";
+    } else {
+        $allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+        $maxFileSize = 5 * 1024 * 1024; // 5MB
+
+        if (!in_array($_FILES['id_file']['type'], $allowedTypes)) {
+            $errors[] = "Invalid file type. Please upload JPG, PNG, or PDF files only.";
+        }
+
+        if ($_FILES['id_file']['size'] > $maxFileSize) {
+            $errors[] = "File size too large. Maximum size is 5MB.";
+        }
+    }
 
     // Validate password
     if (!validatePassword($data['password'])) {
@@ -104,6 +122,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $data['phone']
             ]);
 
+            $userId = $pdo->lastInsertId();
+
+            // Handle ID file upload
+            $uploadDir = 'uploads/id_verifications/';
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+
+            $fileExtension = pathinfo($_FILES['id_file']['name'], PATHINFO_EXTENSION);
+            $fileName = 'id_' . $userId . '_' . time() . '.' . $fileExtension;
+            $filePath = $uploadDir . $fileName;
+
+            if (move_uploaded_file($_FILES['id_file']['tmp_name'], $filePath)) {
+                $stmt = $pdo->prepare("INSERT INTO id_verifications (user_id, id_type, id_file_path) VALUES (?, ?, ?)");
+                $stmt->execute([$userId, $data['id_type'], $filePath]);
+            } else {
+                throw new Exception("Failed to upload ID file");
+            }
+
             $pdo->commit();
             $success = "Registration submitted! Please wait for admin approval.";
         } catch (PDOException $e) {
@@ -157,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                         <?php endif; ?>
 
-                        <form method="POST" id="registrationForm">
+                        <form method="POST" id="registrationForm" enctype="multipart/form-data">
             <div class="form-group">
                 <div class="form-field">
                 <input type="text" name="full_name" required placeholder="" value="<?= htmlspecialchars($data['full_name']) ?>">
@@ -188,10 +225,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="number" name="age" min="18" max="120" required placeholder=" " value="<?= htmlspecialchars($data['age']) ?>">
                     <label>Age</label>
                 </div>
+                </div>
+
+                <div class="form-row">
                 <div class="form-field">
                     <input type="number" name="birth_year" min="1900" max="<?= date('Y') ?>" required placeholder=" " value="<?= htmlspecialchars($data['birth_year']) ?>">
                     <label>Birth Year</label>
                 </div>
+                </div>
+
+                <div class="id-verification-fields">
+                    <div class="form-field">
+                        <label for="id_type">ID Type</label>
+                        <select name="id_type" id="id_type" required>
+                            <option value="">Select ID Type</option>
+                            <option value="passport">Passport</option>
+                            <option value="drivers_license">Driver's License</option>
+                            <option value="national_id">National ID</option>
+                            <option value="student_id">Student ID</option>
+                            <option value="other">Other Government ID</option>
+                        </select>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="id_file">Upload ID Document (JPG, PNG, or PDF)</label>
+                        <input type="file" name="id_file" id="id_file" required accept=".jpg,.jpeg,.png,.pdf">
+                    </div>
                 </div>
 
                 <div class="form-field">

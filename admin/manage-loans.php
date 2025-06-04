@@ -230,6 +230,7 @@ foreach ($approvedLoans as $loan) {
                                     <th>Term</th>
                                     <th>Purpose</th>
                                     <th>Requested</th>
+                                    <th>Verification</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -244,6 +245,13 @@ foreach ($approvedLoans as $loan) {
                                         <td data-label="Term"><?= $loan['term_months'] ?> months</td>
                                         <td data-label="Purpose"><?= htmlspecialchars($loan['purpose']) ?></td>
                                         <td data-label="Requested"><?= date('M d, Y', strtotime($loan['created_at'])) ?></td>
+                                        <td data-label="Verification">
+                                            <?php if ($loan['id_selfie_file_path'] && $loan['id_document_file_path']): ?>
+                                                <a href="view-loan-verification.php?loan_id=<?= $loan['loan_id'] ?>" class="btn3 btn-info" style="color: #000;">View Verification</a>
+                                            <?php else: ?>
+                                                No files uploaded
+                                            <?php endif; ?>
+                                        </td>
                                         <td data-label="Actions">
                                             <a href="manage-loans.php?id=<?= $loan['loan_id'] ?>&action=approve" class="btn3 btn-approve" onclick="return confirm('Approve this loan?')">Approve</a>
                                             <a href="manage-loans.php?id=<?= $loan['loan_id'] ?>&action=reject" class="btn3 btn-reject" onclick="return confirm('Reject this loan?')">Reject</a>

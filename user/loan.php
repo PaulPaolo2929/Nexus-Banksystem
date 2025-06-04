@@ -14,7 +14,7 @@ $userId  = $_SESSION['user_id'];
 $error   = '';
 $success = '';
 
-// Fetch all of this user’s loans (ordered by creation date descending)
+// Fetch all of this user's loans (ordered by creation date descending)
 $stmt = $pdo->prepare("
     SELECT *
       FROM loans 
@@ -24,7 +24,7 @@ $stmt = $pdo->prepare("
 $stmt->execute([$userId]);
 $loans = $stmt->fetchAll();
 
-// (Optional) Fetch user’s account balance (not used on this page, but left for reference)
+// (Optional) Fetch user's account balance (not used on this page, but left for reference)
 $accountStmt = $pdo->prepare("
     SELECT balance 
       FROM accounts 
@@ -49,7 +49,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $term    = intval($_POST['term']);
         $purpose = htmlspecialchars($_POST['purpose'], ENT_QUOTES, 'UTF-8');
 
-        if ($amount < 100) {
+        // Validate ID and selfie file uploads
+        $uploadErrors = [];
+        $uploadDir = '../uploads/loan_verifications/';
+
+        // Create upload directory if it doesn't exist
+        if (!file_exists($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        $idSelfiePath = null;
+        $idDocumentPath = null;
+
+        // Validate and process ID selfie upload
+        if (!isset($_FILES['id_selfie']) || $_FILES['id_selfie']['error'] !== UPLOAD_ERR_OK) {
+            $uploadErrors[] = "Please upload a valid selfie holding your ID.";
+        } else {
+            $allowedTypes = ['image/jpeg', 'image/png'];
+            $maxFileSize = 5 * 1024 * 1024; // 5MB
+
+            if (!in_array($_FILES['id_selfie']['type'], $allowedTypes)) {
+                $uploadErrors[] = "Invalid file type for selfie. Please upload JPG or PNG files only.";
+            }
+
+            if ($_FILES['id_selfie']['size'] > $maxFileSize) {
+                $uploadErrors[] = "Selfie file size too large. Maximum size is 5MB.";
+            }
+            
+            if(empty($uploadErrors)) {
+                $fileExtension = pathinfo($_FILES['id_selfie']['name'], PATHINFO_EXTENSION);
+                $fileName = 'selfie_' . $userId . '_' . time() . '.' . $fileExtension;
+                $filePath = $uploadDir . $fileName;
+                if (move_uploaded_file($_FILES['id_selfie']['tmp_name'], $filePath)) {
+                    $idSelfiePath = str_replace('../', '', $filePath);
+                } else {
+                    $uploadErrors[] = "Failed to upload selfie file.";
+                }
+            }
+        }
+
+        // Validate and process ID document upload
+        if (!isset($_FILES['id_document']) || $_FILES['id_document']['error'] !== UPLOAD_ERR_OK) {
+            $uploadErrors[] = "Please upload a valid ID document.";
+        } else {
+            $allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+            $maxFileSize = 5 * 1024 * 1024; // 5MB
+
+            if (!in_array($_FILES['id_document']['type'], $allowedTypes)) {
+                $uploadErrors[] = "Invalid file type for ID document. Please upload JPG, PNG, or PDF files only.";
+            }
+
+            if ($_FILES['id_document']['size'] > $maxFileSize) {
+                $uploadErrors[] = "ID document file size too large. Maximum size is 5MB.";
+            }
+            
+            if(empty($uploadErrors)) {
+                $fileExtension = pathinfo($_FILES['id_document']['name'], PATHINFO_EXTENSION);
+                $fileName = 'document_' . $userId . '_' . time() . '.' . $fileExtension;
+                $filePath = $uploadDir . $fileName;
+                if (move_uploaded_file($_FILES['id_document']['tmp_name'], $filePath)) {
+                    $idDocumentPath = str_replace('../', '', $filePath);
+                } else {
+                    $uploadErrors[] = "Failed to upload ID document file.";
+                }
+            }
+        }
+
+        if (!empty($uploadErrors)) {
+            $error = implode('<br>', $uploadErrors);
+        } elseif ($amount < 100) {
             $error = "Minimum loan amount is ₱100";
         } elseif ($amount > 50000) {
             $error = "Maximum loan amount is ₱50,000";
@@ -66,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             try {
-                // Insert new loan application with status = 'pending'
+                // Insert new loan application with status = 'pending' and file paths
                 $stmt = $pdo->prepare("
                     INSERT INTO loans (
                         user_id, 
@@ -77,28 +145,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         purpose,
                         total_due,
                         is_paid,
-                        penalty_amount
+                        penalty_amount,
+                        id_selfie_file_path,
+                        id_document_file_path
                     ) VALUES (
                         ?, ?, ?, ?, 'pending', ?, 
-                        ?, 'no', 0.00
+                        ?, 'no', 0.00, ?, ?
                     )
                 ");
-                // Note: I'm initializing total_due = amount (actual calculations can be updated later
-                // once loan is approved and you compute real total_due including interest).
-                // For now, assume total_due == amount on application.
                 $stmt->execute([
                     $userId, 
                     $amount, 
                     $interestRate, 
                     $term, 
                     $purpose,
-                    $amount
+                    $amount, // total_due initialized to amount
+                    $idSelfiePath, 
+                    $idDocumentPath
                 ]);
 
                 // Regenerate token to prevent double submissions
                 $_SESSION['loan_token'] = bin2hex(random_bytes(32));
 
-                $success = "Loan application submitted successfully!";
+                $success = "Loan application submitted successfully! Please wait for review.";
             } catch (Exception $e) {
                 $error = "Failed to submit loan application: " . $e->getMessage();
             }
@@ -107,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// FETCH “Quick Summary” VALUES
+// FETCH "Quick Summary" VALUES
 // ──────────────────────────────────────────────────────────────────────────────
 
 // 1) Total Loan Balance & Current Active Loans
@@ -149,7 +218,7 @@ $lastLoanStmt = $pdo->prepare("
 $lastLoanStmt->execute([$userId]);
 $lastLoan = $lastLoanStmt->fetch();
 
-// 4) Next Payment (simple estimate for “oldest approved loan”)
+// 4) Next Payment (simple estimate for "oldest approved loan")
 //    ─── You may want to adjust this logic if you have a separate payment schedule table. ───
 //    Here: find the single loan with status='approved' AND is_paid='no' with the earliest approved_at.
 $nextPaymentAmount = null;
@@ -378,7 +447,7 @@ $totalOverdue = $overdue['total_overdue'];
                         <div class="alert alert-success"><?= $success ?></div>
                     <?php endif; ?>
 
-                    <form method="POST">
+                    <form method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
                         <div class="form-group">
                             <label>Loan Amount (₱)</label>
@@ -393,6 +462,16 @@ $totalOverdue = $overdue['total_overdue'];
                         <div class="form-group purpose">
                             <label>Purpose</label>
                             <textarea name="purpose" required></textarea>
+                        </div>
+                         <div class="form-group">
+                            <label for="id_selfie">Upload Selfie with ID (JPG, PNG)</label>
+                            <input type="file" name="id_selfie" id="id_selfie" accept=".jpg,.jpeg,.png" required>
+                            <small class="form-text">Upload a clear photo of yourself holding your ID.</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="id_document">Upload ID Document (JPG, PNG, PDF)</label>
+                            <input type="file" name="id_document" id="id_document" accept=".jpg,.jpeg,.png,.pdf" required>
+                            <small class="form-text">Upload a clear photo or scan of your valid ID document.</small>
                         </div>
                         <button type="submit" class="btn11">Apply for Loan</button>
                     </form>
