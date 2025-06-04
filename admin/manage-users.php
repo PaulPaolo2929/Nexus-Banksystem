@@ -163,9 +163,10 @@ $offset = ($page - 1) * $perPage;
 $totalCount = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
 $totalPages = ceil($totalCount / $perPage);
 $users = $pdo->prepare("
-    SELECT u.*, a.account_number, a.balance 
+    SELECT u.*, a.account_number, a.balance, iv.id_type, iv.id_file_path, iv.verification_status
     FROM users u 
     LEFT JOIN accounts a ON u.user_id = a.user_id 
+    LEFT JOIN id_verifications iv ON u.user_id = iv.user_id
     ORDER BY u.created_at DESC
     LIMIT :perPage OFFSET :offset
 ");
@@ -244,6 +245,7 @@ $users = $users->fetchAll();
                         <th>Account</th>
                         <th>Balance</th>
                         <th>Status</th>
+                        <th>ID Verification</th>
                         <th>Active</th>
                         <th>Joined On</th>
                         <th>Actions</th>
@@ -257,6 +259,16 @@ $users = $users->fetchAll();
                             <td data-label="Account"><?= $user['account_number'] ?: 'N/A' ?></td>
                             <td data-label="Balance">₱<?= number_format($user['balance'] ?? 0, 2) ?></td>
                             <td data-label="Status"><?= $user['status'] === 'approved' ? '✅ Approved' : '⏳ Pending' ?></td>
+                            <td data-label="ID Verification">
+                                <?php if ($user['id_file_path']): ?>
+                                    <span class="id-status <?= $user['verification_status'] ?>">
+                                        <?= ucfirst($user['verification_status'] ?? 'pending') ?>
+                                    </span>
+                                    <a href="view-id.php?user_id=<?= $user['user_id'] ?>" class="btn btn-sm btn-info">View ID</a>
+                                <?php else: ?>
+                                    <span class="id-status pending">No ID Uploaded</span>
+                                <?php endif; ?>
+                            </td>
                             <td data-label="Active"><?= $user['is_active'] ? '🟢 Active' : '🔴 Inactive' ?></td>
                             <td data-label="Joined On"><?= date('M j, Y', strtotime($user['created_at'])) ?></td>
                             <td data-label="Actions">

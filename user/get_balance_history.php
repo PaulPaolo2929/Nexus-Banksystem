@@ -13,24 +13,45 @@ if (!isset($_SESSION['user_id'])) {
 
 $userId = $_SESSION['user_id'];
 
-// Fetch balance history for the logged-in user
-$stmt = $pdo->prepare("
-    SELECT last_updated, total_balance 
-    FROM Balance 
-    WHERE user_id = ? 
-    ORDER BY last_updated ASC
-");
+// Get the user's account ID
+$stmt = $pdo->prepare("SELECT account_id FROM accounts WHERE user_id = ?");
 $stmt->execute([$userId]);
-$data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$account = $stmt->fetch();
 
-// Format data for ApexCharts (datetime and value)
-$formatted = [];
-foreach ($data as $row) {
-    $formatted[] = [
-        'x' => date('c', strtotime($row['last_updated'])), // ISO format datetime
-        'y' => (float) $row['total_balance']
+if (!$account) {
+    http_response_code(404);
+    echo json_encode(['error' => 'Account not found']);
+    exit;
+}
+
+$accountId = $account['account_id'];
+
+// Get all transactions for the account
+$stmt = $pdo->prepare("
+    SELECT created_at, 
+           CASE 
+               WHEN type IN ('deposit', 'transfer_in') THEN amount
+               WHEN type IN ('withdrawal', 'transfer_out', 'loanpayment') THEN -amount
+               ELSE 0
+           END as amount_change
+    FROM transactions 
+    WHERE account_id = ?
+    ORDER BY created_at ASC
+");
+$stmt->execute([$accountId]);
+$transactions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Calculate running balance
+$balance = 0;
+$balanceHistory = [];
+
+foreach ($transactions as $txn) {
+    $balance += $txn['amount_change'];
+    $balanceHistory[] = [
+        'x' => date('c', strtotime($txn['created_at'])), // ISO format datetime
+        'y' => (float) $balance
     ];
 }
 
 header('Content-Type: application/json');
-echo json_encode($formatted);
+echo json_encode($balanceHistory);

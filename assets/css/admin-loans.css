@@ -65,17 +65,13 @@
 
 /* Buttons */
 .btn3 {
-    padding: 6px 12px;
-    border-radius: var(--radius-base);
-    font-size: 13px;
-    cursor: pointer;
-    border: none;
-    color: var(--main-color);
-    transition: background-color 0.3s ease;
-    text-decoration: none;
     display: inline-block;
-    text-align: center;
-    margin: 0.2rem;
+    padding: 5px 10px;
+    margin: 0 2px;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #333;
+    transition: background-color 0.3s ease;
 }
 
 .btn-approve {

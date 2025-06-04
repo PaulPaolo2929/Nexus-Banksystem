@@ -23,7 +23,7 @@
   padding: 2rem;
   border-radius: 16px;
   box-shadow: 0 8px 24px rgba(52, 60, 106, 0.08);
-  margin: 4.8rem 1.5rem 2rem 1.5rem;
+  margin: 2rem 1.5rem 2rem 1.5rem;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   position: relative;
   overflow: hidden;
@@ -235,7 +235,6 @@ main header {
   padding: 0.7rem 1rem;
   background-color: var(--main-color);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  position: fixed;
   width: 100%;
   z-index: 998;
 

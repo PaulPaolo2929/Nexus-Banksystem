@@ -579,9 +579,15 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                         type: 'area',
                         height: 450,
                         width: '100%',
+                        toolbar: {
+                            show: false
+                        },
+                        zoom: {
+                            enabled: true
+                        }
                     },
                     series: [{
-                        name: 'Total Balance',
+                        name: 'Account Balance',
                         data: balanceData
                     }],
                     title: {
@@ -590,38 +596,66 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                             fontSize: '20px'
                         }
                     },
-                    colors: ['#00bfff'],
+                    colors: ['#706EFF'],
                     stroke: {
                         width: 3,
                         curve: 'smooth'
                     },
+                    fill: {
+                        type: 'gradient',
+                        gradient: {
+                            shadeIntensity: 1,
+                            opacityFrom: 0.7,
+                            opacityTo: 0.2,
+                            stops: [0, 90, 100]
+                        }
+                    },
                     xaxis: {
                         type: 'datetime',
-                        title: {
-                            text: 'Date & Time',
-                            style: {
-                                fontSize: '10px',
-                            }
-                        },
                         labels: {
                             datetimeUTC: false,
                             format: 'MMM dd, HH:mm',
-                            formatter: function (value) {
-                                const date = new Date(value);
-                                const utcOffset = date.getTimezoneOffset() * 60000; // Convert offset to milliseconds
-                                const localDate = new Date(date.getTime() + utcOffset + (8 * 3600000)); // Add 8 hours for Asia/Manila
-                                const options = { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false };
-                                return new Intl.DateTimeFormat('en-US', options).format(localDate);
+                            style: {
+                                fontSize: '12px'
                             }
                         },
+                        title: {
+                            text: 'Date & Time',
+                            style: {
+                                fontSize: '14px'
+                            }
+                        }
                     },
                     yaxis: {
                         title: {
-                            text: 'Amount (₱)'
+                            text: 'Balance (₱)',
+                            style: {
+                                fontSize: '14px'
+                            }
+                        },
+                        labels: {
+                            formatter: function(value) {
+                                return '₱' + value.toLocaleString('en-US', {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2
+                                });
+                            }
+                        }
+                    },
+                    tooltip: {
+                        x: {
+                            format: 'MMM dd, yyyy HH:mm'
+                        },
+                        y: {
+                            formatter: function(value) {
+                                return '₱' + value.toLocaleString('en-US', {
+                                    minimumFractionDigits: 2,
+                                    maximumFractionDigits: 2
+                                });
+                            }
                         }
                     },
                     grid: {
-                        show: true,
                         borderColor: '#e0e0e0',
                         strokeDashArray: 4,
                         xaxis: {
@@ -634,6 +668,15 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                 show: true
                             }
                         }
+                    },
+                    markers: {
+                        size: 4,
+                        colors: ['#706EFF'],
+                        strokeColors: '#fff',
+                        strokeWidth: 2,
+                        hover: {
+                            size: 6
+                        }
                     }
                 };
 
@@ -642,37 +685,12 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
             })
             .catch(error => {
                 console.error('Error loading balance history:', error);
+                document.querySelector("#balancechart").innerHTML = "<p>Error loading balance history. Please try again later.</p>";
             });
     });
 
     
     </script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Set session timeout to 10 minutes
-        const inactivityTime = 600000;
-        let inactivityTimer;
-
-        const resetInactivityTimer = () => {
-            // Clear existing timer
-            if (inactivityTimer) clearTimeout(inactivityTimer);
-
-            // Set timeout
-            inactivityTimer = setTimeout(() => {
-                window.location.href = '../logout.php?timeout=1';
-            }, inactivityTime);
-        };
-
-        // Reset timer on user activity
-        const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-        events.forEach(event => {
-            document.addEventListener(event, resetInactivityTimer);
-        });
-
-        // Initial timer start
-        resetInactivityTimer();
-    });
-</script>
     <!-- <script src="../assets/js/Userdash.js"></script> -->
     <script>
     // Add this before your existing scripts

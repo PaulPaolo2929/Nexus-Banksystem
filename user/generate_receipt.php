@@ -1,6 +1,9 @@
 <?php
 // generate_receipt.php
 
+// Increase memory limit for image processing
+ini_set('memory_limit', '256M');
+
 // Show errors for debugging; disable in production
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
@@ -13,7 +16,7 @@ require_once '../vendor/autoload.php';  // TCPDF
 redirectIfNotLoggedIn();
 
 // ---------------------------------------------------------------------------
-// Helper to mask an account number (e.g. “123400150015” → “**** **** 0015”)
+// Helper to mask an account number (e.g. "123400150015" → "**** **** 0015")
 // ---------------------------------------------------------------------------
 function maskAccountNumber($acctNumber) {
     $acctNumber = trim($acctNumber);
@@ -46,11 +49,11 @@ $stmt = $pdo->prepare("
         t.amount,
         t.description,
         
-        -- The user’s own account (for masking & new balance)
+        -- The user's own account (for masking & new balance)
         me.account_number      AS account_number,
         me.balance             AS new_balance,
         
-        -- Account holder’s name
+        -- Account holder's name
         u.full_name            AS full_name,
 
         -- Related account (if any)
@@ -82,22 +85,21 @@ $signPrefix = $isCredit ? '+' : '-';
 $absAmt     = number_format(abs($rawAmount), 2);
 $displayAmt = $signPrefix . '₱ ' . $absAmt;
 
-
 // Status is always “SUCCESS” for a completed transaction
 $statusText   = 'SUCCESS';
 
-// Format date as “10 December, 2025 20:22”
+// Format date as "10 December, 2025 20:22"
 $formattedDate = date('j F, Y H:i', strtotime($txn['created_at']));
 
-// Mask the user’s own account number
+// Mask the user's own account number
 $maskedAcct = maskAccountNumber($txn['account_number']);
 
-// Related account (or “—” if none)
+// Related account (or "—" if none)
 $relatedAcct = $txn['related_account_number']
     ? $txn['related_account_number']
     : '—';
 
-// Currency is always “PHP”
+// Currency is always "PHP"
 $currency = 'PHP';
 
 // ---------------------------------------------------------------------------
@@ -138,29 +140,17 @@ $fontBold      = 'dejavusans';
 $fontItalic    = 'dejavusans';
 
 // ────────────────────────────────────────────────────────────────────────────
-// B) HEADER: Logo + “NEXUS E-BANKING SYSTEM” (left)     “Transaction Receipt” (right)
+// B) HEADER: Logo + "NEXUS E-BANKING SYSTEM" (left)     "Transaction Receipt" (right)
 // ────────────────────────────────────────────────────────────────────────────
 
 // B.1) Nexus Logo at (20mm, 20mm), width = 30mm
-$logoFile = '../assets/images/nexus_logo.png';
+$logoFile = '../assets/images/LOGO-RECEIPT.jpg';
 if (file_exists($logoFile)) {
-    // Arguments: file, x, y, width (mm), height="", type="", link="", align="", resize=false, dpi=300
-    $pdf->Image($logoFile, 20, 20, 30, '', '', '', 'T', false, 300);
+    // Arguments: file, x, y, width (mm), height (mm), type="", link="", align="", resize=false, dpi=300
+    $pdf->Image($logoFile, 20, 20, 30, 0, '', '', 'T', false, 300);
 }
 
-// B.2) “NEXUS” (16pt bold, bright blue) just to the right of logo
-$pdf->SetTextColor(...$blueBright);
-$pdf->SetFont($fontBold, 'B', 16);
-$pdf->SetXY(55, 20);
-$pdf->Cell(0, 6, 'NEXUS', 0, 1, 'L', false);
-
-// B.3) “E-BANKING SYSTEM” (9pt normal, bright blue) below “NEXUS”
-$pdf->SetTextColor(...$blueBright);
-$pdf->SetFont($fontNormal, '', 9);
-$pdf->SetX(55);
-$pdf->Cell(0, 5, 'E-BANKING SYSTEM', 0, 1, 'L', false);
-
-// B.4) “Transaction Receipt” (12pt bold, dark blue) on the top‐right
+// B.4) "Transaction Receipt" (12pt bold, dark blue) on the top‐right
 $pdf->SetTextColor(...$darkBlue);
 $pdf->SetFont($fontBold, 'B', 12);
 $pdf->SetXY(20, 20);
@@ -185,7 +175,7 @@ $pdf->SetTextColor(...$amountColor);
 $pdf->SetFont($fontBold, 'B', 32);
 $pdf->Cell(0, 12, $displayAmt, 0, 1, 'C', false);
 
-// C.3) “SUCCESS” (18pt bold, dark blue), centered
+// C.3) "SUCCESS" (18pt bold, dark blue), centered
 $pdf->SetTextColor(...$darkBlue);
 $pdf->SetFont($fontBold, 'B', 18);
 $pdf->Cell(0, 10, $statusText, 0, 1, 'C', false);
@@ -239,7 +229,7 @@ foreach ($rows as $row) {
     $pdf->SetXY($xLabel, $pdf->GetY());
     $pdf->Cell($wLabel, $rowHeight, $label, 0, 0, 'L', false);
 
-    // Colon “:” (11pt normal, medium grey)
+    // Colon ":" (11pt normal, medium grey)
     $pdf->SetTextColor(...$greyMedium);
     $pdf->SetFont($fontNormal, '', 11);
     $pdf->SetXY($xColon, $pdf->GetY());
@@ -266,13 +256,13 @@ $pdf->Ln(8);
 // G) DESCRIPTION ROW (Same style, single row)
 // ────────────────────────────────────────────────────────────────────────────
 
-// G.1) Label = “Description”
+// G.1) Label = "Description"
 $pdf->SetTextColor(...$greyMedium);
 $pdf->SetFont($fontNormal, '', 11);
 $pdf->SetXY($xLabel, $pdf->GetY());
 $pdf->Cell($wLabel, $rowHeight, 'Description', 0, 0, 'L', false);
 
-// G.2) Colon “:”
+// G.2) Colon ":"
 $pdf->SetTextColor(...$greyMedium);
 $pdf->SetFont($fontNormal, '', 11);
 $pdf->SetXY($xColon, $pdf->GetY());
@@ -317,10 +307,10 @@ $pdf->Line(20, $yDivider3, 190, $yDivider3);
 $pdf->Ln(12);
 
 // ────────────────────────────────────────────────────────────────────────────
-// I) FOOTER TEXT (“system‐generated receipt…” + Support + email)
+// I) FOOTER TEXT ("system‐generated receipt…" + Support + email)
 // ────────────────────────────────────────────────────────────────────────────
 
-// I.1) “This is a system‐generated receipt. No signature is required.” (11pt normal, grey)
+// I.1) "This is a system‐generated receipt. No signature is required." (11pt normal, grey)
 // We want two lines, centered.
 $pdf->SetTextColor(...$greyMedium);
 $pdf->SetFont($fontNormal, '', 11);
@@ -336,7 +326,7 @@ $pdf->MultiCell(
 );
 $pdf->Ln(6);
 
-// I.2) “Support” (12pt normal, dark blue), centered
+// I.2) "Support" (12pt normal, dark blue), centered
 $pdf->SetTextColor(...$darkBlue);
 $pdf->SetFont($fontNormal, '', 12);
 $pdf->Cell(0, 6, 'Support', 0, 1, 'C', false);
