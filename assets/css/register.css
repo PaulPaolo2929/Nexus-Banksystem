@@ -11,7 +11,7 @@
     font-family: 'Inter', sans-serif;
     height: 100vh;
     margin: 0;
-    overflow: auto;
+    overflow: hidden
   }
   
   /* outer container */
@@ -20,6 +20,10 @@
     width: 400px;
     padding: 2rem;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
   }
   
   /* heading */
@@ -226,6 +230,7 @@ html, body {
     display: flex;
     flex-direction: column;
     justify-content: center;
+    overflow: auto
   }
 
   .login-form{
@@ -235,7 +240,7 @@ html, body {
     background-color: rgb(255, 255, 255);
     max-height:600px ;
     max-width: 600;
-    padding: 5rem 2rem;
+    padding: 0rem 2rem;
     border-radius: 0.8rem;
   } 
   
@@ -324,6 +329,14 @@ html, body {
     flex-direction: column;
   }
 
+  body, html {
+    background-color: #585899;
+    font-family: 'Inter', sans-serif;
+    height: 100vh;
+    margin: 0;
+    overflow: auto
+  }
+
   .left-panel,
   .container {
     flex: none;
@@ -340,6 +353,7 @@ html, body {
   .container {
       padding: 0rem 1rem;
       border-radius: 0.5rem;
+      overflow: hidden;
   }
 
   .handshake-container {
@@ -365,6 +379,6 @@ html, body {
   background-color: rgb(255, 255, 255);
   max-height:600px ;
   max-width: 600;
-  padding: 5rem 2rem;
+  padding: 0rem 2rem;
   border-radius: 0.8rem;
 } 

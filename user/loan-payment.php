@@ -291,14 +291,13 @@ $profilePic = $user['profile_picture'] ? '../uploads/' . $user['profile_picture'
                                 Investment
                             </a>
 
-                            <a href="loan.php" class="btn">
+                            <a href="loan.php" class="btn dash-text">
                                 <img 
-                                src="../assets/images/inactive-loans.png" 
-                                alt="loans-logo" 
-                                class="nav-icon"
-                                data-default="../assets/images/inactive-loans.png"
-                                data-hover="../assets/images/hover-loans.png"
-                                > 
+                                    src="../assets/images/hover-loans.png" 
+                                    alt="loans-logo" 
+                                    class="nav-icon"
+                                    data-default="../assets/images/hover-loans.png"
+                                    data-hover="../assets/images/hover-loans.png"> 
                                 Loans
                             </a>
 
