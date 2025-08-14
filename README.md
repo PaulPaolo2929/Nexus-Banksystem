@@ -1,5 +1,15 @@
 # Nexus Bank System
+<p align="center">
+  <img src="https://via.placeholder.com/1000x250.png?text=Nexus+Bank+System" alt="Nexus Bank System Banner">
+</p>
 
+# 💳 Nexus Bank System
+
+![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?logo=php&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)
+![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
+![Status](https://img.shields.io/badge/Status-Active-success)
+![Made with Love](https://img.shields.io/badge/Made%20with-%F0%9F%92%9B-pink)
 **Nexus Bank System** is a secure, web-based digital banking platform with integrated **loans, investments, and user management** features.  
 It provides both **clients** and **administrators** with tools for managing financial accounts, transactions, and security—designed for performance, scalability, and data protection.
 
