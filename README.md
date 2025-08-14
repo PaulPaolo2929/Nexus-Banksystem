@@ -78,11 +78,3 @@ It provides both **clients** and **administrators** with tools for managing fina
 ### 1️⃣ Clone Repository
 ```bash
 git clone https://github.com/PaulPaolo2929/Nexus-Banksystem.git
-
-## 👨‍💻 Authors
-
-- **Paul Paolo Mamugay**
-- **Dessa Marie Amparo**
-- **Clint Jorose Capule**
-- **Mark Jesus Fidelino**
-- **Lynz Niome Maniaga**
